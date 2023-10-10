@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="AimmyAimbot.UserController.AButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:AimmyAimbot.UserController"
+             mc:Ignorable="d"
+             d:DesignHeight="50"
+             d:DesignWidth="532"
+             Height="50">
+    <Grid>
+        <Border Background="#FF191919"
+                BorderBrush="#FF1E1E1E"
+                BorderThickness="2"
+                CornerRadius="5"
+                Margin="0,0,0,10">
+            <Grid>
+                <Label x:Name="Title"
+                       Foreground="White"
+                       Content="Refresh"
+                       FontFamily="/AimmyAimbot;component/Fonts/#Atkinson Hyperlegible"
+                       VerticalContentAlignment="Center"
+                       Padding="10,0,0,0"
+                       FontSize="13"
+                       Margin="0,0,47,0"/>
+                <Label Foreground="White"
+                       Content=""
+                       FontFamily="/AimmyAimbot;component/Fonts/#Font Awesome 6 Free Solid"
+                       VerticalContentAlignment="Center"
+                       Padding="10,0"
+                       FontSize="13"
+                       Margin="0"
+                       HorizontalAlignment="Right"
+                       HorizontalContentAlignment="Right" />
+                <Button x:Name="Reader"
+                        Height="Auto"
+                        Background="{x:Null}"
+                        BorderBrush="{x:Null}"
+                        Foreground="{x:Null}"></Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

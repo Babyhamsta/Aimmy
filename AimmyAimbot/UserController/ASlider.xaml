@@ -1,0 +1,53 @@
+﻿<UserControl x:Class="AimmyAimbot.UserController.ASlider"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:AimmyAimbot.UserController"
+             mc:Ignorable="d"
+             d:DesignHeight="90"
+             d:DesignWidth="532"
+             Height="90">
+    <Grid>
+        <Border Background="#FF191919"
+                BorderBrush="#FF1E1E1E"
+                BorderThickness="2"
+                CornerRadius="5"
+                Margin="0,0,0,10">
+            <Grid>
+                <Label x:Name="Title"
+                       Foreground="White"
+                       Content="Smoothness"
+                       FontFamily="/AimmyAimbot;component/Fonts/#Atkinson Hyperlegible"
+                       VerticalContentAlignment="Center"
+                       Padding="10,0"
+                       FontSize="13"
+                       Margin="0,0,264,0"
+                       VerticalAlignment="Top"
+                       Height="38"
+                       HorizontalAlignment="Left"
+                       Width="264" />
+                <Label x:Name="AdjustNotifier"
+                       Foreground="White"
+                       Content="2 Smoothness"
+                       FontFamily="/AimmyAimbot;component/Fonts/#Atkinson Hyperlegible"
+                       VerticalContentAlignment="Center"
+                       Padding="10,0"
+                       FontSize="13"
+                       VerticalAlignment="Top"
+                       Height="38"
+                       HorizontalAlignment="Right"
+                       Width="264"
+                       HorizontalContentAlignment="Right" />
+                <Slider x:Name="Slider"
+                        Margin="10,0,10,10"
+                        VerticalAlignment="Bottom"
+                        Foreground="White"
+                        IsSnapToTickEnabled="True"
+                        Value="2"
+                        TickFrequency="0.01" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
