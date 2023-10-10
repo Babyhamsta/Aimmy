@@ -40,7 +40,7 @@
                             Content="&#xE8BB;"
                             FontFamily="Segoe MDL2 Assets"
                             HorizontalAlignment="Right"
-                            Margin="9,0,0,0"
+                            Margin="10,0,0,0"
                             Foreground="White"
                             Height="Auto"
                             FontSize="10"
