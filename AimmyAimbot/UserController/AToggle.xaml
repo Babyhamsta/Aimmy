@@ -146,7 +146,8 @@
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Foreground="{x:Null}"
-                        materialDesign:RippleAssist.IsDisabled="True"></Button>
+                        materialDesign:RippleAssist.IsDisabled="True"
+                        Tag="false"></Button>
             </Grid>
         </Border>
     </Grid>

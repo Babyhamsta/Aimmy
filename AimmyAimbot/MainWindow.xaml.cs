@@ -1,30 +1,25 @@
 ﻿using AimmyAimbot.Class;
 using AimmyAimbot.UserController;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace AimmyAimbot
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        BrushConverter brushcolor = new BrushConverter();
+        private readonly BrushConverter brushcolor = new BrushConverter();
 
-        #region Window Position Values
+        private enum MenuPosition
+        {
+            AimMenu,
+            TriggerMenu,
+            SelectorMenu,
+            SettingsMenu
+        }
+
         Thickness WinTooLeft = new Thickness(-1680, 0, 1680, 0);
         Thickness WinVeryLeft = new Thickness(-1120, 0, 1120, 0);
         Thickness WinLeft = new Thickness(-560, 0, 560, 0);
@@ -34,26 +29,6 @@ namespace AimmyAimbot
         Thickness WinRight = new Thickness(560, 0, -560, 0);
         Thickness WinVeryRight = new Thickness(1120, 0, -1120, 0);
         Thickness WinTooRight = new Thickness(1680, 0, -1680, 0);
-        #endregion
-
-        #region Window Controls
-
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
-
-        private void Minimize_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
-
-        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            DragMove();
-        }
-
-        #endregion
 
         public MainWindow()
         {
@@ -68,282 +43,206 @@ namespace AimmyAimbot
 
             #endregion
 
+            InitializeMenuPositions();
             LoadAimMenu();
             LoadTriggerMenu();
             LoadSettingsMenu();
         }
 
-        #region Menu Controls
+        #region Menu Initialization and Setup
 
-        // shit code ik
-
-        private async void Selection1_Click(object sender, RoutedEventArgs e)
+        private void InitializeMenuPositions()
         {
-            Selection1.Foreground = (Brush)brushcolor.ConvertFromString("#3e8fb0");
-            Selection2.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection3.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection4.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, new Thickness(10, 30, 414, 0));
-
-            EnableAllWindows();
-
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinCenter);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinRight);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinVeryRight);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinTooRight);
-
-            await Task.Delay(500);
-
-            AimMenu.Visibility = Visibility.Visible;
-            TriggerMenu.Visibility = Visibility.Collapsed;
-            SelectorMenu.Visibility = Visibility.Collapsed;
-            SettingsMenu.Visibility = Visibility.Collapsed;
+            AimMenu.Margin = new Thickness(0, 0, 0, 0);
+            TriggerMenu.Margin = new Thickness(560, 0, -560, 0);
+            SelectorMenu.Margin = new Thickness(560, 0, -560, 0);
+            SettingsMenu.Margin = new Thickness(1680, 0, -1680, 0);
         }
 
-        private async void Selection2_Click(object sender, RoutedEventArgs e)
+        private void SetupToggle(AToggle toggle, Action<bool> action, bool initialState)
         {
-            Selection1.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection2.Foreground = (Brush)brushcolor.ConvertFromString("#3e8fb0");
-            Selection3.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection4.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
+            toggle.Reader.Tag = initialState;
+            SetToggleState(toggle);
 
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, new Thickness(144, 30, 278, 0));
-
-            EnableAllWindows();
-
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinLeft);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinCenter);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinRight);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinVeryRight);
-
-            await Task.Delay(500);
-
-            AimMenu.Visibility = Visibility.Collapsed;
-            TriggerMenu.Visibility = Visibility.Visible;
-            SelectorMenu.Visibility = Visibility.Collapsed;
-            SettingsMenu.Visibility = Visibility.Collapsed;
+            toggle.Reader.Click += (s, x) =>
+            {
+                bool currentState = (bool)toggle.Reader.Tag;
+                toggle.Reader.Tag = !currentState;
+                SetToggleState(toggle);
+                action.Invoke(!currentState);
+            };
         }
 
-        private async void Selection3_Click(object sender, RoutedEventArgs e)
+        private void SetToggleState(AToggle toggle)
         {
-            Selection1.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection2.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection3.Foreground = (Brush)brushcolor.ConvertFromString("#3e8fb0");
-            Selection4.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
+            bool state = (bool)toggle.Reader.Tag;
 
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, new Thickness(280, 30, 144, 0));
-
-            EnableAllWindows();
-
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinVeryLeft);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinLeft);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinCenter);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinRight);
-
-            await Task.Delay(500);
-
-            AimMenu.Visibility = Visibility.Collapsed;
-            TriggerMenu.Visibility = Visibility.Collapsed;
-            SelectorMenu.Visibility = Visibility.Visible;
-            SettingsMenu.Visibility = Visibility.Collapsed;
-        }
-
-        private async void Selection4_Click(object sender, RoutedEventArgs e)
-        {
-            Selection1.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection2.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection3.Foreground = (Brush)brushcolor.ConvertFromString("#ffffff");
-            Selection4.Foreground = (Brush)brushcolor.ConvertFromString("#3e8fb0");
-
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, new Thickness(414, 30, 10, 0));
-
-            EnableAllWindows();
-
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinTooLeft);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinVeryLeft);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinLeft);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinCenter);
-
-            await Task.Delay(500);
-
-            AimMenu.Visibility = Visibility.Collapsed;
-            TriggerMenu.Visibility = Visibility.Collapsed;
-            SelectorMenu.Visibility = Visibility.Collapsed;
-            SettingsMenu.Visibility = Visibility.Visible;
+            if (state)
+            {
+                toggle.EnableSwitch();
+            }
+            else
+            {
+                toggle.DisableSwitch();
+            }
         }
 
         #endregion
 
-        #region Aim Menu
+        #region Menu Controls
+
+        private async void Selection_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button clickedButton)
+            {
+                MenuPosition position = (MenuPosition)Enum.Parse(typeof(MenuPosition), clickedButton.Tag.ToString());
+                ResetMenuColors();
+                clickedButton.Foreground = (Brush)brushcolor.ConvertFromString("#3e8fb0");
+                ApplyMenuAnimations(position);
+                UpdateMenuVisibility(position);
+            }
+        }
+
+        private void ResetMenuColors()
+        {
+            Selection1.Foreground = Selection2.Foreground = Selection3.Foreground = Selection4.Foreground =
+                (Brush)brushcolor.ConvertFromString("#ffffff");
+        }
+
+        private void ApplyMenuAnimations(MenuPosition position)
+        {
+            Thickness highlighterMargin = new Thickness(0, 30, 414, 0);
+            switch (position)
+            {
+                case MenuPosition.AimMenu:
+                    highlighterMargin = new Thickness(10, 30, 414, 0);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, highlighterMargin);
+
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinCenter);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinRight);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinVeryRight);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinTooRight);
+                    break;
+
+                case MenuPosition.TriggerMenu:
+                    highlighterMargin = new Thickness(144, 30, 278, 0);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, highlighterMargin);
+
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinLeft);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinCenter);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinRight);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinVeryRight);
+                    break;
+
+                case MenuPosition.SelectorMenu:
+                    highlighterMargin = new Thickness(280, 30, 144, 0);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, highlighterMargin);
+
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinVeryLeft);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinLeft);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinCenter);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinRight);
+                    break;
+
+                case MenuPosition.SettingsMenu:
+                    highlighterMargin = new Thickness(414, 30, 10, 0);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), MenuHighlighter, MenuHighlighter.Margin, highlighterMargin);
+
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), AimMenu, AimMenu.Margin, WinTooLeft);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), TriggerMenu, TriggerMenu.Margin, WinVeryLeft);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SelectorMenu, SelectorMenu.Margin, WinLeft);
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(500), SettingsMenu, SettingsMenu.Margin, WinCenter);
+                    break;
+            }
+        }
+
+        private void UpdateMenuVisibility(MenuPosition position)
+        {
+            AimMenu.Visibility = (position == MenuPosition.AimMenu) ? Visibility.Visible : Visibility.Collapsed;
+            TriggerMenu.Visibility = (position == MenuPosition.TriggerMenu) ? Visibility.Visible : Visibility.Collapsed;
+            SelectorMenu.Visibility = (position == MenuPosition.SelectorMenu) ? Visibility.Visible : Visibility.Collapsed;
+            SettingsMenu.Visibility = (position == MenuPosition.SettingsMenu) ? Visibility.Visible : Visibility.Collapsed;
+        }
+        #endregion
+
+
         void LoadAimMenu()
         {
-            #region Enable AI Aim Aligner
-            AToggle Enable_AIAimAligner = new AToggle("Enable AI Aim Aligner"); // Title
-
-            // Set Defaults / Saved Settings here
-            Enable_AIAimAligner.DisableSwitch();
-
-            // END HERE
-
-            Enable_AIAimAligner.Reader.Click += (s, x) =>
-            {
-                // Insert Toggle Functionality Here
-                switch (Bools.AIAimAligner)
-                {
-                    case true:
-                        Bools.AIAimAligner = false;
-                        Enable_AIAimAligner.DisableSwitch();
-                        break;
-                    case false:
-                        Bools.AIAimAligner = true;
-                        Enable_AIAimAligner.EnableSwitch();
-                        break;
-                }
-            };
+            AToggle Enable_AIAimAligner = new AToggle("Enable AI Aim Aligner");
+            SetupToggle(Enable_AIAimAligner, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Enable_AIAimAligner);
-            #endregion
 
-            #region Enable Third Person Aim
-            AToggle ThirdPersonAim = new AToggle("Enable Third Person Aim"); // Title
-
-            // Set Defaults / Saved Settings here
-            ThirdPersonAim.DisableSwitch();
-
-            // END HERE
-
-            ThirdPersonAim.Reader.Click += (s, x) =>
-            {
-                switch (Bools.ThirdPersonAim)
-                {
-                    // Insert Toggle Functionality Here
-                    case true:
-                        Bools.ThirdPersonAim = false;
-                        ThirdPersonAim.DisableSwitch();
-                        break;
-                    case false:
-                        Bools.ThirdPersonAim = true;
-                        ThirdPersonAim.EnableSwitch();
-                        break;
-                }
-            };
+            AToggle ThirdPersonAim = new AToggle("Enable Third Person Aim");
+            SetupToggle(ThirdPersonAim, state => Bools.ThirdPersonAim = state, Bools.ThirdPersonAim);
             AimScroller.Children.Add(ThirdPersonAim);
-            #endregion
 
-            #region Change KeyPress
-            AKeyChanger Change_KeyPress = new AKeyChanger("Change KeyPress", "Right Click");  // Title
-
+            AKeyChanger Change_KeyPress = new AKeyChanger("Change KeyPress", "Right Click");
             Change_KeyPress.Reader.Click += (s, x) =>
             {
                 // Insert Button Functionality Here
             };
             AimScroller.Children.Add(Change_KeyPress);
-            #endregion
 
-            #region Pixel Increase (Sensitivity)
-            ASlider PixelSensitivity = new ASlider("Pixel Sensitivty", "Sensitivty"); // Title
+            ASlider PixelSensitivity = new ASlider("Pixel Sensitivty", "Sensitivty");
 
-            // Set Defaults / Saved Settings here
             PixelSensitivity.Slider.Minimum = 1;
             PixelSensitivity.Slider.Maximum = 10;
             PixelSensitivity.Slider.Value = 2;
             PixelSensitivity.Slider.TickFrequency = 0.01;
-
-            // END HERE
-
             PixelSensitivity.Slider.ValueChanged += (s, x) =>
             {
                 // Insert Slider Functionality Here
             };
 
             AimScroller.Children.Add(PixelSensitivity);
-            #endregion
 
-            #region In-Game X & Y Sensitivity
-            ASlider XYSensitivity = new ASlider("In-Game X & Y Sensitivity", "Sensitivity"); // Title
+            ASlider XYSensitivity = new ASlider("In-Game X & Y Sensitivity", "Sensitivity");
 
-            // Set Defaults / Saved Settings here
             XYSensitivity.Slider.Minimum = 1;
             XYSensitivity.Slider.Maximum = 1000;
             XYSensitivity.Slider.Value = 100;
             XYSensitivity.Slider.TickFrequency = 1;
-
-            // END HERE
-
             XYSensitivity.Slider.ValueChanged += (s, x) =>
             {
                 // Insert Slider Functionality Here
             };
 
             AimScroller.Children.Add(XYSensitivity);
-            #endregion
 
-            #region Head Offset (Y Axis)
-            ASlider HeadOffset = new ASlider("Head Offset (Y Axis)", "Sensitivity"); // Title
+            ASlider HeadOffset = new ASlider("Head Offset (Y Axis)", "Sensitivity");
 
-            // Set Defaults / Saved Settings here
             HeadOffset.Slider.Minimum = 1;
             HeadOffset.Slider.Maximum = 10;
             HeadOffset.Slider.Value = 4;
             HeadOffset.Slider.TickFrequency = 0.01;
-
             HeadOffset.Slider.ValueChanged += (s, x) =>
             {
                 // Insert Slider Functionality Here
             };
 
             AimScroller.Children.Add(HeadOffset);
-            #endregion
         }
-        #endregion
-        #region Trigger Menu
+
         void LoadTriggerMenu()
         {
-            #region Enable TriggerBot
-            AToggle Enable_TriggerBot = new AToggle("Enable TriggerBot"); // Title
-
-            // Set Defaults / Saved Settings here
-            Enable_TriggerBot.DisableSwitch();
-
-            // END HERE
-
-            Enable_TriggerBot.Reader.Click += (s, x) =>
-            {
-                // Insert Toggle Functionality Here
-                switch (Bools.Triggerbot)
-                {
-                    case true:
-                        Bools.Triggerbot = false;
-                        Enable_TriggerBot.DisableSwitch();
-                        break;
-                    case false:
-                        Bools.Triggerbot = true;
-                        Enable_TriggerBot.EnableSwitch();
-                        break;
-                }
-            };
+            AToggle Enable_TriggerBot = new AToggle("Enable TriggerBot");
+            SetupToggle(Enable_TriggerBot, state => Bools.Triggerbot = state, Bools.Triggerbot);
             TriggerScroller.Children.Add(Enable_TriggerBot);
-            #endregion
 
-            #region TriggerBot Delay
-            ASlider TriggerBot_Delay = new ASlider("TriggerBot Delay", "milliseconds"); // Title
+            ASlider TriggerBot_Delay = new ASlider("TriggerBot Delay", "milliseconds");
 
-            // Set Defaults / Saved Settings here
             TriggerBot_Delay.Slider.Minimum = 1;
             TriggerBot_Delay.Slider.Maximum = 1000;
             TriggerBot_Delay.Slider.Value = 100;
             TriggerBot_Delay.Slider.TickFrequency = 1;
-
             TriggerBot_Delay.Slider.ValueChanged += (s, x) =>
             {
                 // Insert Slider Functionality Here
             };
 
             TriggerScroller.Children.Add(TriggerBot_Delay);
-            #endregion
+
         }
-        #endregion
-        #region Selection Menu
 
         /*
          * The Selection Menu contains a ListBox for selecting the model,
@@ -361,72 +260,51 @@ namespace AimmyAimbot
 
         }
 
-        #endregion
-        #region Settings Menu
         void LoadSettingsMenu()
         {
-            #region Collect Data While Playing
-            AToggle CollectDataWhilePlaying = new AToggle("Collect Data While Playing"); // Title
-
-            // Set Defaults / Saved Settings here
-            CollectDataWhilePlaying.DisableSwitch();
-
-            // END HERE
-
-            CollectDataWhilePlaying.Reader.Click += (s, x) =>
-            {
-                // Insert Toggle Functionality Here
-                switch (Bools.CollectDataWhilePlaying)
-                {
-                    case true:
-                        Bools.CollectDataWhilePlaying = false;
-                        CollectDataWhilePlaying.DisableSwitch();
-                        break;
-                    case false:
-                        Bools.CollectDataWhilePlaying = true;
-                        CollectDataWhilePlaying.EnableSwitch();
-                        break;
-                }
-            };
+            AToggle CollectDataWhilePlaying = new AToggle("Collect Data While Playing");
+            SetupToggle(CollectDataWhilePlaying, state => Bools.CollectDataWhilePlaying = state, Bools.CollectDataWhilePlaying);
             SettingsScroller.Children.Add(CollectDataWhilePlaying);
-            #endregion
 
-            #region AI Minimum Confidence
-            ASlider AIMinimumConfidence = new ASlider("AI Minimum Confidence", "% Confidence"); // Title
+            ASlider AIMinimumConfidence = new ASlider("AI Minimum Confidence", "% Confidence");
 
-            // Set Defaults / Saved Settings here
             AIMinimumConfidence.Slider.Minimum = 1;
             AIMinimumConfidence.Slider.Maximum = 100;
             AIMinimumConfidence.Slider.Value = 80;
             AIMinimumConfidence.Slider.TickFrequency = 1;
-
-            // END HERE
-
             AIMinimumConfidence.Slider.ValueChanged += (s, x) =>
             {
                 // Insert Slider Functionality Here
             };
-            #endregion
 
-            #region Change KeyPress
-            AButton ClearSettings = new AButton("Clear Settings");  // Title
+            SettingsScroller.Children.Add(AIMinimumConfidence);
+
+            AButton ClearSettings = new AButton("Clear Settings");
 
             ClearSettings.Reader.Click += (s, x) =>
             {
                 // Insert Button Functionality Here
             };
+
             SettingsScroller.Children.Add(ClearSettings);
-            #endregion
+        }
+
+
+        #region Window Controls
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void Minimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DragMove();
         }
         #endregion
-
-        void EnableAllWindows()
-        {
-            AimMenu.Visibility = Visibility.Visible;
-            TriggerMenu.Visibility = Visibility.Visible;
-            SelectorMenu.Visibility = Visibility.Visible;
-            SettingsMenu.Visibility = Visibility.Visible;
-        }
-
     }
 }

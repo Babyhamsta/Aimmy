@@ -84,8 +84,8 @@
                                     Width="134"
                                     Margin="0"
                                     materialDesign:RippleAssist.IsDisabled="True"
-                                    Foreground="#FF3E8FB0"
-                                    Click="Selection1_Click" />
+                                    Foreground="#FF3E8FB0" Click="Selection_Click"
+                                    Tag="AimMenu"/>
                             <Button x:Name="Selection2"
                                     Background="{x:Null}"
                                     BorderBrush="{x:Null}"
@@ -98,7 +98,8 @@
                                     Margin="134,0,0,0"
                                     materialDesign:RippleAssist.IsDisabled="True"
                                     Foreground="White"
-                                    Click="Selection2_Click" />
+                                    Click="Selection_Click"
+                                    Tag="TriggerMenu"/>
                             <Button x:Name="Selection3"
                                     Background="{x:Null}"
                                     BorderBrush="{x:Null}"
@@ -111,7 +112,8 @@
                                     Margin="270,0,0,0"
                                     materialDesign:RippleAssist.IsDisabled="True"
                                     Foreground="White"
-                                    Click="Selection3_Click" />
+                                    Click="Selection_Click"
+                                    Tag="SelectorMenu"/>
                             <Button x:Name="Selection4"
                                     Background="{x:Null}"
                                     BorderBrush="{x:Null}"
@@ -124,7 +126,8 @@
                                     Margin="404,0,0,0"
                                     materialDesign:RippleAssist.IsDisabled="True"
                                     Foreground="White"
-                                    Click="Selection4_Click" />
+                                    Click="Selection_Click"
+                                    Tag="SettingsMenu"/>
                         </Grid>
                     </Border>
                 </Grid>
