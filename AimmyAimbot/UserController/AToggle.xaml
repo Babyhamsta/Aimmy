@@ -3,11 +3,80 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:AimmyAimbot.UserController"
              mc:Ignorable="d"
              d:DesignHeight="50"
              d:DesignWidth="532"
              Height="50">
+    <UserControl.Resources>
+        <Storyboard x:Key="EnableSwitch">
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border">
+                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF56949F">
+                    <EasingColorKeyFrame.EasingFunction>
+                        <QuinticEase EasingMode="EaseOut"/>
+                    </EasingColorKeyFrame.EasingFunction>
+                </EasingColorKeyFrame>
+            </ColorAnimationUsingKeyFrames>
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border">
+                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF9CCFD8">
+                    <EasingColorKeyFrame.EasingFunction>
+                        <QuinticEase EasingMode="EaseOut"/>
+                    </EasingColorKeyFrame.EasingFunction>
+                </EasingColorKeyFrame>
+            </ColorAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border">
+                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="180">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <QuinticEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Offset)" Storyboard.TargetName="border1">
+                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="0.004"/>
+            </DoubleAnimationUsingKeyFrames>
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border1">
+                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF56949F"/>
+            </ColorAnimationUsingKeyFrames>
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border1">
+                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF9CCFD8"/>
+            </ColorAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border1">
+                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="180"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Storyboard.TargetName="border1">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="10"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="DisableSwitch">
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border">
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFEB6F92"/>
+            </ColorAnimationUsingKeyFrames>
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border">
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFB4637A"/>
+            </ColorAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border">
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Offset)" Storyboard.TargetName="border1">
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border1">
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFEB6F92"/>
+            </ColorAnimationUsingKeyFrames>
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border1">
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFB4637A"/>
+            </ColorAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border1">
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Storyboard.TargetName="border1">
+                <SplineDoubleKeyFrame KeyTime="0:0:1" Value="0"/>
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="10"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
     <Grid>
         <Border Background="#FF191919"
                 BorderBrush="#FF1E1E1E"
@@ -23,7 +92,7 @@
                        Padding="10,0,0,0"
                        FontSize="13"
                        Margin="0,0,47,0" />
-                <Border HorizontalAlignment="Right"
+                <Border x:Name="border1" HorizontalAlignment="Right"
                         Margin="10"
                         CornerRadius="5"
                         Width="16">
@@ -33,6 +102,14 @@
                     <Border.Background>
                         <LinearGradientBrush EndPoint="0.5,1"
                                              StartPoint="0.5,0">
+                            <LinearGradientBrush.RelativeTransform>
+                                <TransformGroup>
+                                    <ScaleTransform CenterY="0.5" CenterX="0.5"/>
+                                    <SkewTransform CenterY="0.5" CenterX="0.5"/>
+                                    <RotateTransform CenterY="0.5" CenterX="0.5"/>
+                                    <TranslateTransform/>
+                                </TransformGroup>
+                            </LinearGradientBrush.RelativeTransform>
                             <GradientStop x:Name="G1"
                                           Color="#FFEB6F92" />
                             <GradientStop x:Name="G2"
@@ -41,13 +118,21 @@
                         </LinearGradientBrush>
                     </Border.Background>
                 </Border>
-                <Border HorizontalAlignment="Right"
+                <Border x:Name="border" HorizontalAlignment="Right"
                         Margin="10"
                         CornerRadius="5"
                         Width="16">
                     <Border.Background>
                         <LinearGradientBrush EndPoint="0.5,1"
                                              StartPoint="0.5,0">
+                            <LinearGradientBrush.RelativeTransform>
+                                <TransformGroup>
+                                    <ScaleTransform CenterY="0.5" CenterX="0.5"/>
+                                    <SkewTransform CenterY="0.5" CenterX="0.5"/>
+                                    <RotateTransform CenterY="0.5" CenterX="0.5"/>
+                                    <TranslateTransform/>
+                                </TransformGroup>
+                            </LinearGradientBrush.RelativeTransform>
                             <GradientStop x:Name="GG1"
                                           Color="#FFEB6F92" />
                             <GradientStop x:Name="GG2"
@@ -60,7 +145,8 @@
                         Height="Auto"
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
-                        Foreground="{x:Null}"></Button>
+                        Foreground="{x:Null}"
+                        materialDesign:RippleAssist.IsDisabled="True"></Button>
             </Grid>
         </Border>
     </Grid>

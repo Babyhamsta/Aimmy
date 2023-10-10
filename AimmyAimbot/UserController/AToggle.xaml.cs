@@ -10,6 +10,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -27,21 +28,17 @@ namespace AimmyAimbot.UserController
             Title.Content = Text;
         }
 
+        // Reference: https://stackoverflow.com/questions/34815532/start-storyboard-from-c-sharp-code
+
         public void EnableSwitch()
         {
-            G1.Color = Color.FromRgb(156, 207, 216);
-            G2.Color = Color.FromRgb(86, 148, 159);
-
-            GG1.Color = Color.FromRgb(156, 207, 216);
-            GG2.Color = Color.FromRgb(86, 148, 159);
+            Storyboard Animation = (Storyboard)TryFindResource("EnableSwitch");
+            Animation.Begin();
         }
         public void DisableSwitch()
         {
-            G1.Color = Color.FromRgb(235, 111, 146);
-            G2.Color = Color.FromRgb(180, 99, 122);
-
-            GG1.Color = Color.FromRgb(235, 111, 146);
-            GG2.Color = Color.FromRgb(180, 99, 122);
+            Storyboard Animation = (Storyboard)TryFindResource("DisableSwitch");
+            Animation.Begin();
         }
     }
 }
