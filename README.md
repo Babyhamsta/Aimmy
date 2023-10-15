@@ -4,7 +4,6 @@
       <img width="100%" src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/AimmyBanner.png"></a>
   </p>
 
-# Aimmy
 Aimmy is a multi-functional AI-based Aim Aligner that was developed by BabyHamsta & Nori for the purposes of making gaming more accessible for a wider audience.
 
 Aimmy differentiates itself from similar tools by being incredibly performant, especially on both NVIDIA and AMD GPUs, extremely customizable, and 100% open source.
