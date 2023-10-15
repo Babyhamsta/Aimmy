@@ -9,17 +9,7 @@ Aimmy is a multi-functional AI-based Aim Aligner that was developed by BabyHamst
 Aimmy differentiates itself from similar tools by being incredibly performant, especially on both NVIDIA and AMD GPUs, extremely customizable, and 100% open source.
 
 ## Table of Contents
-[What is the purpose of Aimmy?](#what-is-the-purpose-of-aimmy)  
-
-[How does Aimmy Work?](#how-does-aimmy-work)
-
-[Setup](#how-does-aimmy-work) 
-
-[Features](#features) 
-
-[Setup](#setup) 
-
-[How is Aimmy better than similar AI-Based tools?](#how-is-aimmy-better-than-similar-ai-based-tools) 
+[What is the purpose of Aimmy?](#what-is-the-purpose-of-aimmy) | [How does Aimmy Work?](#how-does-aimmy-work) | [Setup](#how-does-aimmy-work) | [Features](#features) | [Setup](#setup) | [How is Aimmy better than similar AI-Based tools?](#how-is-aimmy-better-than-similar-ai-based-tools) 
 
 
 
