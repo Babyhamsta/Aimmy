@@ -1,3 +1,8 @@
+<div align="center">
+  <p>
+    <a href="https://google.com/" target="_blank">
+      <img width="100%" src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/AimmyBanner.png"></a>
+  </p>
 
 # Aimmy
 Aimmy is a multi-functional AI-based Aim Aligner that was developed by BabyHamsta & Nori for the purposes of making gaming more accessible for a wider audience.
@@ -32,3 +37,4 @@ We also provide better performance across the board compared to other AI Aim Ali
 
 Aimmy comes pre-bundled with a well-designed user interface that is beautiful, and accessible. With many features to customize your personal user experience.
 
+</div>
