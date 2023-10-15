@@ -8,6 +8,10 @@ Aimmy is a multi-functional AI-based Aim Aligner that was developed by BabyHamst
 
 Aimmy differentiates itself from similar tools by being incredibly performant, especially on both NVIDIA and AMD GPUs, extremely customizable, and 100% open source.
 
+## Table of Contents
+[Headers](#What-is-the-purpose-of-Aimmy?)  
+[Emphasis](#emphasis) 
+
 ## What is the purpose of Aimmy?
 ### Aimmy was designed for Gamers who are at a severe disadvantage over normal gamers.
 ### This includes but is not limited to:
@@ -25,9 +29,15 @@ The gamer is now left to perform any actions they believe is necessary.
 
 Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-Trigger. Auto-Trigger relieves the need to repeatedly tap the HID to shoot at a player. This is especially useful for physically challenged users who may have trouble with this action.
 
-## Features
-
 ## Setup
+
+- Download and Install the x64 version of [.NET Runtime 7.0.X.X](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
+- Download Aimmy from Releases
+- Extract the Aimmy.zip file
+- Run Aimmy.exe
+- Choose your Model and Enjoy :)
+
+## Features
 
 ## How is Aimmy better than similar AI-Based tools?
 Our program comes default with 2 game-specific AI models and 1 universal AI model. We also let users make their own models, share them, and switch between them painlessly. This makes Aimmy very versatile and universal for thousands of games.
