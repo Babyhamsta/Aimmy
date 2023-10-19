@@ -7,6 +7,6 @@ This is not an environment we would like to promote. Though because of this, we 
 
 We do not permit versions of Aimmy to be distributed commercially unless value is added into the modified distribution. 
 
-[LICENSE](#https://github.com/MarsQQ/Aimmy/blob/master/LICENSE)
+[LICENSE](https://github.com/MarsQQ/Aimmy/blob/master/LICENSE)
 
 Thank you.
