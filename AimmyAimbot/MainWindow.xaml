@@ -14,7 +14,8 @@
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         AllowsTransparency="True"
-        Background="{x:Null}">
+        Background="Transparent"
+        Closing="Window_Closing">
     <Grid>
         <Border Background="#FF0F0F0F"
                 CornerRadius="5,5,5,5"
@@ -164,29 +165,15 @@
                                 BorderBrush="#FF1E1E1E"
                                 BorderThickness="2"
                                 CornerRadius="5"
-                                Margin="0,0,44,0"
+                                Margin="0,0,0,0"
                                 VerticalAlignment="Bottom"
                                 Height="39">
                             <Label x:Name="SelectedModelNotifier"
                                    Foreground="#DDFFFFFF"
-                                   Content="Selected Model: best.onnx"
+                                   Content="Loaded Model: N/A"
                                    FontFamily="Atkinson Hyperlegible"
                                    Padding="10"></Label>
                         </Border>
-                        <Button x:Name="OpenModelFolder"
-                                Background="#FFEB6F92"
-                                Width="39"
-                                Height="39"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Bottom"
-                                BorderThickness="0"
-                                Padding="0"
-                                materialDesign:ButtonAssist.CornerRadius="5"
-                                FontFamily="/AimmyAimbot;component/Fonts/#Font Awesome 6 Free Solid"
-                                Content=""
-                                Click="OpenModelFolder_Click">
-
-                        </Button>
                     </Grid>
                     <ScrollViewer x:Name="SettingsMenu"
                                   VerticalScrollBarVisibility="Hidden"
