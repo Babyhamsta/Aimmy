@@ -60,6 +60,7 @@ You may wonder, "Why is it in YOLOv5 and not YOLOv8?". This is due to us using t
 
 You can visit MakeSense here: https://www.makesense.ai
 You then can simply load all of your images in and select Object Detection.
+
 ![image](https://github.com/MarsQQ/Aimmy/assets/22938086/35046774-b70b-4264-8c26-eba5fe0b6b9e)
 
 
