@@ -22,6 +22,7 @@ Aimmy differentiates itself from similar tools by being incredibly performant, e
 - Gamers who do not have access to a seperate Human-Interface Device (HID) for controlling the pointer
 - Gamers trying to improve their reaction time
 - Gamers with poor Hand/Eye coordination
+- Gamers who perform low in FPS games
 
 ## How does Aimmy Work?
 Aimmy works by using AI Image Recognition to detect opponents, pointing the player towards the direction of an opponent accordingly. 
@@ -31,6 +32,12 @@ The gamer is now left to perform any actions they believe is necessary.
 Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-Trigger. Auto-Trigger relieves the need to repeatedly tap the HID to shoot at a player. This is especially useful for physically challenged users who may have trouble with this action.
 
 ## Features
+- AI Aim Aligning
+- Aim Keybind Switching
+- Adjustable FOV, Mouse Sensitivity, X Axis, Y Axis, and Model Confidence
+- Auto Trigger and Trigger Delay
+- Hot Model Swapping (No need to reload application)
+- Image capture while playing (For labeling to further AI training)
 
 ## Setup
 
@@ -41,7 +48,8 @@ Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-T
 - Choose your Model and Enjoy :)
 
 ## How is Aimmy better than similar AI-Based tools?
-Our program comes default with 2 game-specific AI models and 1 universal AI model. We also let users make their own models, share them, and switch between them painlessly. This makes Aimmy very versatile and universal for thousands of games.
+Our program comes default with 2 AI models, 1 game specific (Phantom Forces) and 1 universal model. We also let users make their own models, share them, and switch between them painlessly. This makes Aimmy very versatile and universal for thousands of games.
+![Example of Model switching](https://external-content.duckduckgo.com/iu/?u=https://i.imgur.com/4GYUhyp.gif)
 
 We also provide better performance across the board compared to other AI Aim Aligners. Detecting opponents in milliseconds across the board on most CPUs & GPUs.
 
