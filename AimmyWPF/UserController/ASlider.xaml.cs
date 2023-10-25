@@ -1,4 +1,4 @@
-﻿using AimmyAimbot.Class;
+﻿using AimmyWPF.Class;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,14 +14,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace AimmyAimbot.UserController
+namespace AimmyWPF.UserController
 {
     /// <summary>
     /// Interaction logic for ASlider.xaml
     /// </summary>
     public partial class ASlider : UserControl
     {
-        public ASlider(string Text, string NotifierText)
+        public ASlider(string Text, string NotifierText, double ButtonSteps)
         {
             InitializeComponent();
             Title.Content = Text;
@@ -30,17 +30,14 @@ namespace AimmyAimbot.UserController
             {
                 if (AdjustNotifier != null)
                     AdjustNotifier.Content = $"{Slider.Value.ToString()} {NotifierText}";
+
+                // Added by Nori
+                Slider.Value = Math.Round(Slider.Value, 2);
             };
-        }
 
-        private void AddOne_Click(object sender, RoutedEventArgs e)
-        {
-            Slider.Value = Slider.Value + 1;
-        }
-
-        private void SubtractOne_Click(object sender, RoutedEventArgs e)
-        {
-            Slider.Value = Slider.Value - 1;
+            // Added by Nori
+            SubtractOne.Click += (s, e) => Slider.Value = Slider.Value - ButtonSteps;
+            AddOne.Click += (s, e) => Slider.Value = Slider.Value + ButtonSteps;
         }
     }
 }

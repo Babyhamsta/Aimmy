@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 
-namespace AimmyAimbot.Class
+namespace AimmyWPF.Class
 {
     public static class Animator
     {

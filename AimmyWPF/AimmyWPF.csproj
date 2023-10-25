@@ -9,8 +9,8 @@
     <Company>$(Authors)</Company>
     <Authors>Babyhamsta</Authors>
     <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>C:\Users\Admin\source\repos\AimmyWPF\StrongNameSign.snk</AssemblyOriginatorKeyFile>
     <NeutralLanguage>en</NeutralLanguage>
+    <ApplicationIcon>AimmyProgramLogo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,6 +30,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebugType>none</DebugType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="AimmyProgramLogo.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Costura.Fody" Version="5.7.0">

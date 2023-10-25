@@ -1,0 +1,38 @@
+﻿<Window x:Class="SecondaryWindows.NoticeBar"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SecondaryWindows"
+        mc:Ignorable="d"
+        Title="NoticeBar" 
+        Height="450" 
+        Width="800" 
+        AllowsTransparency="True"
+        WindowStyle="None"
+        ShowInTaskbar="False"
+        Background="{x:Null}"
+        Foreground="{x:Null}"
+        WindowState="Maximized"
+        Loaded="Window_Loaded"
+        Topmost="True">
+    <Grid>
+        <Border x:Name="Notice"
+                Width="350"
+                Height="40"
+                Background="#FF0F0F0F"
+                CornerRadius="5,5,5,5"
+                BorderBrush="#FF1E1E1E"
+                BorderThickness="2"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,100">
+            <Label Content="This feature has not been implemented yet."
+                   Foreground="#DDFFFFFF"
+                   VerticalContentAlignment="Center"
+                   HorizontalContentAlignment="Center"
+                   FontSize="14" />
+        </Border>
+
+    </Grid>
+</Window>

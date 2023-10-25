@@ -1,0 +1,107 @@
+﻿<UserControl x:Class="AimmyWPF.UserController.AInfoSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:AimmyWPF.UserController"
+             mc:Ignorable="d"
+             Height="140"
+             d:DesignWidth="532">
+    <Grid>
+        <Border CornerRadius="5"
+                Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0,1"
+                                     StartPoint="0,0">
+                    <GradientStop Color="#FF286983"
+                                  Offset="0.01" />
+                    <GradientStop Color="#FF56949F"
+                                  Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid>
+                <Label Foreground="White"
+                       Content="&#xE946;"
+                       FontFamily="Segoe MDL2 Assets"
+                       VerticalContentAlignment="Center"
+                       Padding="0,0,0,0"
+                       FontSize="13"
+                       Margin="15,28,0,0"
+                       HorizontalAlignment="Left"
+                       HorizontalContentAlignment="Right"
+                       VerticalAlignment="Top" />
+                <Label x:Name="Notice"
+                       Foreground="White"
+                       Content="Aimmy is, and will never be for sale."
+                       FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
+                       VerticalContentAlignment="Center"
+                       Padding="5,0,0,0"
+                       Margin="28,28,0,0"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       RenderTransformOrigin="0.602,0.353"
+                       FontSize="10" />
+                <Path x:Name="CometLogo"
+                      Fill="White"
+                      StrokeThickness="1.33333"
+                      Stretch="Fill"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Center"
+                      Width="76"
+                      Height="38"
+                      Margin="15,0,0,0">
+                    <Path.Data>
+                        <PathGeometry Figures="M 18.2472,490.72756 0.18686636,472.66723 153.0173,318.84293 305.84774,165.01862 l 17.74245,17.70593 17.74244,17.70592 17.0189,-16.98112 c 9.36039,-9.33961 17.60957,-16.98112 18.33151,-16.98112 0.72194,0 69.86022,68.54563 153.64061,152.32363 l 152.32798,152.32362 -18.32581,18.45368 -18.3258,18.45368 -152.3021,-153.11064 -152.3021,-153.11063 -20.36457,20.6423 C 309.83073,233.79713 241.18587,302.86906 168.4871,375.93703 L 36.307534,508.7879 Z"
+                                      FillRule="NonZero" />
+                    </Path.Data>
+                </Path>
+                <Label x:Name="Description"
+                       Foreground="White"
+                       Content="Aimmy - Universal Second Eye"
+                       FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
+                       VerticalContentAlignment="Center"
+                       Padding="0,0,0,0"
+                       Margin="15,0,0,26"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom"
+                       RenderTransformOrigin="0.602,0.353" />
+                <Label x:Name="Credit"
+                       Foreground="White"
+                       Content="By BabyHamsta &amp; Nori"
+                       FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
+                       VerticalContentAlignment="Center"
+                       Padding="0,0,0,0"
+                       FontSize="8"
+                       Margin="16,0,0,19"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom"
+                       RenderTransformOrigin="0.602,0.353" />
+                <Button x:Name="CheckForUpdates"
+                        VerticalAlignment="Top"
+                        Margin="395,65,15,0"
+                        Background="#3FFFFFFF"
+                        BorderBrush="{x:Null}"
+                        Padding="0,0,0,0"
+                        BorderThickness="0,0,0,0"
+                        Content="Check for Update"
+                        FontWeight="Normal"
+                        FontSize="12"
+                        Height="27"
+                        materialDesign:ButtonAssist.CornerRadius="5" />
+                <Label x:Name="VersionNumber"
+                       Foreground="White"
+                       Content="1.0.0"
+                       VerticalContentAlignment="Center"
+                       Padding="5,0,0,0"
+                       FontSize="20"
+                       Margin="0,38,15,0"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Top"
+                       RenderTransformOrigin="0.602,0.353"
+                       HorizontalContentAlignment="Right"
+                       FontFamily="Segoe UI Semibold" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

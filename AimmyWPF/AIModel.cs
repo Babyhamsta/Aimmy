@@ -13,7 +13,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace AimmyAimbot
+namespace AimmyWPF
 {
     public class AIModel
     {

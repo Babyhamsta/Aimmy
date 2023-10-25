@@ -1,4 +1,5 @@
 ﻿using AimmyWPF.Class;
+using SecondaryWindows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,14 +18,17 @@ using System.Windows.Shapes;
 namespace AimmyWPF.UserController
 {
     /// <summary>
-    /// Interaction logic for ALabel.xaml
+    /// Interaction logic for AInfoSection.xaml
     /// </summary>
-    public partial class ALabel : UserControl
+    public partial class AInfoSection : UserControl
     {
-        public ALabel(string Text)
+        public AInfoSection()
         {
             InitializeComponent();
-            Title.Content = Text;
+            //Title.Content = Text;
+            CheckForUpdates.Click += (s, e) => {
+                new NoticeBar().Show();
+            };
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using AimmyAimbot.Class;
-using AimmyAimbot.UserController;
+﻿using AimmyWPF.Class;
+using AimmyWPF.UserController;
 using AimmyWPF;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace AimmyAimbot
+namespace AimmyWPF
 {
     public partial class MainWindow : Window
     {
@@ -411,7 +411,7 @@ namespace AimmyAimbot
             SetupToggle(Show_FOV, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Show_FOV);
 
-            ASlider FovSlider = new ASlider("FOV Size", "Size of FOV");
+            ASlider FovSlider = new ASlider("FOV Size", "Size of FOV", 1);
 
             FovSlider.Slider.Minimum = 10;
             FovSlider.Slider.Maximum = 640;
@@ -432,7 +432,7 @@ namespace AimmyAimbot
 
             AimScroller.Children.Add(FovSlider);
 
-            ASlider MouseSensitivty = new ASlider("Mouse Sensitivty", "Sensitivty");
+            ASlider MouseSensitivty = new ASlider("Mouse Sensitivty", "Sensitivty", 0.01);
 
             MouseSensitivty.Slider.Minimum = 0.01;
             MouseSensitivty.Slider.Maximum = 1;
@@ -445,10 +445,10 @@ namespace AimmyAimbot
 
             AimScroller.Children.Add(MouseSensitivty);
 
-            ASlider YOffset = new ASlider("Y Offset (Down/Up)", "Offset");
+            ASlider YOffset = new ASlider("Y Offset (Down/Up)", "Offset", 1);
 
             YOffset.Slider.Minimum = -50;
-            YOffset.Slider.Maximum = 50;
+            YOffset.Slider.Maximum = 250;
             YOffset.Slider.Value = aimmySettings["Y_Offset"];
             YOffset.Slider.TickFrequency = 1;
             YOffset.Slider.ValueChanged += (s, x) =>
@@ -458,7 +458,7 @@ namespace AimmyAimbot
 
             AimScroller.Children.Add(YOffset);
 
-            ASlider XOffset = new ASlider("X Offset (Left/Right)", "Offset");
+            ASlider XOffset = new ASlider("X Offset (Left/Right)", "Offset", 1);
 
             XOffset.Slider.Minimum = -50;
             XOffset.Slider.Maximum = 50;
@@ -479,7 +479,7 @@ namespace AimmyAimbot
             SetupToggle(Enable_TriggerBot, state => Bools.Triggerbot = state, Bools.Triggerbot);
             TriggerScroller.Children.Add(Enable_TriggerBot);
 
-            ASlider TriggerBot_Delay = new ASlider("Auto Trigger Delay", "Seconds");
+            ASlider TriggerBot_Delay = new ASlider("Auto Trigger Delay", "Seconds", 0.1);
 
             TriggerBot_Delay.Slider.Minimum = 0.01;
             TriggerBot_Delay.Slider.Maximum = 1;
@@ -571,12 +571,14 @@ namespace AimmyAimbot
 
         void LoadSettingsMenu()
         {
+            SettingsScroller.Children.Add(new AInfoSection());
+
             AToggle CollectDataWhilePlaying = new AToggle("Collect Data While Playing");
             CollectDataWhilePlaying.Reader.Name = "CollectData";
             SetupToggle(CollectDataWhilePlaying, state => Bools.CollectDataWhilePlaying = state, Bools.CollectDataWhilePlaying);
             SettingsScroller.Children.Add(CollectDataWhilePlaying);
 
-            ASlider AIMinimumConfidence = new ASlider("AI Minimum Confidence", "% Confidence");
+            ASlider AIMinimumConfidence = new ASlider("AI Minimum Confidence", "% Confidence", 1);
 
             AIMinimumConfidence.Slider.Minimum = 1;
             AIMinimumConfidence.Slider.Maximum = 100;
