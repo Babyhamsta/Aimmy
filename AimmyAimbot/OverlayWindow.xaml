@@ -1,9 +1,0 @@
-﻿<Window x:Class="AimmyWPF.OverlayWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        Topmost="True">
-    <Canvas Name="OverlayCanvas">
-        <Ellipse x:Name="OverlayRectangle" Stroke="Red" StrokeThickness="1" />
-    </Canvas>
-</Window>
