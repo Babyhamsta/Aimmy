@@ -83,7 +83,6 @@
                                     FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                                     HorizontalAlignment="Left"
                                     Width="134"
-                                    Margin="0"
                                     materialDesign:RippleAssist.IsDisabled="True"
                                     Foreground="#FF3E8FB0" Click="Selection_Click"
                                     Tag="AimMenu"/>
