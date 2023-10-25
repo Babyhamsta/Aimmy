@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AimmyWPF": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
