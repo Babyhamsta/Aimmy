@@ -22,10 +22,18 @@ namespace AimmyWPF.UserController
     /// </summary>
     public partial class AToggle : UserControl
     {
-        public AToggle(string Text)
+        static MainWindow MainWin = new MainWindow();
+
+        public AToggle(MainWindow MW, string Text, string Info)
         {
             InitializeComponent();
             Title.Content = Text;
+
+            MainWin = MW;
+
+            QuestionButton.Click += (s, e) => {
+                MainWin.ActivateMoreInfo(Info);
+            };
         }
 
         // Reference: https://stackoverflow.com/questions/34815532/start-storyboard-from-c-sharp-code

@@ -84,8 +84,9 @@
                                     HorizontalAlignment="Left"
                                     Width="134"
                                     materialDesign:RippleAssist.IsDisabled="True"
-                                    Foreground="#FF3E8FB0" Click="Selection_Click"
-                                    Tag="AimMenu"/>
+                                    Foreground="#FF3E8FB0"
+                                    Click="Selection_Click"
+                                    Tag="AimMenu" />
                             <Button x:Name="Selection2"
                                     Background="{x:Null}"
                                     BorderBrush="{x:Null}"
@@ -99,7 +100,7 @@
                                     materialDesign:RippleAssist.IsDisabled="True"
                                     Foreground="White"
                                     Click="Selection_Click"
-                                    Tag="TriggerMenu"/>
+                                    Tag="TriggerMenu" />
                             <Button x:Name="Selection3"
                                     Background="{x:Null}"
                                     BorderBrush="{x:Null}"
@@ -113,7 +114,7 @@
                                     materialDesign:RippleAssist.IsDisabled="True"
                                     Foreground="White"
                                     Click="Selection_Click"
-                                    Tag="SelectorMenu"/>
+                                    Tag="SelectorMenu" />
                             <Button x:Name="Selection4"
                                     Background="{x:Null}"
                                     BorderBrush="{x:Null}"
@@ -127,7 +128,7 @@
                                     materialDesign:RippleAssist.IsDisabled="True"
                                     Foreground="White"
                                     Click="Selection_Click"
-                                    Tag="SettingsMenu"/>
+                                    Tag="SettingsMenu" />
                         </Grid>
                     </Border>
                 </Grid>
@@ -181,6 +182,51 @@
                         <StackPanel x:Name="SettingsScroller" />
                     </ScrollViewer>
                 </Grid>
+                <Border x:Name="MoreInfoBox"
+                        VerticalAlignment="Bottom"
+                        Height="180"
+                        Margin="5,0,5,-180"
+                        Background="#FF191919"
+                        BorderBrush="#FF1E1E1E"
+                        BorderThickness="2"
+                        CornerRadius="5"
+                        Visibility="Collapsed">
+                    <Grid>
+                        <Label HorizontalAlignment="Left"
+                               Width="93"
+                               Foreground="White"
+                               Content="More Info"
+                               FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
+                               VerticalContentAlignment="Center"
+                               Padding="15,10,15,10"
+                               FontSize="13"
+                               VerticalAlignment="Top"
+                               Height="40" />
+                        <Button x:Name="MoreInfoExit"
+                                Background="{x:Null}"
+                                BorderBrush="{x:Null}"
+                                Padding="10,0"
+                                BorderThickness="0,0,0,0"
+                                Content="&#xE8BB;"
+                                FontFamily="Segoe MDL2 Assets"
+                                HorizontalAlignment="Right"
+                                Margin="0,4,0,0"
+                                Foreground="White"
+                                Height="32"
+                                FontSize="10"
+                                Click="MoreInfoExit_Click"
+                                VerticalAlignment="Top"
+                                Width="30" />
+                        <ScrollViewer Margin="15,40,15,15">
+                            <TextBlock x:Name="InfoText"
+                                       Foreground="White"
+                                       FontFamily="Atkinson Hyperlegible"
+                                       Text="Hello"
+                                       FontSize="14"
+                                       TextWrapping="Wrap"></TextBlock>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
             </Grid>
         </Border>
     </Grid>

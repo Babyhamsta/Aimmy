@@ -38,8 +38,23 @@
                        VerticalAlignment="Top"
                        Height="38"
                        HorizontalAlignment="Right"
-                       Width="264"
-                       HorizontalContentAlignment="Right" />
+                       Width="236"
+                       HorizontalContentAlignment="Right"
+                       Margin="0,0,28,0" />
+                <Button x:Name="QuestionButton"
+                        Content="&#xE897;"
+                        HorizontalAlignment="Right"
+                        Height="20"
+                        Margin="0,10,10,0"
+                        VerticalAlignment="Top"
+                        Width="20"
+                        Padding="0,0,0,0"
+                        FontFamily="Segoe MDL2 Assets"
+                        BorderThickness="0,0,0,0"
+                        BorderBrush="{x:Null}"
+                        Background="#FF323232"
+                        FontSize="10"
+                        materialDesign:ButtonAssist.CornerRadius="5" />
                 <Button x:Name="SubtractOne"
                         Content="&#xE949;"
                         HorizontalAlignment="Left"
@@ -65,7 +80,7 @@
                         Content="&#xE948;"
                         HorizontalAlignment="Right"
                         Height="20"
-                        Margin="498,0,10,10"
+                        Margin="0,0,10,10"
                         VerticalAlignment="Bottom"
                         Width="20"
                         Padding="0,0,0,0"
@@ -73,8 +88,8 @@
                         BorderThickness="0,0,0,0"
                         BorderBrush="{x:Null}"
                         Background="#FFEB6F92"
-                        FontSize="10" 
-                        materialDesign:ButtonAssist.CornerRadius="5"/>
+                        FontSize="10"
+                        materialDesign:ButtonAssist.CornerRadius="5" />
             </Grid>
         </Border>
     </Grid>

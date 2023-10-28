@@ -51,7 +51,7 @@ namespace AimmyWPF
         private Dictionary<string, double> aimmySettings = new Dictionary<string, double>
         {
             { "FOV_Size", 640 },
-            { "Mouse_Sens", 0.4 },
+            { "Mouse_Sens", 0.08 },
             { "Y_Offset", 50 },
             { "X_Offset", 0 },
             { "Trigger_Delay", 0.1 },
@@ -379,10 +379,41 @@ namespace AimmyWPF
         }
         #endregion
 
+        #region More Info Function
+        public void ActivateMoreInfo(string info)
+        {
+            MoreInfoBox.Visibility = Visibility.Visible;
+
+            AimMenu.IsEnabled = false;
+            TriggerMenu.IsEnabled = false;
+            SelectorMenu.IsEnabled = false;
+            SettingsMenu.IsEnabled = false;
+
+            Animator.ObjectShift(TimeSpan.FromMilliseconds(1000), MoreInfoBox, MoreInfoBox.Margin, new Thickness(5, 0, 5, 5));
+
+            InfoText.Text = info;
+        }
+
+        private async void MoreInfoExit_Click(object sender, RoutedEventArgs e)
+        {
+            AimMenu.IsEnabled = true;
+            TriggerMenu.IsEnabled = true;
+            SelectorMenu.IsEnabled = true;
+            SettingsMenu.IsEnabled = true;
+
+            Animator.ObjectShift(TimeSpan.FromMilliseconds(1000), MoreInfoBox, MoreInfoBox.Margin, new Thickness(5, 0, 5, -180));
+
+            await Task.Delay(1000);
+
+            MoreInfoBox.Visibility = Visibility.Collapsed;
+        }
+        #endregion
+
 
         void LoadAimMenu()
         {
-            AToggle Enable_AIAimAligner = new AToggle("Enable AI Aim Aligner");
+            AToggle Enable_AIAimAligner = new AToggle(this, "Enable AI Aim Aligner", 
+                "This will enable the AI's ability to align the aim.");
             Enable_AIAimAligner.Reader.Name = "AimbotToggle";
             SetupToggle(Enable_AIAimAligner, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Enable_AIAimAligner);
@@ -406,12 +437,15 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_KeyPress);
 
-            AToggle Show_FOV = new AToggle("Show FOV");
+            AToggle Show_FOV = new AToggle(this, "Show FOV", 
+                "This will show a circle around your screen that show what the AI is considering on the screen at a given moment.");
             Show_FOV.Reader.Name = "ShowFOV";
             SetupToggle(Show_FOV, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Show_FOV);
 
-            ASlider FovSlider = new ASlider("FOV Size", "Size of FOV", 1);
+            ASlider FovSlider = new ASlider(this, "FOV Size", "Size of FOV",
+                "This setting controls how much of your screen is considered in the AI's decision making and how big the circle on your screen will be.",
+                1);
 
             FovSlider.Slider.Minimum = 10;
             FovSlider.Slider.Maximum = 640;
@@ -432,7 +466,9 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(FovSlider);
 
-            ASlider MouseSensitivty = new ASlider("Mouse Sensitivty", "Sensitivty", 0.01);
+            ASlider MouseSensitivty = new ASlider(this, "Mouse Sensitivty", "Sensitivty",
+                "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a lower number.",
+                0.01);
 
             MouseSensitivty.Slider.Minimum = 0.01;
             MouseSensitivty.Slider.Maximum = 1;
@@ -445,7 +481,9 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(MouseSensitivty);
 
-            ASlider YOffset = new ASlider("Y Offset (Down/Up)", "Offset", 1);
+            ASlider YOffset = new ASlider(this, "Y Offset (Up/Down)", "Offset",
+                "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.", 
+                1);
 
             YOffset.Slider.Minimum = -50;
             YOffset.Slider.Maximum = 250;
@@ -458,7 +496,9 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(YOffset);
 
-            ASlider XOffset = new ASlider("X Offset (Left/Right)", "Offset", 1);
+            ASlider XOffset = new ASlider(this, "X Offset (Left/Right)", "Offset",
+                "This setting controls which way your aim leans. A lower number will result in an aim that leans to the left. A higher number will result in an aim that leans to the right",
+                1);
 
             XOffset.Slider.Minimum = -50;
             XOffset.Slider.Maximum = 50;
@@ -474,12 +514,15 @@ namespace AimmyWPF
 
         void LoadTriggerMenu()
         {
-            AToggle Enable_TriggerBot = new AToggle("Enable Auto Trigger");
+            AToggle Enable_TriggerBot = new AToggle(this, "Enable Auto Trigger",
+                "This will enable the AI's ability to shoot whenever it sees a target.");
             Enable_TriggerBot.Reader.Name = "TriggerBot";
             SetupToggle(Enable_TriggerBot, state => Bools.Triggerbot = state, Bools.Triggerbot);
             TriggerScroller.Children.Add(Enable_TriggerBot);
 
-            ASlider TriggerBot_Delay = new ASlider("Auto Trigger Delay", "Seconds", 0.1);
+            ASlider TriggerBot_Delay = new ASlider(this, "Auto Trigger Delay", "Seconds", 
+                "This slider will control how many miliseconds it will take to initiate a trigger.",
+                0.1);
 
             TriggerBot_Delay.Slider.Minimum = 0.01;
             TriggerBot_Delay.Slider.Maximum = 1;
@@ -573,12 +616,15 @@ namespace AimmyWPF
         {
             SettingsScroller.Children.Add(new AInfoSection());
 
-            AToggle CollectDataWhilePlaying = new AToggle("Collect Data While Playing");
+            AToggle CollectDataWhilePlaying = new AToggle(this, "Collect Data While Playing",
+                "This will enable the AI's ability to take a picture of your screen when the trigger key is pressed.");
             CollectDataWhilePlaying.Reader.Name = "CollectData";
             SetupToggle(CollectDataWhilePlaying, state => Bools.CollectDataWhilePlaying = state, Bools.CollectDataWhilePlaying);
             SettingsScroller.Children.Add(CollectDataWhilePlaying);
 
-            ASlider AIMinimumConfidence = new ASlider("AI Minimum Confidence", "% Confidence", 1);
+            ASlider AIMinimumConfidence = new ASlider(this, "AI Minimum Confidence", "% Confidence", 
+                "This setting controls how confident the AI needs to be before making the decision to aim.", 
+                1);
 
             AIMinimumConfidence.Slider.Minimum = 1;
             AIMinimumConfidence.Slider.Maximum = 100;

@@ -26,6 +26,8 @@ namespace AimmyWPF.UserController
             InitializeComponent();
             Title.Content = Text;
             KeyNotifier.Content = DefaultContent;
+
+            //MainWin.ActivateMoreInfo();
         }
     }
 }

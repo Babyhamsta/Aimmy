@@ -92,8 +92,9 @@
                        Padding="10,0,0,0"
                        FontSize="13"
                        Margin="0,0,47,0" />
-                <Border x:Name="border1" HorizontalAlignment="Right"
-                        Margin="10"
+                <Border x:Name="border1"
+                        HorizontalAlignment="Right"
+                        Margin="10,10,40,10"
                         CornerRadius="5"
                         Width="16">
                     <Border.Effect>
@@ -104,10 +105,13 @@
                                              StartPoint="0.5,0">
                             <LinearGradientBrush.RelativeTransform>
                                 <TransformGroup>
-                                    <ScaleTransform CenterY="0.5" CenterX="0.5"/>
-                                    <SkewTransform CenterY="0.5" CenterX="0.5"/>
-                                    <RotateTransform CenterY="0.5" CenterX="0.5"/>
-                                    <TranslateTransform/>
+                                    <ScaleTransform CenterY="0.5"
+                                                    CenterX="0.5" />
+                                    <SkewTransform CenterY="0.5"
+                                                   CenterX="0.5" />
+                                    <RotateTransform CenterY="0.5"
+                                                     CenterX="0.5" />
+                                    <TranslateTransform />
                                 </TransformGroup>
                             </LinearGradientBrush.RelativeTransform>
                             <GradientStop x:Name="G1"
@@ -118,8 +122,9 @@
                         </LinearGradientBrush>
                     </Border.Background>
                 </Border>
-                <Border x:Name="border" HorizontalAlignment="Right"
-                        Margin="10"
+                <Border x:Name="border"
+                        HorizontalAlignment="Right"
+                        Margin="10,10,40,10"
                         CornerRadius="5"
                         Width="16">
                     <Border.Background>
@@ -127,10 +132,13 @@
                                              StartPoint="0.5,0">
                             <LinearGradientBrush.RelativeTransform>
                                 <TransformGroup>
-                                    <ScaleTransform CenterY="0.5" CenterX="0.5"/>
-                                    <SkewTransform CenterY="0.5" CenterX="0.5"/>
-                                    <RotateTransform CenterY="0.5" CenterX="0.5"/>
-                                    <TranslateTransform/>
+                                    <ScaleTransform CenterY="0.5"
+                                                    CenterX="0.5" />
+                                    <SkewTransform CenterY="0.5"
+                                                   CenterX="0.5" />
+                                    <RotateTransform CenterY="0.5"
+                                                     CenterX="0.5" />
+                                    <TranslateTransform />
                                 </TransformGroup>
                             </LinearGradientBrush.RelativeTransform>
                             <GradientStop x:Name="GG1"
@@ -146,8 +154,21 @@
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Foreground="{x:Null}"
-                        materialDesign:RippleAssist.IsDisabled="True"
-                        Tag="false"></Button>
+                        Margin="0,2,35,2" />
+                <Button x:Name="QuestionButton"
+                        Content="&#xE897;"
+                        HorizontalAlignment="Right"
+                        Height="20"
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        Width="20"
+                        Padding="0,0,0,0"
+                        FontFamily="Segoe MDL2 Assets"
+                        BorderThickness="0,0,0,0"
+                        BorderBrush="{x:Null}"
+                        Background="#FF323232"
+                        FontSize="10"
+                        materialDesign:ButtonAssist.CornerRadius="5" />
             </Grid>
         </Border>
     </Grid>

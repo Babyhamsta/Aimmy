@@ -21,10 +21,18 @@ namespace AimmyWPF.UserController
     /// </summary>
     public partial class AButton : UserControl
     {
-        public AButton(string Text)
+        static MainWindow MainWin = new MainWindow();
+
+        public AButton(MainWindow MW, string Text, string Info)
         {
             InitializeComponent();
             Title.Content = Text;
+
+            MainWin = MW;
+
+            QuestionButton.Click += (s, e) => {
+                MainWin.ActivateMoreInfo(Info);
+            };
         }
     }
 }
