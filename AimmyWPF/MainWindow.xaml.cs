@@ -1,6 +1,5 @@
 ﻿using AimmyWPF.Class;
 using AimmyWPF.UserController;
-using AimmyWPF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using AimmyAimbot;
 
 namespace AimmyWPF
 {
@@ -21,10 +21,9 @@ namespace AimmyWPF
     {
         private OverlayWindow FOVOverlay;
         private FileSystemWatcher fileWatcher;
-        private string lastLoadedModel;
+        private string lastLoadedModel = "N/A";
 
         private readonly BrushConverter brushcolor = new BrushConverter();
-        private System.Windows.Forms.Panel fovPanel;
 
         private int TimeSinceLastClick = 0;
         private DateTime LastClickTime = DateTime.MinValue;
@@ -51,11 +50,11 @@ namespace AimmyWPF
         private Dictionary<string, double> aimmySettings = new Dictionary<string, double>
         {
             { "FOV_Size", 640 },
-            { "Mouse_Sens", 0.08 },
+            { "Mouse_Sens", 0.80 },
             { "Y_Offset", 50 },
             { "X_Offset", 0 },
             { "Trigger_Delay", 0.1 },
-            { "AI_Min_Conf", 60 }
+            { "AI_Min_Conf", 50 }
         };
 
 
@@ -89,6 +88,20 @@ namespace AimmyWPF
         {
             InitializeComponent();
 
+            // Check for required folders
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string[] dirs = { "bin", "bin/models", "bin/images" };
+
+            foreach (string dir in dirs)
+            {
+                string fullPath = Path.Combine(baseDir, dir);
+                if (!Directory.Exists(fullPath))
+                {
+                    System.Windows.MessageBox.Show($"The '{dir}' folder does not exist, please ensure the folder is in the same directory as the exe.");
+                    System.Windows.Application.Current.Shutdown();
+                }
+            }
+
             // Setup key/mouse hook
             bindingManager = new InputBindingManager();
             bindingManager.SetupDefault("Right");
@@ -117,7 +130,7 @@ namespace AimmyWPF
 
             // Load all models into listbox
             LoadModelsIntoListBox();
-            InitializeModel();
+            //InitializeModel();
             SelectorListBox.SelectionChanged += new SelectionChangedEventHandler(SelectorListBox_SelectionChanged);
 
             FOVOverlay = new OverlayWindow();
@@ -171,8 +184,8 @@ namespace AimmyWPF
             int halfScreenWidth = ScreenWidth / 2;
             int halfScreenHeight = ScreenHeight / 2;
 
-            int moveX = (int)Lerp(0, detectedX - halfScreenWidth, Alpha);
-            int moveY = (int)Lerp(0, detectedY - halfScreenHeight, Alpha);
+            int moveX = (int)Lerp(0, detectedX - halfScreenWidth, 1 - Alpha);
+            int moveY = (int)Lerp(0, detectedY - halfScreenHeight, 1 - Alpha);
 
             mouse_event(MOUSEEVENTF_MOVE, (uint)moveX, (uint)moveY, 0, 0);
 
@@ -269,35 +282,24 @@ namespace AimmyWPF
         {
             bool state = (bool)toggle.Reader.Tag;
 
-            if (state)
+            // Stop them from turning on anything until model has been selected.
+            if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "TriggerBot") && lastLoadedModel == "N/A")
             {
-                toggle.EnableSwitch();
+                System.Windows.MessageBox.Show("Please select a model in the Model Selector before toggling.");
+                return;
             }
-            else
-            {
-                toggle.DisableSwitch();
-            }
+
+            (state ? (Action)(() => toggle.EnableSwitch()) : () => toggle.DisableSwitch())();
 
             toggleState[toggle.Reader.Name] = state;
 
-            // Handle sending to AIModel
-            if (toggle.Reader.Name == "CollectData")
+            if (toggle.Reader.Name == "CollectData" && state)
             {
-                if (state)
-                {
-                    _onnxModel.CollectData = true;
-                }
+                _onnxModel.CollectData = true;
             }
             else if (toggle.Reader.Name == "ShowFOV")
             {
-                if (state)
-                {
-                    FOVOverlay.Show();
-                }
-                else 
-                {
-                    FOVOverlay.Hide();
-                }
+                (state ? (Action)(() => FOVOverlay.Show()) : () => FOVOverlay.Hide())();
             }
         }
 
@@ -382,30 +384,26 @@ namespace AimmyWPF
         #region More Info Function
         public void ActivateMoreInfo(string info)
         {
-            MoreInfoBox.Visibility = Visibility.Visible;
-
-            AimMenu.IsEnabled = false;
-            TriggerMenu.IsEnabled = false;
-            SelectorMenu.IsEnabled = false;
-            SettingsMenu.IsEnabled = false;
-
+            SetMenuState(false);
             Animator.ObjectShift(TimeSpan.FromMilliseconds(1000), MoreInfoBox, MoreInfoBox.Margin, new Thickness(5, 0, 5, 5));
-
+            MoreInfoBox.Visibility = Visibility.Visible;
             InfoText.Text = info;
         }
 
         private async void MoreInfoExit_Click(object sender, RoutedEventArgs e)
         {
-            AimMenu.IsEnabled = true;
-            TriggerMenu.IsEnabled = true;
-            SelectorMenu.IsEnabled = true;
-            SettingsMenu.IsEnabled = true;
-
             Animator.ObjectShift(TimeSpan.FromMilliseconds(1000), MoreInfoBox, MoreInfoBox.Margin, new Thickness(5, 0, 5, -180));
-
             await Task.Delay(1000);
-
             MoreInfoBox.Visibility = Visibility.Collapsed;
+            SetMenuState(true);
+        }
+
+        private void SetMenuState(bool state)
+        {
+            AimMenu.IsEnabled = state;
+            TriggerMenu.IsEnabled = state;
+            SelectorMenu.IsEnabled = state;
+            SettingsMenu.IsEnabled = state;
         }
         #endregion
 
@@ -589,7 +587,7 @@ namespace AimmyWPF
             // Preselect the first file in the ListBox
             if (SelectorListBox.Items.Count > 0)
             {
-                if (string.IsNullOrEmpty(lastLoadedModel) || !SelectorListBox.Items.Contains(lastLoadedModel))
+                if (!SelectorListBox.Items.Contains(lastLoadedModel) && lastLoadedModel != "N/A")
                 {
                     SelectorListBox.SelectedIndex = 0;
                     lastLoadedModel = SelectorListBox.Items[0].ToString();

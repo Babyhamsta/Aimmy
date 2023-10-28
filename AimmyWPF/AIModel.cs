@@ -10,10 +10,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace AimmyWPF
+namespace AimmyAimbot
 {
     public class AIModel
     {
@@ -36,14 +35,25 @@ namespace AimmyWPF
 
         public AIModel(string modelPath)
         {
-            _modeloptions = new RunOptions();
+            try
+            {
+                _modeloptions = new RunOptions();
 
-            var sessionOptions = new SessionOptions();
-            sessionOptions.GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL;
-            sessionOptions.AppendExecutionProvider_DML();
-            _onnxModel = new InferenceSession(modelPath, sessionOptions);
+                var sessionOptions = new SessionOptions();
+                sessionOptions.EnableCpuMemArena = true;
+                sessionOptions.EnableMemoryPattern = true;
+                sessionOptions.GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL;
+                sessionOptions.ExecutionMode = ExecutionMode.ORT_PARALLEL;
+                sessionOptions.AppendExecutionProvider_DML();
 
-            _outputNames = _onnxModel.OutputMetadata.Keys.ToList();
+                _onnxModel = new InferenceSession(modelPath, sessionOptions);
+                _outputNames = _onnxModel.OutputMetadata.Keys.ToList();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"There was an error starting the OnnxModel: {ex}");
+                System.Windows.Application.Current.Shutdown();
+            }
         }
 
         public class Prediction
@@ -73,15 +83,14 @@ namespace AimmyWPF
             byte[] rgbValues = new byte[bytes];
 
             Marshal.Copy(ptr, rgbValues, 0, bytes);
-
-            int counter = 0;
-            for (int i = 0; i < rgbValues.Length; i += 3)
+            Parallel.For(0, rgbValues.Length / 3, i =>
             {
-                result[counter] = rgbValues[i + 2] / 255.0f; // R
-                result[height * width + counter] = rgbValues[i + 1] / 255.0f; // G
-                result[2 * height * width + counter] = rgbValues[i] / 255.0f; // B
-                counter++;
-            }
+                int index = i * 3;
+                int counter = i;
+                result[counter] = rgbValues[index + 2] / 255.0f; // R
+                result[height * width + counter] = rgbValues[index + 1] / 255.0f; // G
+                result[2 * height * width + counter] = rgbValues[index] / 255.0f; // B
+            });
 
             image.UnlockBits(bmpData);
 
@@ -133,13 +142,16 @@ namespace AimmyWPF
 
             var tree = new KdTree<float, Prediction>(2, new FloatMath());
 
-            for (int i = 0; i < NUM_DETECTIONS; i++)
+            var filteredIndices = Enumerable.Range(0, NUM_DETECTIONS)
+                                    .AsParallel()
+                                    .Where(i => outputTensor[0, 4, i] >= ConfidenceThreshold)
+                                    .ToList();
+
+            object treeLock = new object();
+
+            Parallel.ForEach(filteredIndices, i =>
             {
                 float objectness = outputTensor[0, 4, i];
-                if (objectness < ConfidenceThreshold)
-                {
-                    continue;
-                }
 
                 float x_center = outputTensor[0, 0, i];
                 float y_center = outputTensor[0, 1, i];
@@ -151,7 +163,6 @@ namespace AimmyWPF
                 float x_max = x_center + width / 2;
                 float y_max = y_center + height / 2;
 
-                // Check if the prediction falls within the FOV
                 if (x_min >= fovMinX && x_max <= fovMaxX && y_min >= fovMinY && y_max <= fovMaxY)
                 {
                     var prediction = new Prediction
@@ -162,9 +173,13 @@ namespace AimmyWPF
 
                     var centerX = (x_min + x_max) / 2.0f;
                     var centerY = (y_min + y_max) / 2.0f;
-                    tree.Add(new[] { centerX, centerY }, prediction);
+
+                    lock (treeLock)
+                    {
+                        tree.Add(new[] { centerX, centerY }, prediction);
+                    }
                 }
-            }
+            });
 
             // Querying the KDTree for the closest prediction to the center.
             var nodes = tree.GetNearestNeighbours(new[] { IMAGE_SIZE / 2.0f, IMAGE_SIZE / 2.0f }, 1);
