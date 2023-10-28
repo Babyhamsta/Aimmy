@@ -33,7 +33,7 @@
                        VerticalAlignment="Top" />
                 <Label x:Name="Notice"
                        Foreground="White"
-                       Content="Aimmy is, and will never be for sale."
+                       Content="Aimmy is free, and will never be for sale."
                        FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                        VerticalContentAlignment="Center"
                        Padding="5,0,0,0"
@@ -68,7 +68,7 @@
                        RenderTransformOrigin="0.602,0.353" />
                 <Label x:Name="Credit"
                        Foreground="White"
-                       Content="By BabyHamsta &amp; Nori"
+                       Content="By Babyhamsta &amp; Nori"
                        FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                        VerticalContentAlignment="Center"
                        Padding="0,0,0,0"
@@ -91,7 +91,7 @@
                         materialDesign:ButtonAssist.CornerRadius="5" />
                 <Label x:Name="VersionNumber"
                        Foreground="White"
-                       Content="1.0.0"
+                       Content="1.1.1"
                        VerticalContentAlignment="Center"
                        Padding="5,0,0,0"
                        FontSize="20"

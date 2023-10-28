@@ -630,9 +630,21 @@ namespace AimmyWPF
             AIMinimumConfidence.Slider.TickFrequency = 1;
             AIMinimumConfidence.Slider.ValueChanged += (s, x) =>
             {
-                double ConfVal = ((double)AIMinimumConfidence.Slider.Value);
-                aimmySettings["AI_Min_Conf"] = ConfVal;
-                _onnxModel.ConfidenceThreshold = (float)(ConfVal / 100.0f);
+                if (lastLoadedModel != "N/A")
+                {
+                    double ConfVal = ((double)AIMinimumConfidence.Slider.Value);
+                    aimmySettings["AI_Min_Conf"] = ConfVal;
+                    _onnxModel.ConfidenceThreshold = (float)(ConfVal / 100.0f);
+                }
+                else 
+                {
+                    // Prevent double messageboxes..
+                    if (AIMinimumConfidence.Slider.Value != aimmySettings["AI_Min_Conf"])
+                    {
+                        System.Windows.MessageBox.Show("Unable to set confidence, please select a model and try again.");
+                        AIMinimumConfidence.Slider.Value = aimmySettings["AI_Min_Conf"];
+                    }
+                }
             };
 
             SettingsScroller.Children.Add(AIMinimumConfidence);
