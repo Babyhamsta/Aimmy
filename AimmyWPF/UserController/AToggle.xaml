@@ -154,7 +154,8 @@
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Foreground="{x:Null}"
-                        Margin="0,2,35,2" />
+                        Margin="0,2,35,2" 
+                        materialDesign:RippleAssist.IsDisabled="True"/>
                 <Button x:Name="QuestionButton"
                         Content="&#xE897;"
                         HorizontalAlignment="Right"
