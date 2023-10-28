@@ -465,7 +465,7 @@ namespace AimmyWPF
             AimScroller.Children.Add(FovSlider);
 
             ASlider MouseSensitivty = new ASlider(this, "Mouse Sensitivty", "Sensitivty",
-                "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a lower number.",
+                "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a higher number.",
                 0.01);
 
             MouseSensitivty.Slider.Minimum = 0.01;
@@ -484,7 +484,7 @@ namespace AimmyWPF
                 1);
 
             YOffset.Slider.Minimum = -50;
-            YOffset.Slider.Maximum = 250;
+            YOffset.Slider.Maximum = 50;
             YOffset.Slider.Value = aimmySettings["Y_Offset"];
             YOffset.Slider.TickFrequency = 1;
             YOffset.Slider.ValueChanged += (s, x) =>
