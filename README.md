@@ -9,7 +9,7 @@ Aimmy is a multi-functional AI-based Aim Aligner that was developed by BabyHamst
 Aimmy differentiates itself from similar tools by being incredibly performant, especially on both NVIDIA and AMD GPUs, extremely customizable, and source-available.
 
 ## Table of Contents
-[What is the purpose of Aimmy?](#what-is-the-purpose-of-aimmy) | [How does Aimmy Work?](#how-does-aimmy-work) | [Setup](#how-does-aimmy-work) | [Features](#features) | [Setup](#setup) | [How is Aimmy better than similar AI-Based tools?](#how-is-aimmy-better-than-similar-ai-based-tools) | [What is the Web Model?](#what-is-the-web-model) 
+[What is the purpose of Aimmy?](#what-is-the-purpose-of-aimmy) | [How does Aimmy Work?](#how-does-aimmy-work) | [Setup](#how-does-aimmy-work) | [Features](#features) | [Setup](#setup) | [How is Aimmy better than similar AI-Based tools?](#how-is-aimmy-better-than-similar-ai-based-tools) | [What is the Web Model?](#what-is-the-web-model) | [How do I train my own model?](#how-do-i-train-my-own-model)
 
 
 
@@ -79,5 +79,9 @@ Once you are finished labeling you'll want to export the labels for AI training:
 
 ![image](https://github.com/MarsQQ/Aimmy/assets/22938086/1af932c3-adde-4138-86f5-1c59934afae7)
 ![image](https://github.com/MarsQQ/Aimmy/assets/22938086/05cc8837-8131-4035-897c-722301a0233b)
+
+## How do I train my own model
+Please see the video tutorial bellow on how to label images and train your own model. (Redirects to Youtube)
+[![Watch the video on Youtube](https://img.youtube.com/vi/ozYzjS5p2H8/maxresdefault.jpg)](https://youtu.be/ozYzjS5p2H8)
 
 </div>
