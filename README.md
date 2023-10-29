@@ -86,6 +86,6 @@ Once you are finished labeling you'll want to export the labels for AI training:
 
 ## How do I train my own model
 Please see the video tutorial bellow on how to label images and train your own model. (Redirects to Youtube)
-[![Watch the video on Youtube](https://img.youtube.com/vi/ozYzjS5p2H8/maxresdefault.jpg)](https://youtu.be/ozYzjS5p2H8)
+[![Watch the video on Youtube](https://img.youtube.com/vi/i98wF4218-Q/maxresdefault.jpg)](https://youtu.be/i98wF4218-Q)
 
 </div>
