@@ -45,6 +45,7 @@ Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-T
 
 ## Setup
 - Download and Install the x64 version of [.NET Runtime 7.0.X.X](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
+- Download and Install the x64 version of [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 - Download Aimmy from [Releases](https://github.com/MarsQQ/Aimmy/releases) (Make sure it's the Aimmy zip and not Source zip)
 - Extract the Aimmy.zip file
 - Run Aimmy.exe
