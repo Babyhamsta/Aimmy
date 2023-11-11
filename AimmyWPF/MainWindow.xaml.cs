@@ -14,6 +14,10 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using AimmyAimbot;
+using Newtonsoft.Json;
+using System.Net;
+using Class;
+using static System.Net.WebRequestMethods;
 
 namespace AimmyWPF
 {
@@ -136,9 +140,28 @@ namespace AimmyWPF
             FOVOverlay = new OverlayWindow();
             FOVOverlay.Hide();
             FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
-
             // Start the loop that runs the model
             Task.Run(() => StartModelCaptureLoop());
+        }
+
+        List<String> AvailableModels = new List<String>();
+
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // This is a proof of concept atm so I yanked the code from this:
+            // https://stackoverflow.com/questions/46302570/how-to-get-list-of-files-from-a-specific-github-repo-given-a-link-in-c
+            // nori
+
+            IEnumerable<string> octokitResults = await RetrieveGithubFiles.ListContentsOctokit("Babyhamsta", "Aimmy", "models");
+            foreach (var file in octokitResults)
+            {
+                if (!AvailableModels.Contains(file) && !System.IO.File.Exists($"bin\\models\\{file}"))
+                {
+                    AvailableModels.Add(file);
+                }
+            }
+
+            LoadModelStoreMenu();
         }
 
         #region Mouse Movement / Clicking Handler
@@ -407,6 +430,22 @@ namespace AimmyWPF
         }
         #endregion
 
+        #region Read Config File Function
+
+        // I'm scrapping this for now. - n4ri
+
+        //void ReadConfig(string path)
+        //{
+        //    if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+        //    {
+        //        JSONData.AimmyConfig AimmyJSON = JsonConvert.DeserializeObject<JSONData.AimmyConfig>(File.ReadAllText(path));
+
+                
+        //    }
+        //}
+
+        #endregion
+
 
         void LoadAimMenu()
         {
@@ -608,6 +647,12 @@ namespace AimmyWPF
         private void SelectorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             InitializeModel();
+        }
+
+        void LoadModelStoreMenu()
+        {
+            foreach (var entries in AvailableModels)
+                ModelStoreScroller.Children.Add(new ADownloadGateway(entries));
         }
 
         void LoadSettingsMenu()

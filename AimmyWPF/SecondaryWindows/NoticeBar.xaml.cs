@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -20,10 +21,11 @@ namespace SecondaryWindows
     /// </summary>
     public partial class NoticeBar : Window
     {
-        public NoticeBar()
+        public NoticeBar(string Text)
         {
             InitializeComponent();
             Notice.Opacity = 0;
+            ContentText.Content = Text;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)

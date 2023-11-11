@@ -27,7 +27,8 @@
                 VerticalAlignment="Bottom"
                 HorizontalAlignment="Center"
                 Margin="0,0,0,100">
-            <Label Content="This feature has not been implemented yet."
+            <Label x:Name="ContentText"
+                   Content="This feature has not been implemented yet."
                    Foreground="#DDFFFFFF"
                    VerticalContentAlignment="Center"
                    HorizontalContentAlignment="Center"

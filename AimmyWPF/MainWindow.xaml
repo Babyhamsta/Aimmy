@@ -15,7 +15,8 @@
         WindowStartupLocation="CenterScreen"
         AllowsTransparency="True"
         Background="Transparent"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        Loaded="Window_Loaded">
     <Grid>
         <Border Background="#FF0F0F0F"
                 CornerRadius="5,5,5,5"
@@ -148,32 +149,62 @@
                     </ScrollViewer>
                     <Grid x:Name="SelectorMenu"
                           Visibility="Collapsed">
-                        <Border Background="#FF191919"
-                                BorderBrush="#FF1E1E1E"
-                                BorderThickness="2"
-                                CornerRadius="5"
-                                Margin="0,0,0,44">
-                            <ListBox x:Name="SelectorListBox"
-                                     Foreground="#DDFFFFFF"
-                                     FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
-                                     Margin="0"
-                                     Padding="2">
-                            </ListBox>
+                        <TabControl HorizontalContentAlignment="Left">
+                            <TabItem BorderThickness="0"
+                                     Padding="0"
+                                     Height="33">
+                                <TabItem.Header>
+                                    <TextBlock Foreground="{DynamicResource MaterialDesignPaper}"
+                                               Text="Local Models"
+                                               FontSize="11"/>
+                                </TabItem.Header>
+                                <Grid>
+                                    <Border Background="#FF191919"
+                                            BorderBrush="#FF1E1E1E"
+                                            BorderThickness="2"
+                                            CornerRadius="5"
+                                            Margin="0,0,0,44">
+                                        <ListBox x:Name="SelectorListBox"
+                                                 Foreground="#DDFFFFFF"
+                                                 FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
+                                                 Margin="0"
+                                                 Padding="2">
+                                        </ListBox>
 
-                        </Border>
-                        <Border Background="#FF191919"
-                                BorderBrush="#FF1E1E1E"
-                                BorderThickness="2"
-                                CornerRadius="5"
-                                Margin="0,0,0,0"
-                                VerticalAlignment="Bottom"
-                                Height="39">
-                            <Label x:Name="SelectedModelNotifier"
-                                   Foreground="#DDFFFFFF"
-                                   Content="Loaded Model: N/A"
-                                   FontFamily="Atkinson Hyperlegible"
-                                   Padding="10"></Label>
-                        </Border>
+                                    </Border>
+                                    <Border Background="#FF191919"
+                                            BorderBrush="#FF1E1E1E"
+                                            BorderThickness="2"
+                                            CornerRadius="5"
+                                            Margin="0,0,0,0"
+                                            VerticalAlignment="Bottom"
+                                            Height="39">
+                                        <Label x:Name="SelectedModelNotifier"
+                                               Foreground="#DDFFFFFF"
+                                               Content="Loaded Model: N/A"
+                                               FontFamily="Atkinson Hyperlegible"
+                                               Padding="10"></Label>
+                                    </Border>
+                                </Grid>
+                            </TabItem>
+                            <TabItem BorderThickness="0"
+                                     Padding="0"
+                                     Height="33">
+                                <TabItem.Header>
+                                    <TextBlock Foreground="{DynamicResource MaterialDesignPaper}"
+                                               Text="Downloadable Models"
+                                               FontSize="11" />
+                                </TabItem.Header>
+                                <Grid>
+                                    <ScrollViewer x:Name="ModelStoreMenu"
+                                                  VerticalScrollBarVisibility="Hidden"
+                                                  PanningMode="VerticalOnly">
+                                        <StackPanel x:Name="ModelStoreScroller" />
+                                    </ScrollViewer>
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+                        
                     </Grid>
                     <ScrollViewer x:Name="SettingsMenu"
                                   VerticalScrollBarVisibility="Hidden"

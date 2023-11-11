@@ -27,7 +27,7 @@ namespace AimmyWPF.UserController
             InitializeComponent();
             //Title.Content = Text;
             CheckForUpdates.Click += (s, e) => {
-                new NoticeBar().Show();
+                new NoticeBar("This feature has not been implemented yet.").Show();
             };
         }
     }
