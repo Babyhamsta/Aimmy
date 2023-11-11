@@ -34,6 +34,7 @@ namespace AimmyWPF.UserController
             {
                 using (WebClient webClient = new WebClient())
                 {
+                    new NoticeBar("The download is being pursued.").Show();
                     webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{RetrieveGithubFiles.RepoPath}/{Text}"), $"bin\\models\\{Text}");
                     while (webClient.IsBusy)
                     {
