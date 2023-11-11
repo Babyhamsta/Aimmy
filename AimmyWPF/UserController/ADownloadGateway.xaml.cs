@@ -1,4 +1,5 @@
 ﻿using AimmyWPF.Class;
+using Class;
 using SecondaryWindows;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,7 @@ namespace AimmyWPF.UserController
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.DownloadFileAsync(new Uri($"https://github.com/Babyhamsta/Aimmy/raw/master/models/{Text}"), $"bin\\models\\{Text}");
+                    webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{RetrieveGithubFiles.RepoPath}/{Text}"), $"bin\\models\\{Text}");
                     while (webClient.IsBusy)
                     {
                         await Task.Delay(1000);

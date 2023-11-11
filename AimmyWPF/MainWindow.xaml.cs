@@ -152,8 +152,8 @@ namespace AimmyWPF
             // https://stackoverflow.com/questions/46302570/how-to-get-list-of-files-from-a-specific-github-repo-given-a-link-in-c
             // nori
 
-            IEnumerable<string> octokitResults = await RetrieveGithubFiles.ListContentsOctokit("Babyhamsta", "Aimmy", "models");
-            foreach (var file in octokitResults)
+            IEnumerable<string> ContentResults = await RetrieveGithubFiles.ListContents();
+            foreach (var file in ContentResults)
             {
                 if (!AvailableModels.Contains(file) && !System.IO.File.Exists($"bin\\models\\{file}"))
                 {
