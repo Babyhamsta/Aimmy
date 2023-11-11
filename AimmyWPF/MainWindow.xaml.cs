@@ -651,8 +651,13 @@ namespace AimmyWPF
 
         void LoadModelStoreMenu()
         {
-            foreach (var entries in AvailableModels)
-                ModelStoreScroller.Children.Add(new ADownloadGateway(entries));
+            if (AvailableModels.Count > 0)
+            {
+                foreach (var entries in AvailableModels)
+                    ModelStoreScroller.Children.Add(new ADownloadGateway(entries));
+            }
+            else
+                LackOfModelsText.Visibility = Visibility.Visible;
         }
 
         void LoadSettingsMenu()

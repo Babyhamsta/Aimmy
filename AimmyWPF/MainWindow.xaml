@@ -196,6 +196,12 @@
                                                FontSize="11" />
                                 </TabItem.Header>
                                 <Grid>
+                                    <Label x:Name="LackOfModelsText"
+                                           Visibility="Collapsed"
+                                           HorizontalContentAlignment="Center"
+                                           VerticalContentAlignment="Center"
+                                           Content="There is no downloadable models at the moment, please check again later."
+                                           Foreground="#DDFFFFFF" />
                                     <ScrollViewer x:Name="ModelStoreMenu"
                                                   VerticalScrollBarVisibility="Hidden"
                                                   PanningMode="VerticalOnly">
