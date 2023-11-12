@@ -34,17 +34,18 @@ namespace AimmyWPF.UserController
             {
                 using (WebClient webClient = new WebClient())
                 {
+                    DownloadButton.Content = "\xE895";
                     new NoticeBar("The download is being pursued.").Show();
                     webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{RetrieveGithubFiles.RepoPath}/{Text}"), $"bin\\models\\{Text}");
-                    while (webClient.IsBusy)
+                    webClient.DownloadProgressChanged += (s, e) => DownloadProgress.Value = e.ProgressPercentage;
+
+                    webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        await Task.Delay(1000);
-                    }
-                    webClient.Dispose();
+                        webClient.Dispose();
+                        new NoticeBar("The file has been completed.").Show();
+                        (this.Parent as StackPanel).Children.Remove(this);
+                    };
                 }
-                new NoticeBar("The file has been completed.").Show();
-                //await Task.Delay(1000);
-                (this.Parent as StackPanel).Children.Remove(this);
             };
         }
     }

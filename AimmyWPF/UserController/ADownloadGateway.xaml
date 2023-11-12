@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:AimmyWPF.UserController"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:xrpb="http://XamlRadialProgressBar/DotNet"
              x:Class="AimmyWPF.UserController.ADownloadGateway"
              mc:Ignorable="d"
              d:DesignHeight="50"
@@ -23,7 +24,7 @@
                        VerticalContentAlignment="Center"
                        Padding="10,0,0,0"
                        FontSize="13"
-                       Margin="0,0,35,0" />
+                       Margin="0,0,60,0" />
                 <Button x:Name="DownloadButton"
                         Content="&#xE896;"
                         HorizontalAlignment="Right"
@@ -38,8 +39,17 @@
                         Background="#FF323232"
                         FontSize="10"
                         materialDesign:ButtonAssist.CornerRadius="5" />
+                <xrpb:RadialProgressBar x:Name="DownloadProgress"
+                                        Value="0"
+                                        Foreground="White"
+                                        ArcWidth="2"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Left"
+                                        Width="30"
+                                        Height="30"
+                                        Margin="468,0,0,0" />
             </Grid>
         </Border>
-        
+
     </Grid>
 </UserControl>
