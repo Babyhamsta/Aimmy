@@ -14,10 +14,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using AimmyAimbot;
-using Newtonsoft.Json;
-using System.Net;
 using Class;
-using static System.Net.WebRequestMethods;
 
 namespace AimmyWPF
 {
@@ -55,7 +52,7 @@ namespace AimmyWPF
         {
             { "FOV_Size", 640 },
             { "Mouse_Sens", 0.80 },
-            { "Y_Offset", 50 },
+            { "Y_Offset", 0 },
             { "X_Offset", 0 },
             { "Trigger_Delay", 0.1 },
             { "AI_Min_Conf", 50 }
@@ -67,7 +64,8 @@ namespace AimmyWPF
             { "AimbotToggle", false },
             { "AimViewToggle", false },
             { "TriggerBot", false },
-            { "CollectData", false }
+            { "CollectData", false },
+            { "TopMost", false }
         };
 
 
@@ -91,6 +89,14 @@ namespace AimmyWPF
         public MainWindow()
         {
             InitializeComponent();
+
+            // Check to see if certain items are installed
+            RequirementsManager RM = new RequirementsManager();
+            if (!RM.IsVCRedistInstalled())
+            {
+                System.Windows.MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.");
+                System.Diagnostics.Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
+            }
 
             // Check for required folders
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -121,6 +127,11 @@ namespace AimmyWPF
                     if (aimmySettings.ContainsKey(parts[0]) && double.TryParse(parts[1], out double value))
                     {
                         aimmySettings[parts[0]] = value;
+                    }
+                    else if (parts[0] == "TopMost" && bool.TryParse(parts[1], out bool topMostValue))
+                    {
+                        toggleState["TopMost"] = topMostValue;
+                        this.Topmost = topMostValue;
                     }
                 }
             }
@@ -291,6 +302,7 @@ namespace AimmyWPF
         private void SetupToggle(AToggle toggle, Action<bool> action, bool initialState)
         {
             toggle.Reader.Tag = initialState;
+            (initialState ? (Action)(() => toggle.EnableSwitch()) : () => toggle.DisableSwitch())();
 
             toggle.Reader.Click += (s, x) =>
             {
@@ -306,7 +318,7 @@ namespace AimmyWPF
             bool state = (bool)toggle.Reader.Tag;
 
             // Stop them from turning on anything until model has been selected.
-            if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "TriggerBot") && lastLoadedModel == "N/A")
+            if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "TriggerBot" || toggle.Reader.Name == "CollectData") && lastLoadedModel == "N/A")
             {
                 System.Windows.MessageBox.Show("Please select a model in the Model Selector before toggling.");
                 return;
@@ -316,13 +328,17 @@ namespace AimmyWPF
 
             toggleState[toggle.Reader.Name] = state;
 
-            if (toggle.Reader.Name == "CollectData" && state)
+            if (toggle.Reader.Name == "CollectData")
             {
-                _onnxModel.CollectData = true;
+                _onnxModel.CollectData = state;
             }
             else if (toggle.Reader.Name == "ShowFOV")
             {
                 (state ? (Action)(() => FOVOverlay.Show()) : () => FOVOverlay.Hide())();
+            }
+            else if (toggle.Reader.Name == "TopMost")
+            {
+                this.Topmost = state;
             }
         }
 
@@ -522,8 +538,8 @@ namespace AimmyWPF
                 "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.", 
                 1);
 
-            YOffset.Slider.Minimum = -50;
-            YOffset.Slider.Maximum = 50;
+            YOffset.Slider.Minimum = -150;
+            YOffset.Slider.Maximum = 150;
             YOffset.Slider.Value = aimmySettings["Y_Offset"];
             YOffset.Slider.TickFrequency = 1;
             YOffset.Slider.ValueChanged += (s, x) =>
@@ -537,8 +553,8 @@ namespace AimmyWPF
                 "This setting controls which way your aim leans. A lower number will result in an aim that leans to the left. A higher number will result in an aim that leans to the right",
                 1);
 
-            XOffset.Slider.Minimum = -50;
-            XOffset.Slider.Maximum = 50;
+            XOffset.Slider.Minimum = -150;
+            XOffset.Slider.Maximum = 150;
             XOffset.Slider.Value = aimmySettings["X_Offset"];
             XOffset.Slider.TickFrequency = 1;
             XOffset.Slider.ValueChanged += (s, x) =>
@@ -699,14 +715,14 @@ namespace AimmyWPF
 
             SettingsScroller.Children.Add(AIMinimumConfidence);
 
-            /*AButton ClearSettings = new AButton("Clear Settings");
+            bool topMostInitialState = toggleState.ContainsKey("TopMost") ? toggleState["TopMost"] : false;
 
-            ClearSettings.Reader.Click += (s, x) =>
-            {
-                // Insert Button Functionality Here
-            };
+            AToggle TopMost = new AToggle(this, "UI TopMost",
+                "This will toggle the UI's TopMost, meaning it can hide behind other windows vs always being on top.");
+            TopMost.Reader.Name = "TopMost";
+            SetupToggle(TopMost, state => Bools.TopMost = state, topMostInitialState);
 
-            SettingsScroller.Children.Add(ClearSettings);*/
+            SettingsScroller.Children.Add(TopMost);
         }
 
         #region Window Controls
@@ -725,16 +741,25 @@ namespace AimmyWPF
             DragMove();
         }
 
+        private static bool SavedData = false;
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            // Prevent saving overwrite
+            if (SavedData) return;
+
             // Unhook keybind/mousehook
             bindingManager.StopListening();
+            FOVOverlay.Close();
 
+            // Save settings
             string serializedData = string.Join(";", aimmySettings.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+            serializedData += $";TopMost={toggleState["TopMost"]}";
+
             AimmyWPF.Properties.Settings.Default.AppData = serializedData;
             AimmyWPF.Properties.Settings.Default.Save();
+            SavedData = true;
 
-            FOVOverlay.Close();
+            // Close
             System.Windows.Application.Current.Shutdown();
         }
         #endregion

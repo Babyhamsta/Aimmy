@@ -14,7 +14,6 @@
         Background="{x:Null}"
         Foreground="{x:Null}"
         WindowState="Maximized"
-        Loaded="Window_Loaded"
         Topmost="True">
     <Grid>
         <Border x:Name="Notice"

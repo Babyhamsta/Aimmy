@@ -91,7 +91,7 @@
                         materialDesign:ButtonAssist.CornerRadius="5" />
                 <Label x:Name="VersionNumber"
                        Foreground="White"
-                       Content="1.1.1"
+                       Content="v1.2.0"
                        VerticalContentAlignment="Center"
                        Padding="5,0,0,0"
                        FontSize="20"

@@ -10,6 +10,7 @@
     <Authors>Babyhamsta</Authors>
     <SignAssembly>True</SignAssembly>
     <NeutralLanguage>en</NeutralLanguage>
+    <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
