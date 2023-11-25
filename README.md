@@ -26,7 +26,8 @@ Aimmy is 100% free to use, ad-free, and is actively not for profit. Aimmy is, an
 - Gamers who do not have access to a seperate Human-Interface Device (HID) for controlling the pointer
 - Gamers trying to improve their reaction time
 - Gamers with poor Hand/Eye coordination
-- Gamers who perform low in FPS games
+- Gamers who perform poorly in FPS games
+- Gamers who play for long periods in hot environments, causing greasy hands that make aiming difficult 
 
 ## How does Aimmy Work?
 Aimmy works by using AI Image Recognition to detect opponents, pointing the player towards the direction of an opponent accordingly. 
