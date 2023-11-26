@@ -97,6 +97,7 @@ Please see the video tutorial bellow on how to label images and train your own m
 ## How do I upload my model to the "Downloadable Models" menu?
 
 If you are not aware already, Aimmy contains a "Downloadable Models" tab that allows you to download models developed and shared by the Aimmy Community.
+
 <img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DownloadableModels.png">
 
 Aimmy pulls these models from the [Aimmy repository](https://github.com/Babyhamsta/Aimmy/tree/master/models), this means **anyone can upload models to the "Downloadable Models" tab by making a pull request**.
