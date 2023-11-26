@@ -130,7 +130,7 @@ Create a new pull request
 Create the pull request
 <img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT9.png">
 
-Create the pull request
+Create the pull request (again)
 <img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT10.png">
 
 You are done! We will review your pull request and your model will be added in 24-48 hours. If you would like to remove your model from the "Downloadable Models" tab, you may make another pull request or contact us on the Issues tab.
