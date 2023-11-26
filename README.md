@@ -11,7 +11,9 @@ Unlike most products of a similar caliber, Aimmy utilizes DirectML, ONNX, and YO
 
 Aimmy also has a myriad of [features](#features) that sets itself apart from other AI Aim Aligners, like the ability to hotswap models, and settings that allow you to adjust your aiming accuracy. 
 
-Aimmy is 100% free to use, ad-free, and is actively not for profit. Aimmy is not, and will never be for sale, and is considered a **source-available** product as **we actively discourage other developers from making profit-focused forks of Aimmy**. 
+Aimmy is 100% free to use, ad-free, and is actively not for profit. Aimmy is not, and will never be for sale, and is considered a **source-available** product as **we actively discourage other developers from making profit-focused forks of Aimmy**.
+
+Join our Discord: https://discord.gg/Aimmy 
 
 ## Table of Contents
 [What is the purpose of Aimmy?](#what-is-the-purpose-of-aimmy) | [How does Aimmy Work?](#how-does-aimmy-work) | [Features](#features) | [Setup](#setup) | [How is Aimmy better than similar AI-Based tools?](#how-is-aimmy-better-than-similar-ai-based-tools) | [What is the Web Model?](#what-is-the-web-model) | [How do I train my own model?](#how-do-i-train-my-own-model) | [How do I upload my model to the "Downloadable Models" menu](#how-do-i-upload-my-model-to-the-downloadable-models-menu)
