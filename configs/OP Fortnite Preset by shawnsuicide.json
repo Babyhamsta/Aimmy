@@ -1,0 +1,9 @@
+{
+  "Suggested_Model": "AIO V2 (Humanoid Body) by natdog400.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 185,
+  "Mouse_Sensitivity": 0.94,
+  "Y_Offset": 24,
+  "X_Offset": 18,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 35
+}
