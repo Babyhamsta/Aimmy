@@ -15,6 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using AimmyAimbot;
 using Class;
+using Newtonsoft.Json;
 
 namespace AimmyWPF
 {
@@ -48,7 +49,7 @@ namespace AimmyWPF
             SettingsMenu
         }
 
-        private Dictionary<string, double> aimmySettings = new Dictionary<string, double>
+        public Dictionary<string, double> aimmySettings = new Dictionary<string, double>
         {
             { "FOV_Size", 640 },
             { "Mouse_Sens", 0.80 },
@@ -142,11 +143,14 @@ namespace AimmyWPF
             LoadTriggerMenu();
             LoadSettingsMenu();
             InitializeFileWatcher();
+            InitializeConfigWatcher();
 
             // Load all models into listbox
             LoadModelsIntoListBox();
+            LoadConfigsIntoListBox();
             //InitializeModel();
             SelectorListBox.SelectionChanged += new SelectionChangedEventHandler(SelectorListBox_SelectionChanged);
+            ConfigSelectorListBox.SelectionChanged += new SelectionChangedEventHandler(ConfigSelectorListBox_SelectionChanged);
 
             FOVOverlay = new OverlayWindow();
             FOVOverlay.Hide();
@@ -419,7 +423,7 @@ namespace AimmyWPF
             SettingsMenu.Visibility = (position == MenuPosition.SettingsMenu) ? Visibility.Visible : Visibility.Collapsed;
         }
         #endregion
-
+        
         #region More Info Function
         public void ActivateMoreInfo(string info)
         {
@@ -445,23 +449,6 @@ namespace AimmyWPF
             SettingsMenu.IsEnabled = state;
         }
         #endregion
-
-        #region Read Config File Function
-
-        // I'm scrapping this for now. - n4ri
-
-        //void ReadConfig(string path)
-        //{
-        //    if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
-        //    {
-        //        JSONData.AimmyConfig AimmyJSON = JsonConvert.DeserializeObject<JSONData.AimmyConfig>(File.ReadAllText(path));
-
-                
-        //    }
-        //}
-
-        #endregion
-
 
         void LoadAimMenu()
         {
@@ -664,6 +651,98 @@ namespace AimmyWPF
         {
             InitializeModel();
         }
+
+        // nori's config stuff, might need optimization later
+
+        #region N4ri's Config Code (god please fix this)
+
+        void LoadConfig(string path)
+        {
+            if (ConfigSelectorListBox.SelectedItem != null)
+            {
+                dynamic AimmyJSON = JsonConvert.DeserializeObject(File.ReadAllText(path));
+
+                System.Windows.MessageBox.Show("The creator of this model suggests you use this model:" +
+                    "\n" +
+                    AimmyJSON.Suggested_Model, "Suggested Model - Aimmy");
+
+                aimmySettings["FOV_Size"] = AimmyJSON.FOV_Size;
+                aimmySettings["Mouse_Sens"] = AimmyJSON.Mouse_Sensitivity;
+                aimmySettings["Y_Offset"] = AimmyJSON.Y_Offset;
+                aimmySettings["X_Offset"] = AimmyJSON.X_Offset;
+                aimmySettings["Trigger_Delay"] = AimmyJSON.Auto_Trigger_Delay;
+                aimmySettings["AI_Min_Conf"] = AimmyJSON.AI_Minimum_Confidence;
+                ReloadMenu();
+            }
+        }
+
+        void ReloadMenu()
+        {
+            AimScroller.Children.Clear();
+            TriggerScroller.Children.Clear();
+            SettingsScroller.Children.Clear();
+
+            LoadAimMenu();
+            LoadTriggerMenu();
+            LoadSettingsMenu();
+        }
+
+        private void ConfigWatcher_Reload(object sender, FileSystemEventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                LoadConfigsIntoListBox();
+            });
+        }
+
+        private void InitializeConfigWatcher()
+        {
+            fileWatcher = new FileSystemWatcher();
+            fileWatcher.Path = "bin/configs";
+            fileWatcher.Filter = "*.json";
+            fileWatcher.EnableRaisingEvents = true;
+            fileWatcher.Created += ConfigWatcher_Reload;
+            fileWatcher.Deleted += ConfigWatcher_Reload;
+            fileWatcher.Renamed += ConfigWatcher_Reload;
+        }
+
+        private void LoadConfigsIntoListBox()
+        {
+            string[] jsonFiles = Directory.GetFiles("bin/configs", "*.json");
+            ConfigSelectorListBox.Items.Clear();
+
+            foreach (string filePath in jsonFiles)
+            {
+                string fileName = Path.GetFileName(filePath);
+                ConfigSelectorListBox.Items.Add(fileName);
+            }
+
+            // Preselect the first file in the ListBox
+            if (ConfigSelectorListBox.Items.Count > 0)
+            {
+                if (!ConfigSelectorListBox.Items.Contains(lastLoadedModel) && lastLoadedModel != "N/A")
+                {
+                    ConfigSelectorListBox.SelectedIndex = 0;
+                    lastLoadedModel = ConfigSelectorListBox.Items[0].ToString();
+                }
+                else
+                {
+                    SelectorListBox.SelectedItem = lastLoadedModel;
+                }
+                SelectedModelNotifier.Content = "Loaded Model: " + lastLoadedModel;
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("No configs found, please put a .json file in bin/configs.");
+                System.Windows.Application.Current.Shutdown();
+            }
+        }
+
+        private void ConfigSelectorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            LoadConfig($"bin/configs/{ConfigSelectorListBox.SelectedItem.ToString()}");
+        }
+        #endregion
 
         void LoadModelStoreMenu()
         {
