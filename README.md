@@ -113,8 +113,10 @@ Now, fork the Aimmy Repository
 <img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT1.png">
 <img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT2.png">
 
-After that, go to your fork's model folder and upload your model.
+After that, go to your fork's model folder
 <img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT3.png">
+
+Press "Add File"
 <img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT4.png">
 
 Drag your model onto the area that contains the text "Drag additional files here to add them to your repository"
