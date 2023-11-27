@@ -11,6 +11,7 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 using System;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace AimmyAimbot
 {
@@ -35,24 +36,46 @@ namespace AimmyAimbot
 
         public AIModel(string modelPath)
         {
+            _modeloptions = new RunOptions();
+
+            var sessionOptions = new SessionOptions
+            {
+                EnableCpuMemArena = true,
+                EnableMemoryPattern = true,
+                GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+                ExecutionMode = ExecutionMode.ORT_PARALLEL
+            };
+
             try
             {
-                _modeloptions = new RunOptions();
-
-                var sessionOptions = new SessionOptions();
-                sessionOptions.EnableCpuMemArena = true;
-                sessionOptions.EnableMemoryPattern = true;
-                sessionOptions.GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL;
-                sessionOptions.ExecutionMode = ExecutionMode.ORT_PARALLEL;
                 sessionOptions.AppendExecutionProvider_DML();
-
                 _onnxModel = new InferenceSession(modelPath, sessionOptions);
                 _outputNames = _onnxModel.OutputMetadata.Keys.ToList();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"There was an error starting the OnnxModel: {ex}");
-                System.Windows.Application.Current.Shutdown();
+                MessageBox.Show($"There was an error starting the OnnxModel via DirectML: {ex}\n\nProgram will attempt to use CPU only, performance may be poor.", "Model Error");
+                try
+                {
+                    sessionOptions.AppendExecutionProvider_CPU();
+                    _onnxModel = new InferenceSession(modelPath, sessionOptions);
+                    _outputNames = _onnxModel.OutputMetadata.Keys.ToList();
+                }
+                catch (Exception innerEx)
+                {
+                    MessageBox.Show($"There was an error starting the model via CPU: {innerEx}", "Model Error");
+                    System.Windows.Application.Current.Shutdown();
+                }
+            }
+
+            // Checking output shape
+            foreach (var output in _onnxModel.OutputMetadata)
+            {
+                var shape = _onnxModel.OutputMetadata[output.Key].Dimensions;
+                if (shape.Length != 3 || shape[0] != 1 || shape[1] != 5 || shape[2] != 8400)
+                {
+                    MessageBox.Show($"Output shape {string.Join("x", shape)} does not match the expected shape of 1x5x8400.\n\nThis model will not work with Aimmy, please use an ONNX V8 model.", "Model Error");
+                }
             }
         }
 

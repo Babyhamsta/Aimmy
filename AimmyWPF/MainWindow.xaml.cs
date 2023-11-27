@@ -16,19 +16,25 @@ using System.Windows.Media;
 using AimmyAimbot;
 using Class;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace AimmyWPF
 {
     public partial class MainWindow : Window
     {
+        private PredictionManager predictionManager;
         private OverlayWindow FOVOverlay;
         private FileSystemWatcher fileWatcher;
+        private FileSystemWatcher ConfigfileWatcher;
+
         private string lastLoadedModel = "N/A";
+        private string lastLoadedConfig = "N/A";
 
         private readonly BrushConverter brushcolor = new BrushConverter();
 
         private int TimeSinceLastClick = 0;
         private DateTime LastClickTime = DateTime.MinValue;
+
         private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         private const uint MOUSEEVENTF_LEFTUP = 0x0004;
         private const uint MOUSEEVENTF_MOVE = 0x0001; // Movement flag
@@ -63,6 +69,7 @@ namespace AimmyWPF
         private Dictionary<string, bool> toggleState = new Dictionary<string, bool>
         {
             { "AimbotToggle", false },
+            { "PredictionToggle", false },
             { "AimViewToggle", false },
             { "TriggerBot", false },
             { "CollectData", false },
@@ -95,20 +102,20 @@ namespace AimmyWPF
             RequirementsManager RM = new RequirementsManager();
             if (!RM.IsVCRedistInstalled())
             {
-                System.Windows.MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.");
+                System.Windows.MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.", "Load Error");
                 System.Diagnostics.Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
             }
 
             // Check for required folders
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string[] dirs = { "bin", "bin/models", "bin/images" };
+            string[] dirs = { "bin", "bin/models", "bin/images", "bin/configs" };
 
             foreach (string dir in dirs)
             {
                 string fullPath = Path.Combine(baseDir, dir);
                 if (!Directory.Exists(fullPath))
                 {
-                    System.Windows.MessageBox.Show($"The '{dir}' folder does not exist, please ensure the folder is in the same directory as the exe.");
+                    System.Windows.MessageBox.Show($"The '{dir}' folder does not exist, please ensure the folder is in the same directory as the exe.", "Load Error");
                     System.Windows.Application.Current.Shutdown();
                 }
             }
@@ -145,16 +152,22 @@ namespace AimmyWPF
             InitializeFileWatcher();
             InitializeConfigWatcher();
 
+            // Load PredictionManager
+            predictionManager = new PredictionManager();
+            predictionManager.InitializeKalmanFilter();
+
             // Load all models into listbox
             LoadModelsIntoListBox();
             LoadConfigsIntoListBox();
-            //InitializeModel();
+
             SelectorListBox.SelectionChanged += new SelectionChangedEventHandler(SelectorListBox_SelectionChanged);
             ConfigSelectorListBox.SelectionChanged += new SelectionChangedEventHandler(ConfigSelectorListBox_SelectionChanged);
 
+            // Create FOV Overlay
             FOVOverlay = new OverlayWindow();
             FOVOverlay.Hide();
             FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
+
             // Start the loop that runs the model
             Task.Run(() => StartModelCaptureLoop());
         }
@@ -246,7 +259,6 @@ namespace AimmyWPF
 
             if (!TriggerOnly)
             {
-                // Scale the coordinates from the 640x640 image to the actual screen size
                 float scaleX = (float)ScreenWidth / 640f;
                 float scaleY = (float)ScreenHeight / 640f;
 
@@ -255,9 +267,19 @@ namespace AimmyWPF
                 int detectedX = (int)((closestPrediction.Rectangle.X * scaleX) + XOffset);
                 int detectedY = (int)((closestPrediction.Rectangle.Y * scaleY) + YOffset);
 
-                MoveCrosshair(detectedX, detectedY);
+                // Handle Prediction
+                if (toggleState["PredictionToggle"])
+                {
+                    predictionManager.UpdateKalmanFilter(detectedX, detectedY);
+                    var predictedPosition = predictionManager.GetEstimatedPosition();
+                    MoveCrosshair(predictedPosition.X, predictedPosition.Y);
+                }
+                else 
+                {
+                    MoveCrosshair(detectedX, detectedY);
+                }
             }
-            else 
+            else
             {
                 Task.Run(() => DoTriggerClick());
             }
@@ -324,7 +346,7 @@ namespace AimmyWPF
             // Stop them from turning on anything until model has been selected.
             if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "TriggerBot" || toggle.Reader.Name == "CollectData") && lastLoadedModel == "N/A")
             {
-                System.Windows.MessageBox.Show("Please select a model in the Model Selector before toggling.");
+                System.Windows.MessageBox.Show("Please select a model in the Model Selector before toggling.", "Toggle Error");
                 return;
             }
 
@@ -458,11 +480,6 @@ namespace AimmyWPF
             SetupToggle(Enable_AIAimAligner, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Enable_AIAimAligner);
 
-            /*AToggle ThirdPersonAim = new AToggle("Enable Third Person Aim");
-            ThirdPersonAim.Reader.Name = "AimViewToggle";
-            SetupToggle(ThirdPersonAim, state => Bools.ThirdPersonAim = state, Bools.ThirdPersonAim);
-            AimScroller.Children.Add(ThirdPersonAim);*/
-
             AKeyChanger Change_KeyPress = new AKeyChanger("Change Keybind", "Right");
             Change_KeyPress.Reader.Click += (s, x) =>
             {
@@ -476,6 +493,12 @@ namespace AimmyWPF
             };
 
             AimScroller.Children.Add(Change_KeyPress);
+
+            AToggle Enable_AIPredictions = new AToggle(this, "Enable Predictions",
+               "This will use a KalmanFilter algorithm to predict aim patterns for better tracing of enemies.");
+            Enable_AIPredictions.Reader.Name = "PredictionToggle";
+            SetupToggle(Enable_AIPredictions, state => Bools.AIPredictions = state, Bools.AIPredictions);
+            AimScroller.Children.Add(Enable_AIPredictions);
 
             AToggle Show_FOV = new AToggle(this, "Show FOV", 
                 "This will show a circle around your screen that show what the AI is considering on the screen at a given moment.");
@@ -626,7 +649,6 @@ namespace AimmyWPF
                 SelectorListBox.Items.Add(fileName);
             }
 
-            // Preselect the first file in the ListBox
             if (SelectorListBox.Items.Count > 0)
             {
                 if (!SelectorListBox.Items.Contains(lastLoadedModel) && lastLoadedModel != "N/A")
@@ -640,11 +662,6 @@ namespace AimmyWPF
                 }
                 SelectedModelNotifier.Content = "Loaded Model: " + lastLoadedModel;
             }
-            else
-            {
-                System.Windows.MessageBox.Show("No models found, please put a .onnx model in bin/models.");
-                System.Windows.Application.Current.Shutdown();
-            }
         }
 
         private void SelectorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -652,13 +669,9 @@ namespace AimmyWPF
             InitializeModel();
         }
 
-        // nori's config stuff, might need optimization later
-
-        #region N4ri's Config Code (god please fix this)
-
         void LoadConfig(string path)
         {
-            if (ConfigSelectorListBox.SelectedItem != null)
+            if (ConfigSelectorListBox.SelectedItem != null && lastLoadedModel != "N/A")
             {
                 dynamic AimmyJSON = JsonConvert.DeserializeObject(File.ReadAllText(path));
 
@@ -666,13 +679,27 @@ namespace AimmyWPF
                     "\n" +
                     AimmyJSON.Suggested_Model, "Suggested Model - Aimmy");
 
-                aimmySettings["FOV_Size"] = AimmyJSON.FOV_Size;
+                aimmySettings["FOV_Size"] = (int)AimmyJSON.FOV_Size;
+                FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
+                _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
+
                 aimmySettings["Mouse_Sens"] = AimmyJSON.Mouse_Sensitivity;
                 aimmySettings["Y_Offset"] = AimmyJSON.Y_Offset;
                 aimmySettings["X_Offset"] = AimmyJSON.X_Offset;
                 aimmySettings["Trigger_Delay"] = AimmyJSON.Auto_Trigger_Delay;
+
                 aimmySettings["AI_Min_Conf"] = AimmyJSON.AI_Minimum_Confidence;
+                _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
+
+                lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
+
+                // Reload the UI
                 ReloadMenu();
+            }
+            else 
+            {
+                ConfigSelectorListBox.SelectedItem = null;
+                System.Windows.MessageBox.Show("Please select a model in the Model Selector before loading a config.", "Config Error");
             }
         }
 
@@ -697,13 +724,13 @@ namespace AimmyWPF
 
         private void InitializeConfigWatcher()
         {
-            fileWatcher = new FileSystemWatcher();
-            fileWatcher.Path = "bin/configs";
-            fileWatcher.Filter = "*.json";
-            fileWatcher.EnableRaisingEvents = true;
-            fileWatcher.Created += ConfigWatcher_Reload;
-            fileWatcher.Deleted += ConfigWatcher_Reload;
-            fileWatcher.Renamed += ConfigWatcher_Reload;
+            ConfigfileWatcher = new FileSystemWatcher();
+            ConfigfileWatcher.Path = "bin/configs";
+            ConfigfileWatcher.Filter = "*.json";
+            ConfigfileWatcher.EnableRaisingEvents = true;
+            ConfigfileWatcher.Created += ConfigWatcher_Reload;
+            ConfigfileWatcher.Deleted += ConfigWatcher_Reload;
+            ConfigfileWatcher.Renamed += ConfigWatcher_Reload;
         }
 
         private void LoadConfigsIntoListBox()
@@ -717,42 +744,42 @@ namespace AimmyWPF
                 ConfigSelectorListBox.Items.Add(fileName);
             }
 
-            // Preselect the first file in the ListBox
             if (ConfigSelectorListBox.Items.Count > 0)
             {
-                if (!ConfigSelectorListBox.Items.Contains(lastLoadedModel) && lastLoadedModel != "N/A")
+                if (!ConfigSelectorListBox.Items.Contains(lastLoadedConfig) && lastLoadedConfig != "N/A")
                 {
                     ConfigSelectorListBox.SelectedIndex = 0;
-                    lastLoadedModel = ConfigSelectorListBox.Items[0].ToString();
+                    lastLoadedConfig = ConfigSelectorListBox.Items[0].ToString();
                 }
                 else
                 {
-                    SelectorListBox.SelectedItem = lastLoadedModel;
+                    ConfigSelectorListBox.SelectedItem = lastLoadedConfig;
                 }
-                SelectedModelNotifier.Content = "Loaded Model: " + lastLoadedModel;
-            }
-            else
-            {
-                System.Windows.MessageBox.Show("No configs found, please put a .json file in bin/configs.");
-                System.Windows.Application.Current.Shutdown();
+                SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;
             }
         }
 
         private void ConfigSelectorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            LoadConfig($"bin/configs/{ConfigSelectorListBox.SelectedItem.ToString()}");
+            if (ConfigSelectorListBox.SelectedItem != null)
+            {
+                LoadConfig($"bin/configs/{ConfigSelectorListBox.SelectedItem.ToString()}");
+            }
         }
-        #endregion
 
         void LoadModelStoreMenu()
         {
             if (AvailableModels.Count > 0)
             {
                 foreach (var entries in AvailableModels)
+                {
                     ModelStoreScroller.Children.Add(new ADownloadGateway(entries));
+                }
             }
             else
+            {
                 LackOfModelsText.Visibility = Visibility.Visible;
+            }
         }
 
         void LoadSettingsMenu()
@@ -786,7 +813,7 @@ namespace AimmyWPF
                     // Prevent double messageboxes..
                     if (AIMinimumConfidence.Slider.Value != aimmySettings["AI_Min_Conf"])
                     {
-                        System.Windows.MessageBox.Show("Unable to set confidence, please select a model and try again.");
+                        System.Windows.MessageBox.Show("Unable to set confidence, please select a model and try again.", "Slider Error");
                         AIMinimumConfidence.Slider.Value = aimmySettings["AI_Min_Conf"];
                     }
                 }
