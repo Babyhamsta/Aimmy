@@ -1,0 +1,9 @@
+{
+  "Suggested_Model": "Arsenal by zys.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 174,
+  "Mouse_Sensitivity": 0.5,
+  "Y_Offset": 7,
+  "X_Offset": 44,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 60
+}
