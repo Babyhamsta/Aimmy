@@ -1,7 +1,7 @@
 
 <div align="center">
   <p>
-    <a href="https://github.com/MarsQQ/Aimmy/releases" target="_blank">
+    <a href="https://github.com/Babyhamsta/Aimmy/releases" target="_blank">
       <img width="100%" src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/AimmyBanner.png"></a>
   </p>
 
