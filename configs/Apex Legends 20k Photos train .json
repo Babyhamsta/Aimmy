@@ -1,0 +1,10 @@
+{
+  "Suggested_Model": "Apex Legends 20k Photos train .onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 300,
+  "Mouse_Sensitivity": 0.80,
+  "Y_Offset": 20,
+  "X_Offset": 50,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 50
+}
+
