@@ -1,0 +1,10 @@
+{
+  "Suggested_Model": "cstest5000.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 180,
+  "Mouse_Sensitivity": 0.85,
+  "Y_Offset": 15,
+  "X_Offset": 25,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 50
+}
+
