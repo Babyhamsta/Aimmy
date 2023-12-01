@@ -3,7 +3,7 @@
 [PLEASE NOTE] [2023/12/01]: Some games currently flag Aimmy's exe hash and will ban you for having Aimmy open. A beta version of our fix is pushed out to our discord server. However, Aimmy can only be recommended for use on accounts with little to no monetary value. If you are using Aimmy on a valued account, please note you are actively taking a risk we are not responsible for. 
 
 Thank You
-- N4ri
+N4ri
   
   <p>
     <a href="https://github.com/Babyhamsta/Aimmy/releases" target="_blank">
