@@ -161,8 +161,8 @@ namespace AimmyWPF
                 string fullPath = Path.Combine(baseDir, dir);
                 if (!Directory.Exists(fullPath))
                 {
-                    MessageBox.Show($"The '{dir}' folder does not exist, please ensure the folder is in the same directory as the exe.", "Load Error");
-                    Application.Current.Shutdown();
+                    // Create the directory
+                    Directory.CreateDirectory(fullPath);
                 }
             }
 
