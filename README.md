@@ -1,6 +1,6 @@
 
 <div align="center">
-[PLEASE NOTE] [2023/12/01]: Some games currently flag Aimmy's exe hash and will ban you for having Aimmy open. A beta version of our fix is pushed out to our discord server. However, Aimmy can only be recommended for use on accounts with little to no monetary value. If you are using Aimmy on a valued account, please note you are actively taking a risk we are not responsible for. 
+[PLEASE NOTE] [2023/12/08]: The latest update [v1.4.1] has made some efforts to improve undetection, if you suffer from any detection issues, please contact the Aimmy discord server.
 
 Thank You
 
