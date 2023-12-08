@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -94,8 +93,13 @@ namespace AimmyWPF
             Console.WriteLine($"{mouseStroke.X} {mouseStroke.Y} {mouseStroke.Flags} {mouseStroke.State} {mouseStroke.Information}");
         }
 
+        private bool StartedLoad = false;
         public MainWindow()
         {
+
+            if (StartedLoad) { return; }
+            StartedLoad = true;
+
             InitializeComponent();
             this.Title = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
 
@@ -172,20 +176,35 @@ namespace AimmyWPF
             bindingManager.OnBindingReleased += (binding) => { IsHolding_Binding = false; };
 
             // Load settings
-            if (!string.IsNullOrEmpty(AimmyWPF.Properties.Settings.Default.AppData))
+            if (File.Exists("bin/configs/Default.cfg"))
             {
-                foreach (var pair in AimmyWPF.Properties.Settings.Default.AppData.Split(';'))
+                string json = File.ReadAllText("bin/configs/Default.cfg");
+
+                // Deserialize JSON directly into a dictionary
+                var config = JsonConvert.DeserializeObject<Dictionary<string, double>>(json);
+                if (config == null) { return; } // invalid config
+
+                // Update aimmySettings with values from the loaded config
+                foreach (var setting in config)
                 {
-                    var parts = pair.Split('=');
-                    if (aimmySettings.ContainsKey(parts[0]) && double.TryParse(parts[1], out double value))
+                    if (aimmySettings.ContainsKey(setting.Key))
                     {
-                        aimmySettings[parts[0]] = value;
+                        aimmySettings[setting.Key] = setting.Value;
                     }
-                    else if (parts[0] == "TopMost" && bool.TryParse(parts[1], out bool topMostValue))
+                    else if(setting.Key == "TopMost")
                     {
+                        bool topMostValue = setting.Value == 1.0;
                         toggleState["TopMost"] = topMostValue;
                         this.Topmost = topMostValue;
                     }
+                }
+
+                // Assuming you also want to load "Suggested_Model" and handle it
+                var specialConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                if (specialConfig != null && specialConfig.ContainsKey("Suggested_Model"))
+                {
+                    MessageBox.Show("The creator of this model suggests you use this model:\n" +
+                                    specialConfig["Suggested_Model"], "Suggested Model - Aimmy");
                 }
             }
 
@@ -942,19 +961,32 @@ namespace AimmyWPF
             // Prevent saving overwrite
             if (SavedData) return;
 
+            // Save to Default Config
+            try
+            {
+                var extendedSettings = new Dictionary<string, object>();
+                foreach (var kvp in aimmySettings)
+                {
+                    extendedSettings[kvp.Key] = kvp.Value;
+                }
+
+                // Add topmost
+                extendedSettings["TopMost"] = this.Topmost ? 1.0 : 0.0;
+
+                string json = JsonConvert.SerializeObject(extendedSettings, Formatting.Indented);
+                File.WriteAllText("bin/configs/Default.cfg", json);
+            }
+            catch (Exception x)
+            {
+                Console.WriteLine("Error saving configuration: " + x.Message);
+            }
+            SavedData = true;
+
             // Unhook keybind/mousehook
             mouseHook.Dispose();
             InputInterceptor.Dispose();
             bindingManager.StopListening();
             FOVOverlay.Close();
-
-            // Save settings
-            string serializedData = string.Join(";", aimmySettings.Select(kvp => $"{kvp.Key}={kvp.Value}"));
-            serializedData += $";TopMost={toggleState["TopMost"]}";
-
-            Properties.Settings.Default.AppData = serializedData;
-            Properties.Settings.Default.Save();
-            SavedData = true;
 
             // Close
             Application.Current.Shutdown();
