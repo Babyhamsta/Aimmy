@@ -134,9 +134,8 @@ namespace AimmyWPF
                 try
                 {
                     MouseFilter filter = MouseFilter.All;
-                    InputInterceptor.Initialize();
 
-                    if (InputInterceptor.Initialized && mouseHook == null)
+                    if (InputInterceptor.Initialize() && mouseHook == null)
                     {
                         mouseHook = new MouseHook(filter, mouse_callback);
                     }
