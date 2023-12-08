@@ -5,17 +5,17 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using AimmyAimbot;
 using Class;
 using Newtonsoft.Json;
+using InputInterceptorNS;
+using System.Reflection;
 using System.Diagnostics;
 
 namespace AimmyWPF
@@ -26,6 +26,7 @@ namespace AimmyWPF
         private OverlayWindow FOVOverlay;
         private FileSystemWatcher fileWatcher;
         private FileSystemWatcher ConfigfileWatcher;
+        private MouseHook mouseHook;
 
         private string lastLoadedModel = "N/A";
         private string lastLoadedConfig = "N/A";
@@ -39,8 +40,8 @@ namespace AimmyWPF
         private const uint MOUSEEVENTF_LEFTUP = 0x0004;
         private const uint MOUSEEVENTF_MOVE = 0x0001; // Movement flag
 
-        private static int ScreenWidth = Screen.PrimaryScreen.Bounds.Width;
-        private static int ScreenHeight = Screen.PrimaryScreen.Bounds.Height;
+        private static int ScreenWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+        private static int ScreenHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
 
         private AIModel _onnxModel;
         private InputBindingManager bindingManager;
@@ -69,6 +70,7 @@ namespace AimmyWPF
         private Dictionary<string, bool> toggleState = new Dictionary<string, bool>
         {
             { "AimbotToggle", false },
+            { "AlwaysOn", false },
             { "PredictionToggle", false },
             { "AimViewToggle", false },
             { "TriggerBot", false },
@@ -87,23 +89,67 @@ namespace AimmyWPF
         Thickness WinVeryRight = new Thickness(1120, 0, -1120, 0);
         Thickness WinTooRight = new Thickness(1680, 0, -1680, 0);
 
-        public struct RECT
+        private void mouse_callback(ref MouseStroke mouseStroke)
         {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
+            Console.WriteLine($"{mouseStroke.X} {mouseStroke.Y} {mouseStroke.Flags} {mouseStroke.State} {mouseStroke.Information}");
         }
+
         public MainWindow()
         {
             InitializeComponent();
+            this.Title = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
 
             // Check to see if certain items are installed
             RequirementsManager RM = new RequirementsManager();
             if (!RM.IsVCRedistInstalled())
             {
-                System.Windows.MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.", "Load Error");
-                System.Diagnostics.Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
+                MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.", "Load Error");
+                Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
+                Application.Current.Shutdown();
+            }
+
+            // Setup Mouse Interceptor
+            if (!InputInterceptor.CheckDriverInstalled())
+            {
+                if (InputInterceptor.CheckAdministratorRights())
+                {
+                    try
+                    {
+                        InputInterceptor.InstallDriver();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"There was an error installing the input driver, please restart the application and try again or reboot and try again. Error: {ex}", "Input Error");
+                        Application.Current.Shutdown();
+                    }
+                }
+                else 
+                {
+                    MessageBox.Show("Please run Aimmy as admin once so the InputInterceptor driver can install.", "Input Error");
+                    Application.Current.Shutdown();
+                }
+            }
+            else 
+            {
+                try
+                {
+                    MouseFilter filter = MouseFilter.All;
+                    InputInterceptor.Initialize();
+
+                    if (InputInterceptor.Initialized && mouseHook == null)
+                    {
+                        mouseHook = new MouseHook(filter, mouse_callback);
+                    }
+                    else 
+                    {
+                        throw new Exception("InputInterceptor failed to initalize.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Unable to create MouseHook, please try rebooting and then running Aimmy again.\n\nError: {ex}", "Input Error");
+                    Application.Current.Shutdown();
+                }
             }
 
             // Check for required folders
@@ -115,8 +161,8 @@ namespace AimmyWPF
                 string fullPath = Path.Combine(baseDir, dir);
                 if (!Directory.Exists(fullPath))
                 {
-                    System.Windows.MessageBox.Show($"The '{dir}' folder does not exist, please ensure the folder is in the same directory as the exe.", "Load Error");
-                    System.Windows.Application.Current.Shutdown();
+                    MessageBox.Show($"The '{dir}' folder does not exist, please ensure the folder is in the same directory as the exe.", "Load Error");
+                    Application.Current.Shutdown();
                 }
             }
 
@@ -193,23 +239,21 @@ namespace AimmyWPF
         }
 
         #region Mouse Movement / Clicking Handler
+        private static Random MouseRandom = new Random();
 
-        [DllImport("user32.dll")]
-        static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetCursorPos(out POINT lpPoint);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
+        private static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
         {
-            public int X;
-            public int Y;
-        }
+            double x = Math.Pow(1 - t, 3) * start.X +
+                       3 * Math.Pow(1 - t, 2) * t * control1.X +
+                       3 * (1 - t) * Math.Pow(t, 2) * control2.X +
+                       Math.Pow(t, 3) * end.X;
 
-        private static double Lerp(double start, double end, double alpha)
-        {
-            return start + alpha * (end - start);
+            double y = Math.Pow(1 - t, 3) * start.Y +
+                       3 * Math.Pow(1 - t, 2) * t * control1.Y +
+                       3 * (1 - t) * Math.Pow(t, 2) * control2.Y +
+                       Math.Pow(t, 3) * end.Y;
+
+            return new Point((int)x, (int)y);
         }
 
         private async Task DoTriggerClick()
@@ -219,9 +263,9 @@ namespace AimmyWPF
 
             if (TimeSinceLastClick >= Trigger_Delay_Milliseconds || LastClickTime == DateTime.MinValue)
             {
-                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                mouseHook.SimulateLeftButtonDown();
                 await Task.Delay(20);
-                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                mouseHook.SimulateLeftButtonUp();
                 LastClickTime = DateTime.Now;
             }
 
@@ -235,14 +279,30 @@ namespace AimmyWPF
             int halfScreenWidth = ScreenWidth / 2;
             int halfScreenHeight = ScreenHeight / 2;
 
-            int moveX = (int)Lerp(0, detectedX - halfScreenWidth, 1 - Alpha);
-            int moveY = (int)Lerp(0, detectedY - halfScreenHeight, 1 - Alpha);
+            int targetX = detectedX - halfScreenWidth;
+            int targetY = detectedY - halfScreenHeight;
 
-            mouse_event(MOUSEEVENTF_MOVE, (uint)moveX, (uint)moveY, 0, 0);
+            // Introduce random jitter
+            int jitterX = MouseRandom.Next(-2, 3);
+            int jitterY = MouseRandom.Next(-2, 3);
+
+            targetX += jitterX;
+            targetY += jitterY;
+
+            // Define Bezier curve control points
+            Point start = new Point(0, 0); // Current cursor position (locked to center screen)
+            Point end = new Point(targetX, targetY);
+            Point control1 = new Point(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
+            Point control2 = new Point(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
+
+            // Calculate new position along the Bezier curve
+            Point newPosition = CubicBezier(start, end, control1, control2, 1 - Alpha);
+
+            mouseHook.MoveCursorBy((int)newPosition.X, (int)newPosition.Y);
 
             if (toggleState["TriggerBot"])
             {
-                Task.Run(() => DoTriggerClick());
+                Task.Run(DoTriggerClick);
             }
         }
 
@@ -281,7 +341,7 @@ namespace AimmyWPF
             }
             else
             {
-                Task.Run(() => DoTriggerClick());
+                Task.Run(DoTriggerClick);
             }
         }
 
@@ -292,8 +352,9 @@ namespace AimmyWPF
 
             while (!cts.Token.IsCancellationRequested)
             {
-                if (toggleState["AimbotToggle"] && IsHolding_Binding)
+                if (toggleState["AimbotToggle"] && (IsHolding_Binding || toggleState["AlwaysOn"]))
                 {
+                    Debug.WriteLine("Doing aimbot");
                     await ModelCapture();
                 }
                 else if (!toggleState["AimbotToggle"] && toggleState["TriggerBot"] && IsHolding_Binding) // Triggerbot Only
@@ -346,7 +407,7 @@ namespace AimmyWPF
             // Stop them from turning on anything until model has been selected.
             if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "TriggerBot" || toggle.Reader.Name == "CollectData") && lastLoadedModel == "N/A")
             {
-                System.Windows.MessageBox.Show("Please select a model in the Model Selector before toggling.", "Toggle Error");
+                MessageBox.Show("Please select a model in the Model Selector before toggling.", "Toggle Error");
                 return;
             }
 
@@ -378,7 +439,7 @@ namespace AimmyWPF
             {
                 MenuPosition position = (MenuPosition)Enum.Parse(typeof(MenuPosition), clickedButton.Tag.ToString());
                 ResetMenuColors();
-                clickedButton.Foreground = (System.Windows.Media.Brush)brushcolor.ConvertFromString("#3e8fb0");
+                clickedButton.Foreground = (Brush)brushcolor.ConvertFromString("#3e8fb0");
                 ApplyMenuAnimations(position);
                 UpdateMenuVisibility(position);
             }
@@ -493,6 +554,12 @@ namespace AimmyWPF
             };
 
             AimScroller.Children.Add(Change_KeyPress);
+
+            AToggle Enable_AlwaysOn = new AToggle(this, "Aim Align Always On",
+               "This will keep the aim aligner on 24/7 so you don't have to hold a toggle.");
+            Enable_AlwaysOn.Reader.Name = "AlwaysOn";
+            SetupToggle(Enable_AlwaysOn, state => Bools.AIAlwaysOn = state, Bools.AIAlwaysOn);
+            AimScroller.Children.Add(Enable_AlwaysOn);
 
             AToggle Enable_AIPredictions = new AToggle(this, "Enable Predictions",
                "This will use a KalmanFilter algorithm to predict aim patterns for better tracing of enemies.");
@@ -675,7 +742,7 @@ namespace AimmyWPF
             {
                 dynamic AimmyJSON = JsonConvert.DeserializeObject(File.ReadAllText(path));
 
-                System.Windows.MessageBox.Show("The creator of this model suggests you use this model:" +
+                MessageBox.Show("The creator of this model suggests you use this model:" +
                     "\n" +
                     AimmyJSON.Suggested_Model, "Suggested Model - Aimmy");
 
@@ -699,7 +766,7 @@ namespace AimmyWPF
             else 
             {
                 ConfigSelectorListBox.SelectedItem = null;
-                System.Windows.MessageBox.Show("Please select a model in the Model Selector before loading a config.", "Config Error");
+                MessageBox.Show("Please select a model in the Model Selector before loading a config.", "Config Error");
             }
         }
 
@@ -813,7 +880,7 @@ namespace AimmyWPF
                     // Prevent double messageboxes..
                     if (AIMinimumConfidence.Slider.Value != aimmySettings["AI_Min_Conf"])
                     {
-                        System.Windows.MessageBox.Show("Unable to set confidence, please select a model and try again.", "Slider Error");
+                        MessageBox.Show("Unable to set confidence, please select a model and try again.", "Slider Error");
                         AIMinimumConfidence.Slider.Value = aimmySettings["AI_Min_Conf"];
                     }
                 }
@@ -829,12 +896,35 @@ namespace AimmyWPF
             SetupToggle(TopMost, state => Bools.TopMost = state, topMostInitialState);
 
             SettingsScroller.Children.Add(TopMost);
+
+            AButton UninstallDriver = new AButton(this, "Uninstall Input Driver",
+               "This will auto uninstall the input driver used to prevent detections on Aimmy. Note: If you reopen the driver version of Aimmy it will auto reinstall the driver.");
+
+            UninstallDriver.MouseDown += (s, e) =>
+            {
+                try
+                {
+                    UninstallDriver.IsEnabled = false;
+                    UninstallDriver.Content = "Uninstalling...";
+                    InputInterceptor.UninstallDriver();
+                    MessageBox.Show("Driver uninstalled, Aimmy will now close, please reboot your computer to complete the uninstall.");
+                    Application.Current.Shutdown();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Unable to uninstall driver: {ex}");
+                    UninstallDriver.IsEnabled = true;
+                }
+
+            };
+
+            SettingsScroller.Children.Add(UninstallDriver);
         }
 
         #region Window Controls
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Application.Current.Shutdown();
+            Application.Current.Shutdown();
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
@@ -854,6 +944,8 @@ namespace AimmyWPF
             if (SavedData) return;
 
             // Unhook keybind/mousehook
+            mouseHook.Dispose();
+            InputInterceptor.Dispose();
             bindingManager.StopListening();
             FOVOverlay.Close();
 
@@ -861,12 +953,12 @@ namespace AimmyWPF
             string serializedData = string.Join(";", aimmySettings.Select(kvp => $"{kvp.Key}={kvp.Value}"));
             serializedData += $";TopMost={toggleState["TopMost"]}";
 
-            AimmyWPF.Properties.Settings.Default.AppData = serializedData;
-            AimmyWPF.Properties.Settings.Default.Save();
+            Properties.Settings.Default.AppData = serializedData;
+            Properties.Settings.Default.Save();
             SavedData = true;
 
             // Close
-            System.Windows.Application.Current.Shutdown();
+            Application.Current.Shutdown();
         }
         #endregion
     }
