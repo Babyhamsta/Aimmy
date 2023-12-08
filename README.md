@@ -1,7 +1,13 @@
 
 <div align="center">
+[PLEASE NOTE] [2023/12/01]: Some games currently flag Aimmy's exe hash and will ban you for having Aimmy open. A beta version of our fix is pushed out to our discord server. However, Aimmy can only be recommended for use on accounts with little to no monetary value. If you are using Aimmy on a valued account, please note you are actively taking a risk we are not responsible for. 
+
+Thank You
+
+<3 N4ri
+  
   <p>
-    <a href="https://github.com/MarsQQ/Aimmy/releases" target="_blank">
+    <a href="https://github.com/Babyhamsta/Aimmy/releases" target="_blank">
       <img width="100%" src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/AimmyBanner.png"></a>
   </p>
 
@@ -42,9 +48,12 @@ Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-T
 ## Features
 - AI Aim Aligning
 - Aim Keybind Switching
+- Predictions
 - Adjustable FOV, Mouse Sensitivity, X Axis, Y Axis, and Model Confidence
 - Auto Trigger and Trigger Delay
 - Hot Model Swapping (No need to reload application)
+- Hot Config Swapping (switch between presets easily)
+- [Downloadable Model System](#how-do-i-upload-my-model-to-the-downloadable-models-menu)
 - Image capture while playing (For labeling to further AI training)
 
 ## Setup
@@ -56,7 +65,7 @@ Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-T
 - Choose your Model and Enjoy :)
 
 ## How is Aimmy better than similar AI-Based tools?
-Our program comes default with 2 AI models, 1 game specific (Phantom Forces) and 1 universal model. We also let users make their own models, share them, and switch between them painlessly. This makes Aimmy very versatile and universal for thousands of games.
+Our program comes default with 2 AI models, 1 game specific (Phantom Forces) and 1 universal model. We also let users make their own models, share them, and switch between them painlessly. We also provide a downloadable model menu with dozens of community made models for various games and types of games. This makes Aimmy very versatile and universal for thousands of games.
 ![Example of Model switching](https://external-content.duckduckgo.com/iu/?u=https://i.imgur.com/4GYUhyp.gif)
 
 We also provide better performance across the board compared to other AI Aim Aligners. Detecting opponents in milliseconds across the board on most CPUs & GPUs.

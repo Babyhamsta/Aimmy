@@ -35,7 +35,7 @@ namespace AimmyWPF.UserController
                 using (WebClient webClient = new WebClient())
                 {
                     DownloadButton.Content = "\xE895";
-                    new NoticeBar("The download is being pursued.").Show();
+                    new NoticeBar("The download is being parsed.").Show();
                     webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{RetrieveGithubFiles.RepoPath}/{Text}"), $"bin\\models\\{Text}");
                     webClient.DownloadProgressChanged += (s, e) => DownloadProgress.Value = e.ProgressPercentage;
 

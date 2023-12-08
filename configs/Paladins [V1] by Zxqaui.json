@@ -1,0 +1,9 @@
+{
+  "Suggested_Model": "Paladins [V1] by zxqaui.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 175,
+  "Mouse_Sensitivity": 0.92,
+  "Y_Offset": 36,
+  "X_Offset": 31,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 50
+}
