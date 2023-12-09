@@ -1,9 +1,7 @@
+> [!IMPORTANT]
+> Crucial information necessary for users to succeed.
 
 <div align="center">
-
-  
-**Warning**
-> This is a warning
   
   <p>
     <a href="https://github.com/Babyhamsta/Aimmy/releases" target="_blank">
