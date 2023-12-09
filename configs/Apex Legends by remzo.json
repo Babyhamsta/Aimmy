@@ -1,0 +1,9 @@
+{
+  "Suggested_Model": "Apex Legends by Blue.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 300,
+  "Mouse_Sensitivity": 0.91,
+  "Y_Offset": 34,
+  "X_Offset": 45,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 65
+}

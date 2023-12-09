@@ -1,0 +1,9 @@
+{
+  "Suggested_Model": "Themida_Krunker2k.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 516,
+  "Mouse_Sensitivity": 0.8,
+  "Y_Offset": 0,
+  "X_Offset": 33,
+  "Auto_Trigger_Delay": 0.08,
+  "AI_Minimum_Confidence": 70
+}

@@ -1,0 +1,9 @@
+{
+  "Suggested_Model": "Arsenal (4k) by Themida.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 306,
+  "Mouse_Sensitivity": 0.8,
+  "Y_Offset": 47,
+  "X_Offset": 58,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 70
+}

@@ -1,0 +1,9 @@
+{
+  "Suggested_Model": "Counter Blox by saint.onnx (Found in Downloadable Model menu)",
+  "FOV_Size": 286,
+  "Mouse_Sensitivity": 0.9,
+  "Y_Offset": 23,
+  "X_Offset": 15,
+  "Auto_Trigger_Delay": 0.1,
+  "AI_Minimum_Confidence": 53
+}
