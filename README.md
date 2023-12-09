@@ -1,10 +1,9 @@
 
 <div align="center">
-[PLEASE NOTE] [2023/12/08]: The latest update [v1.4.1] has made some efforts to improve undetection, if you suffer from any detection issues, please contact the Aimmy discord server.
 
-Thank You
-
-<3 N4ri
+  
+> [!IMPORTANT]  
+> The latest update [v1.4.1] has made some efforts to improve undetection, if you suffer from any detection issues, please contact the Aimmy discord server.
   
   <p>
     <a href="https://github.com/Babyhamsta/Aimmy/releases" target="_blank">
