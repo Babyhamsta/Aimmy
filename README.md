@@ -2,8 +2,8 @@
 <div align="center">
 
   
-> [!IMPORTANT]  
-> The latest update [v1.4.1] has made some efforts to improve undetection, if you suffer from any detection issues, please contact the Aimmy discord server.
+[!IMPORTANT]  
+The latest update [v1.4.1] has made some efforts to improve undetection, if you suffer from any detection issues, please contact the Aimmy discord server.
   
   <p>
     <a href="https://github.com/Babyhamsta/Aimmy/releases" target="_blank">
