@@ -88,7 +88,8 @@
                         FontWeight="Normal"
                         FontSize="12"
                         Height="27"
-                        materialDesign:ButtonAssist.CornerRadius="5" />
+                        materialDesign:ButtonAssist.CornerRadius="5"
+                        Foreground="White" />
                 <Label x:Name="VersionNumber"
                        Foreground="White"
                        Content="v1.4.2"

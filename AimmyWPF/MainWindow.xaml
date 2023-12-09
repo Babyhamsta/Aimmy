@@ -154,9 +154,9 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Foreground="{DynamicResource MaterialDesignPaper}"
-                                               Text="Local Models"
-                                               FontSize="11"/>
+                                    <TextBlock Text="Local Models"
+                                               FontSize="11"
+                                               Foreground="White" />
                                 </TabItem.Header>
                                 <Grid>
                                     <Border Background="#FF191919"
@@ -191,9 +191,10 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Foreground="{DynamicResource MaterialDesignPaper}"
+                                    <TextBlock
                                                Text="Local Configs"
-                                               FontSize="11" />
+                                               FontSize="11"
+                                               Foreground="White" />
                                 </TabItem.Header>
                                 <Grid>
                                     <Border Background="#FF191919"
@@ -227,9 +228,10 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Foreground="{DynamicResource MaterialDesignPaper}"
+                                    <TextBlock
                                                Text="Downloadable Models"
-                                               FontSize="11" />
+                                               FontSize="11"
+                                               Foreground="White" />
                                 </TabItem.Header>
                                 <Grid>
                                     <Label x:Name="LackOfModelsText"

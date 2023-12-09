@@ -54,7 +54,8 @@
                         BorderBrush="{x:Null}"
                         Background="#FF323232"
                         FontSize="10"
-                        materialDesign:ButtonAssist.CornerRadius="5" />
+                        materialDesign:ButtonAssist.CornerRadius="5"
+                        Foreground="White" />
                 <Button x:Name="SubtractOne"
                         Content="&#xE949;"
                         HorizontalAlignment="Left"
@@ -68,7 +69,8 @@
                         BorderBrush="{x:Null}"
                         Background="#FFEB6F92"
                         FontSize="10"
-                        materialDesign:ButtonAssist.CornerRadius="5" />
+                        materialDesign:ButtonAssist.CornerRadius="5"
+                        Foreground="White" />
                 <Slider x:Name="Slider"
                         Margin="35,0,35,10"
                         VerticalAlignment="Bottom"
@@ -89,7 +91,8 @@
                         BorderBrush="{x:Null}"
                         Background="#FFEB6F92"
                         FontSize="10"
-                        materialDesign:ButtonAssist.CornerRadius="5" />
+                        materialDesign:ButtonAssist.CornerRadius="5"
+                        Foreground="White" />
             </Grid>
         </Border>
     </Grid>
