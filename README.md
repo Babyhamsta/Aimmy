@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> Crucial information necessary for users to succeed.
+> Aimmy Update v1.4.1 has fixed some detection issues, it is recommended to update to that version.
 
 <div align="center">
   
