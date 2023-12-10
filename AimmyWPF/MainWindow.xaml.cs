@@ -16,6 +16,8 @@ using Newtonsoft.Json;
 using InputInterceptorNS;
 using System.Reflection;
 using System.Diagnostics;
+using System.Collections;
+using Accord.Math;
 
 namespace AimmyWPF
 {
@@ -55,8 +57,10 @@ namespace AimmyWPF
             SettingsMenu
         }
 
-        public Dictionary<string, double> aimmySettings = new Dictionary<string, double>
+        // Changed to Dynamic from Double because it was making the Config System hard to rework :/
+        public Dictionary<string, dynamic> aimmySettings = new Dictionary<string, dynamic>
         {
+            { "Suggested_Model", ""},
             { "FOV_Size", 640 },
             { "Mouse_Sens", 0.80 },
             { "Y_Offset", 0 },
@@ -176,12 +180,13 @@ namespace AimmyWPF
             bindingManager.OnBindingReleased += (binding) => { IsHolding_Binding = false; };
 
             // Load settings
+            // Might require some optimizing - Nori
             if (File.Exists("bin/configs/Default.cfg"))
             {
                 string json = File.ReadAllText("bin/configs/Default.cfg");
 
                 // Deserialize JSON directly into a dictionary
-                var config = JsonConvert.DeserializeObject<Dictionary<string, double>>(json);
+                var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
                 if (config == null) { return; } // invalid config
 
                 // Update aimmySettings with values from the loaded config
@@ -191,21 +196,23 @@ namespace AimmyWPF
                     {
                         aimmySettings[setting.Key] = setting.Value;
                     }
-                    else if(setting.Key == "TopMost")
+                    else if (setting.Key == "TopMost")
                     {
-                        bool topMostValue = setting.Value == 1.0;
-                        toggleState["TopMost"] = topMostValue;
-                        this.Topmost = topMostValue;
+                        //bool topMostValue = setting.Value == 1.0;
+                        toggleState["TopMost"] = setting.Value;
+                        this.Topmost = setting.Value;
                     }
                 }
 
-                // Assuming you also want to load "Suggested_Model" and handle it
-                var specialConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                if (specialConfig != null && specialConfig.ContainsKey("Suggested_Model"))
-                {
-                    MessageBox.Show("The creator of this model suggests you use this model:\n" +
-                                    specialConfig["Suggested_Model"], "Suggested Model - Aimmy");
-                }
+                // I think we should remove this - Nori
+
+                //// Assuming you also want to load "Suggested_Model" and handle it
+                //var specialConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                //if (specialConfig != null && specialConfig.ContainsKey("Suggested_Model"))
+                //{
+                //    MessageBox.Show("The creator of this model suggests you use this model:\n" +
+                //                    specialConfig["Suggested_Model"], "Suggested Model - Aimmy");
+                //}
             }
 
             // Load UI
@@ -768,30 +775,65 @@ namespace AimmyWPF
         {
             if (ConfigSelectorListBox.SelectedItem != null && lastLoadedModel != "N/A")
             {
-                dynamic AimmyJSON = JsonConvert.DeserializeObject(File.ReadAllText(path));
+                #region Consider Deleting - Nori
+                //dynamic AimmyJSON = JsonConvert.DeserializeObject(File.ReadAllText(path));
+
+                //MessageBox.Show("The creator of this model suggests you use this model:" +
+                //    "\n" +
+                //    AimmyJSON.Suggested_Model, "Suggested Model - Aimmy");
+
+                //aimmySettings["FOV_Size"] = (int)AimmyJSON.FOV_Size;
+                //FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
+                //_onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
+
+                //aimmySettings["Mouse_Sens"] = AimmyJSON.Mouse_Sensitivity;
+                //aimmySettings["Y_Offset"] = AimmyJSON.Y_Offset;
+                //aimmySettings["X_Offset"] = AimmyJSON.X_Offset;
+                //aimmySettings["Trigger_Delay"] = AimmyJSON.Auto_Trigger_Delay;
+
+                //aimmySettings["AI_Min_Conf"] = AimmyJSON.AI_Minimum_Confidence;
+                //_onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
+
+                //lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
+
+                //// Reload the UI
+                //ReloadMenu();
+
+                #endregion
+                string json = File.ReadAllText(path);
+
+                // Deserialize JSON directly into a dictionary
+                var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
+                if (config == null) { return; } // invalid config
+
+                // Update aimmySettings with values from the loaded config
+                foreach (var setting in config)
+                {
+                    if (aimmySettings.ContainsKey(setting.Key))
+                    {
+                        aimmySettings[setting.Key] = setting.Value;
+                    }
+                    else if (setting.Key == "TopMost")
+                    {
+                        //bool topMostValue = setting.Value == 1.0;
+                        toggleState["TopMost"] = setting.Value;
+                        this.Topmost = setting.Value;
+                    }
+                }
 
                 MessageBox.Show("The creator of this model suggests you use this model:" +
-                    "\n" +
-                    AimmyJSON.Suggested_Model, "Suggested Model - Aimmy");
+    "\n" +
+    (string)aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
 
-                aimmySettings["FOV_Size"] = (int)AimmyJSON.FOV_Size;
                 FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
                 _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
-
-                aimmySettings["Mouse_Sens"] = AimmyJSON.Mouse_Sensitivity;
-                aimmySettings["Y_Offset"] = AimmyJSON.Y_Offset;
-                aimmySettings["X_Offset"] = AimmyJSON.X_Offset;
-                aimmySettings["Trigger_Delay"] = AimmyJSON.Auto_Trigger_Delay;
-
-                aimmySettings["AI_Min_Conf"] = AimmyJSON.AI_Minimum_Confidence;
                 _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
 
                 lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
 
-                // Reload the UI
                 ReloadMenu();
             }
-            else 
+            else
             {
                 ConfigSelectorListBox.SelectedItem = null;
                 MessageBox.Show("Please select a model in the Model Selector before loading a config.", "Config Error");
@@ -821,7 +863,8 @@ namespace AimmyWPF
         {
             ConfigfileWatcher = new FileSystemWatcher();
             ConfigfileWatcher.Path = "bin/configs";
-            ConfigfileWatcher.Filter = "*.json";
+            ConfigfileWatcher.Filters.Add("*.json");
+            ConfigfileWatcher.Filters.Add("*.cfg");
             ConfigfileWatcher.EnableRaisingEvents = true;
             ConfigfileWatcher.Created += ConfigWatcher_Reload;
             ConfigfileWatcher.Deleted += ConfigWatcher_Reload;
@@ -830,7 +873,7 @@ namespace AimmyWPF
 
         private void LoadConfigsIntoListBox()
         {
-            string[] jsonFiles = Directory.GetFiles("bin/configs", "*.json");
+            string[] jsonFiles = Directory.GetFiles("bin/configs");
             ConfigSelectorListBox.Items.Clear();
 
             foreach (string filePath in jsonFiles)
@@ -985,7 +1028,7 @@ namespace AimmyWPF
                 }
 
                 // Add topmost
-                extendedSettings["TopMost"] = this.Topmost ? 1.0 : 0.0;
+                extendedSettings["TopMost"] = this.Topmost ? true : false;
 
                 string json = JsonConvert.SerializeObject(extendedSettings, Formatting.Indented);
                 File.WriteAllText("bin/configs/Default.cfg", json);
