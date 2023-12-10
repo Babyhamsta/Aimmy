@@ -975,7 +975,7 @@ namespace AimmyWPF
             AButton UninstallDriver = new AButton(this, "Uninstall Input Driver",
                "This will auto uninstall the input driver used to prevent detections on Aimmy. Note: If you reopen the driver version of Aimmy it will auto reinstall the driver.");
 
-            UninstallDriver.MouseDown += (s, e) =>
+            UninstallDriver.Reader.Click += (s, e) =>
             {
                 try
                 {

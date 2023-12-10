@@ -12,6 +12,9 @@
     <Compile Update="OverlayWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="SecondaryWindows\ConfigSaver.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="SecondaryWindows\NoticeBar.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -21,6 +24,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="OverlayWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="SecondaryWindows\ConfigSaver.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="SecondaryWindows\NoticeBar.xaml">

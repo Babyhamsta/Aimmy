@@ -970,6 +970,57 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+            <Style TargetType="{x:Type TextBox}"
+                   BasedOn="{StaticResource {x:Type TextBox}}"
+                   x:Key="placeHolder">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type TextBox}">
+                            <Grid>
+                                <TextBox Text="{Binding Text, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}"
+                                         x:Name="textSource"
+                                         Foreground="{TemplateBinding Foreground}"
+                                         Background="Transparent"
+                                         Panel.ZIndex="2"
+                                         BorderThickness="0"
+                                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                         Padding="{TemplateBinding Padding}">
+
+                                    <TextBox.Resources>
+                                        <Style TargetType="{x:Type Border}" />
+                                    </TextBox.Resources>
+                                </TextBox>
+                                <TextBox Text="{TemplateBinding Tag}"
+                                         Background="{TemplateBinding Background}"
+                                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                         BorderThickness="{TemplateBinding BorderThickness}"
+                                         BorderBrush="{TemplateBinding BorderBrush}"
+                                         Padding="{TemplateBinding Padding}">
+                                    <TextBox.Resources>
+                                        <Style TargetType="{x:Type Border}" />
+                                    </TextBox.Resources>
+                                    <TextBox.Style>
+                                        <Style TargetType="{x:Type TextBox}">
+                                            <Setter Property="Foreground"
+                                                    Value="Transparent" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, Source={x:Reference textSource}}"
+                                                             Value="">
+                                                    <Setter Property="Foreground"
+                                                            Value="LightGray" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

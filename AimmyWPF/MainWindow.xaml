@@ -280,7 +280,7 @@
                 <Border x:Name="MoreInfoBox"
                         VerticalAlignment="Bottom"
                         Height="180"
-                        Margin="5,0,5,-180"
+                        Margin="10,0,10,-180"
                         Background="#FF191919"
                         BorderBrush="#FF1E1E1E"
                         BorderThickness="2"
