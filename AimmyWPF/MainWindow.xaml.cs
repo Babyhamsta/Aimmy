@@ -18,6 +18,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Collections;
 using Accord.Math;
+using SecondaryWindows;
 
 namespace AimmyWPF
 {
@@ -821,9 +822,12 @@ namespace AimmyWPF
                     }
                 }
 
-                MessageBox.Show("The creator of this model suggests you use this model:" +
-    "\n" +
-    (string)aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
+                if (aimmySettings["Suggested_Model"] != string.Empty)
+                {
+                    MessageBox.Show("The creator of this model suggests you use this model:" +
+                        "\n" +
+                        aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
+                }    
 
                 FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
                 _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
@@ -971,6 +975,16 @@ namespace AimmyWPF
             SetupToggle(TopMost, state => Bools.TopMost = state, topMostInitialState);
 
             SettingsScroller.Children.Add(TopMost);
+
+            AButton SaveConfigSystem = new AButton(this, "Save Current Config",
+   "This will save the current config for the purposes of publishing.");
+
+            SaveConfigSystem.Reader.Click += (s, e) =>
+            {
+                new ConfigSaver(aimmySettings).ShowDialog();
+            };
+
+            SettingsScroller.Children.Add(SaveConfigSystem);
 
             AButton UninstallDriver = new AButton(this, "Uninstall Input Driver",
                "This will auto uninstall the input driver used to prevent detections on Aimmy. Note: If you reopen the driver version of Aimmy it will auto reinstall the driver.");
