@@ -25,7 +25,7 @@ namespace AimmyWPF.UserController
     public partial class ADownloadGateway : UserControl
     {
 
-        public ADownloadGateway(string Text)
+        public ADownloadGateway(string Text, string Path)
         {
             InitializeComponent();
             Title.Content = Text;
@@ -36,7 +36,7 @@ namespace AimmyWPF.UserController
                 {
                     DownloadButton.Content = "\xE895";
                     new NoticeBar("The download is being parsed.").Show();
-                    webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{RetrieveGithubFiles.RepoPath}/{Text}"), $"bin\\models\\{Text}");
+                    webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{Path}/{Text}"), $"bin\\{Path}\\{Text}");
                     webClient.DownloadProgressChanged += (s, e) => DownloadProgress.Value = e.ProgressPercentage;
 
                     webClient.DownloadFileCompleted += (s, e) =>

@@ -191,8 +191,7 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock
-                                               Text="Local Configs"
+                                    <TextBlock Text="Local Configs"
                                                FontSize="11"
                                                Foreground="White" />
                                 </TabItem.Header>
@@ -228,8 +227,7 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock
-                                               Text="Downloadable Models"
+                                    <TextBlock Text="Downloadable Models"
                                                FontSize="11"
                                                Foreground="White" />
                                 </TabItem.Header>
@@ -247,8 +245,30 @@
                                     </ScrollViewer>
                                 </Grid>
                             </TabItem>
+                            <TabItem BorderThickness="0"
+                                     Padding="10,0,10,0"
+                                     Height="33">
+                                <TabItem.Header>
+                                    <TextBlock Text="Downloadable Configs"
+                                               FontSize="11"
+                                               Foreground="White" />
+                                </TabItem.Header>
+                                <Grid>
+                                    <Label x:Name="LackOfConfigsText"
+                                           Visibility="Collapsed"
+                                           HorizontalContentAlignment="Center"
+                                           VerticalContentAlignment="Center"
+                                           Content="There is no downloadable configs at the moment, please check again later."
+                                           Foreground="#DDFFFFFF" />
+                                    <ScrollViewer x:Name="ConfigStoreMenu"
+                                                  VerticalScrollBarVisibility="Hidden"
+                                                  PanningMode="VerticalOnly">
+                                        <StackPanel x:Name="ConfigStoreScroller" />
+                                    </ScrollViewer>
+                                </Grid>
+                            </TabItem>
                         </TabControl>
-                        
+
                     </Grid>
                     <ScrollViewer x:Name="SettingsMenu"
                                   VerticalScrollBarVisibility="Hidden"

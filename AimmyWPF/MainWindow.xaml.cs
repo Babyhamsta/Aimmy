@@ -237,6 +237,7 @@ namespace AimmyWPF
         }
 
         List<String> AvailableModels = new List<String>();
+        List<String> AvailableConfigs = new List<String>();
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -244,8 +245,8 @@ namespace AimmyWPF
             // https://stackoverflow.com/questions/46302570/how-to-get-list-of-files-from-a-specific-github-repo-given-a-link-in-c
             // nori
 
-            IEnumerable<string> ContentResults = await RetrieveGithubFiles.ListContents();
-            foreach (var file in ContentResults)
+            IEnumerable<string> ModelResults = await RetrieveGithubFiles.ListContents("models");
+            foreach (var file in ModelResults)
             {
                 if (!AvailableModels.Contains(file) && !System.IO.File.Exists($"bin\\models\\{file}"))
                 {
@@ -253,7 +254,16 @@ namespace AimmyWPF
                 }
             }
 
-            LoadModelStoreMenu();
+            IEnumerable<string> ConfigResults = await RetrieveGithubFiles.ListContents("configs");
+            foreach (var file in ConfigResults)
+            {
+                if (!AvailableConfigs.Contains(file) && !System.IO.File.Exists($"bin\\configs\\{file}"))
+                {
+                    AvailableConfigs.Add(file);
+                }
+            }
+
+            LoadStoreMenu();
         }
 
         #region Mouse Movement / Clicking Handler
@@ -852,19 +862,23 @@ namespace AimmyWPF
             }
         }
 
-        void LoadModelStoreMenu()
+        void LoadStoreMenu()
         {
             if (AvailableModels.Count > 0)
             {
                 foreach (var entries in AvailableModels)
-                {
-                    ModelStoreScroller.Children.Add(new ADownloadGateway(entries));
-                }
+                    ModelStoreScroller.Children.Add(new ADownloadGateway(entries, "models"));
             }
             else
-            {
                 LackOfModelsText.Visibility = Visibility.Visible;
+
+            if (AvailableConfigs.Count > 0)
+            {
+                foreach (var entries in AvailableConfigs)
+                    ConfigStoreScroller.Children.Add(new ADownloadGateway(entries, "configs"));
             }
+            else
+                LackOfConfigsText.Visibility = Visibility.Visible;
         }
 
         void LoadSettingsMenu()
