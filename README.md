@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> Aimmy Update v1.4.1 has fixed some detection issues, it is recommended to update to that version.
+> Aimmy Update v1.4.5 has fixed some detection issues, it is recommended to update to the latest version.
 
 <div align="center">
   
