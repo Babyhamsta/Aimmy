@@ -1,9 +1,0 @@
-{
-  "Suggested_Model": "Basic Fortnite Model by vanishLLC and natdog400.onnx (Found in Downloadable Model menu)",
-  "FOV_Size": 350,
-  "Mouse_Sensitivity": 0.5,
-  "Y_Offset": 30,
-  "X_Offset": 32,
-  "Auto_Trigger_Delay": 0.1,
-  "AI_Minimum_Confidence": 46
-}

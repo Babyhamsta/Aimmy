@@ -1,9 +1,0 @@
-{
-  "Suggested_Model": "ROBLOXUniversal_Hamsta_v1_1_0.onnx",
-  "FOV_Size": 409,
-  "Mouse_Sensitivity": 0.75,
-  "Y_Offset": 40,
-  "X_Offset": 1,
-  "Auto_Trigger_Delay": 0.1,
-  "AI_Minimum_Confidence": 40
-}

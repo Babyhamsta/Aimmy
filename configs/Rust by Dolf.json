@@ -1,9 +1,0 @@
-{
-  "Suggested_Model": "Rust by Dolf.onnx (Found in Downloadable Model menu)",
-  "FOV_Size": 250,
-  "Mouse_Sensitivity": 0.8,
-  "Y_Offset": 70,
-  "X_Offset": 70,
-  "Auto_Trigger_Delay": 0.1,
-  "AI_Minimum_Confidence": 1
-}

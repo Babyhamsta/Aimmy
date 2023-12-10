@@ -1,9 +1,0 @@
-{
-  "Suggested_Model": "Warframe by SIRMEME.onnx (Found in Downloadable Model menu)",
-  "FOV_Size": r20,
-  "Mouse_Sensitivity": 0.90,
-  "Y_Offset": 0,
-  "X_Offset": 0,
-  "Auto_Trigger_Delay": 0.1,
-  "AI_Minimum_Confidence": 60
-}
