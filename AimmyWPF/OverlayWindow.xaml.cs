@@ -49,5 +49,11 @@ namespace AimmyWPF
             this.Width = screenWidth;
             this.Height = screenHeight;
         }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = true;
+            this.Hide();
+        }
     }
 }
