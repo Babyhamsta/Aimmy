@@ -27,9 +27,9 @@ namespace AimmyWPF
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            // Update rectangle dimensions.
-            OverlayRectangle.Width = FovSize;
-            OverlayRectangle.Height = FovSize;
+            // Update circle dimensions.
+            OverlayCircle.Width = FovSize;
+            OverlayCircle.Height = FovSize;
 
             // Get screen dimensions.
             double screenWidth = SystemParameters.PrimaryScreenWidth;
@@ -39,9 +39,9 @@ namespace AimmyWPF
             OverlayCanvas.Width = screenWidth;
             OverlayCanvas.Height = screenHeight;
 
-            // Update rectangle position within the Canvas.
-            Canvas.SetLeft(OverlayRectangle, (screenWidth - FovSize) / 2);
-            Canvas.SetTop(OverlayRectangle, (screenHeight - FovSize) / 2);
+            // Update circle position within the Canvas.
+            Canvas.SetLeft(OverlayCircle, (screenWidth - FovSize) / 2);
+            Canvas.SetTop(OverlayCircle, (screenHeight - FovSize) / 2);
 
             // Update OverlayWindow position to be centered on the screen.
             this.Left = 0;

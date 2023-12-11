@@ -6,6 +6,6 @@
         ShowInTaskbar="False"
         Closing="Window_Closing">
     <Canvas Name="OverlayCanvas">
-        <Ellipse x:Name="OverlayRectangle" Stroke="Red" StrokeThickness="1" />
+        <Ellipse x:Name="OverlayCircle" Stroke="Red" StrokeThickness="1" />
     </Canvas>
 </Window>
