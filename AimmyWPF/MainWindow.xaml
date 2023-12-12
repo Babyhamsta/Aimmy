@@ -11,7 +11,7 @@
         Width="564"
         WindowStyle="None"
         Topmost="True"
-        ResizeMode="NoResize"
+        ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
         AllowsTransparency="True"
         Background="Transparent"
