@@ -1,5 +1,5 @@
-> [!IMPORTANT]
-> Aimmy Update v1.4.5 has fixed some detection issues, it is recommended to update to the latest version.
+> [!WARNING]
+> How many times do I have to tell you to stop using Aimmy in Fortnite, if you keep using it in Fortnite it's not our fault you get banned!.
 
 <div align="center">
   
