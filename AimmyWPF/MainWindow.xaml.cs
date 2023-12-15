@@ -13,12 +13,10 @@ using System.Windows.Media;
 using AimmyAimbot;
 using Class;
 using Newtonsoft.Json;
-using InputInterceptorNS;
 using System.Reflection;
 using System.Diagnostics;
-using System.Collections;
-using Accord.Math;
 using SecondaryWindows;
+using System.Runtime.InteropServices;
 
 namespace AimmyWPF
 {
@@ -28,7 +26,6 @@ namespace AimmyWPF
         private OverlayWindow FOVOverlay;
         private FileSystemWatcher fileWatcher;
         private FileSystemWatcher ConfigfileWatcher;
-        private MouseHook mouseHook;
 
         private string lastLoadedModel = "N/A";
         private string lastLoadedConfig = "N/A";
@@ -93,11 +90,6 @@ namespace AimmyWPF
         Thickness WinVeryRight = new Thickness(1120, 0, -1120, 0);
         Thickness WinTooRight = new Thickness(1680, 0, -1680, 0);
 
-        private void mouse_callback(ref MouseStroke mouseStroke)
-        {
-            Console.WriteLine($"{mouseStroke.X} {mouseStroke.Y} {mouseStroke.Flags} {mouseStroke.State} {mouseStroke.Information}");
-        }
-
         private bool StartedLoad = false;
         public MainWindow()
         {
@@ -115,49 +107,6 @@ namespace AimmyWPF
                 MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.", "Load Error");
                 Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
                 Application.Current.Shutdown();
-            }
-
-            // Setup Mouse Interceptor
-            if (!InputInterceptor.CheckDriverInstalled())
-            {
-                if (InputInterceptor.CheckAdministratorRights())
-                {
-                    try
-                    {
-                        InputInterceptor.InstallDriver();
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"There was an error installing the input driver, please restart the application and try again or reboot and try again. Error: {ex}", "Input Error");
-                        Application.Current.Shutdown();
-                    }
-                }
-                else 
-                {
-                    MessageBox.Show("Please run Aimmy as admin once so the InputInterceptor driver can install.", "Input Error");
-                    Application.Current.Shutdown();
-                }
-            }
-            else 
-            {
-                try
-                {
-                    MouseFilter filter = MouseFilter.All;
-
-                    if (InputInterceptor.Initialize() && mouseHook == null)
-                    {
-                        mouseHook = new MouseHook(filter, mouse_callback);
-                    }
-                    else 
-                    {
-                        throw new Exception("InputInterceptor failed to initalize.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Unable to create MouseHook, please try rebooting and then running Aimmy again.\n\nError: {ex}", "Input Error");
-                    Application.Current.Shutdown();
-                }
             }
 
             // Check for required folders
@@ -204,16 +153,6 @@ namespace AimmyWPF
                         this.Topmost = setting.Value;
                     }
                 }
-
-                // I think we should remove this - Nori
-
-                //// Assuming you also want to load "Suggested_Model" and handle it
-                //var specialConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                //if (specialConfig != null && specialConfig.ContainsKey("Suggested_Model"))
-                //{
-                //    MessageBox.Show("The creator of this model suggests you use this model:\n" +
-                //                    specialConfig["Suggested_Model"], "Suggested Model - Aimmy");
-                //}
             }
 
             // Load UI
@@ -275,6 +214,20 @@ namespace AimmyWPF
         }
 
         #region Mouse Movement / Clicking Handler
+        [DllImport("user32.dll")]
+        static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetCursorPos(out POINT lpPoint);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
         private static Random MouseRandom = new Random();
 
         private static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
@@ -299,9 +252,9 @@ namespace AimmyWPF
 
             if (TimeSinceLastClick >= Trigger_Delay_Milliseconds || LastClickTime == DateTime.MinValue)
             {
-                mouseHook.SimulateLeftButtonDown();
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
                 await Task.Delay(20);
-                mouseHook.SimulateLeftButtonUp();
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                 LastClickTime = DateTime.Now;
             }
 
@@ -319,8 +272,8 @@ namespace AimmyWPF
             int targetY = detectedY - halfScreenHeight;
 
             // Introduce random jitter
-            int jitterX = MouseRandom.Next(-2, 3);
-            int jitterY = MouseRandom.Next(-2, 3);
+            int jitterX = MouseRandom.Next(-4, 4);
+            int jitterY = MouseRandom.Next(-4, 4);
 
             targetX += jitterX;
             targetY += jitterY;
@@ -334,7 +287,7 @@ namespace AimmyWPF
             // Calculate new position along the Bezier curve
             Point newPosition = CubicBezier(start, end, control1, control2, 1 - Alpha);
 
-            mouseHook.MoveCursorBy((int)newPosition.X, (int)newPosition.Y);
+            mouse_event(MOUSEEVENTF_MOVE, (uint)newPosition.X, (uint)newPosition.Y, 0, 0);
 
             if (toggleState["TriggerBot"])
             {
@@ -776,31 +729,6 @@ namespace AimmyWPF
         {
             if (ConfigSelectorListBox.SelectedItem != null && lastLoadedModel != "N/A")
             {
-                #region Consider Deleting - Nori
-                //dynamic AimmyJSON = JsonConvert.DeserializeObject(File.ReadAllText(path));
-
-                //MessageBox.Show("The creator of this model suggests you use this model:" +
-                //    "\n" +
-                //    AimmyJSON.Suggested_Model, "Suggested Model - Aimmy");
-
-                //aimmySettings["FOV_Size"] = (int)AimmyJSON.FOV_Size;
-                //FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
-                //_onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
-
-                //aimmySettings["Mouse_Sens"] = AimmyJSON.Mouse_Sensitivity;
-                //aimmySettings["Y_Offset"] = AimmyJSON.Y_Offset;
-                //aimmySettings["X_Offset"] = AimmyJSON.X_Offset;
-                //aimmySettings["Trigger_Delay"] = AimmyJSON.Auto_Trigger_Delay;
-
-                //aimmySettings["AI_Min_Conf"] = AimmyJSON.AI_Minimum_Confidence;
-                //_onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
-
-                //lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
-
-                //// Reload the UI
-                //ReloadMenu();
-
-                #endregion
                 string json = File.ReadAllText(path);
 
                 // Deserialize JSON directly into a dictionary
@@ -981,33 +909,10 @@ namespace AimmyWPF
 
             SaveConfigSystem.Reader.Click += (s, e) =>
             {
-                new ConfigSaver(aimmySettings).ShowDialog();
+                new ConfigSaver(aimmySettings, lastLoadedModel).ShowDialog();
             };
 
             SettingsScroller.Children.Add(SaveConfigSystem);
-
-            AButton UninstallDriver = new AButton(this, "Uninstall Input Driver",
-               "This will auto uninstall the input driver used to prevent detections on Aimmy. Note: If you reopen the driver version of Aimmy it will auto reinstall the driver.");
-
-            UninstallDriver.Reader.Click += (s, e) =>
-            {
-                try
-                {
-                    UninstallDriver.IsEnabled = false;
-                    UninstallDriver.Content = "Uninstalling...";
-                    InputInterceptor.UninstallDriver();
-                    MessageBox.Show("Driver uninstalled, Aimmy will now close, please reboot your computer to complete the uninstall.");
-                    Application.Current.Shutdown();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Unable to uninstall driver: {ex}");
-                    UninstallDriver.IsEnabled = true;
-                }
-
-            };
-
-            SettingsScroller.Children.Add(UninstallDriver);
         }
 
         #region Window Controls
@@ -1053,9 +958,7 @@ namespace AimmyWPF
             }
             SavedData = true;
 
-            // Unhook keybind/mousehook
-            mouseHook.Dispose();
-            InputInterceptor.Dispose();
+            // Unhook keybind hooker
             bindingManager.StopListening();
             FOVOverlay.Close();
 

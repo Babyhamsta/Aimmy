@@ -42,7 +42,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="InputInterceptor-Forked" Version="1.0.0" />
     <PackageReference Include="KdTree" Version="1.4.1" />
     <PackageReference Include="MaterialDesignColors" Version="3.0.0-ci472" />
     <PackageReference Include="MaterialDesignThemes" Version="5.0.0-ci472" />

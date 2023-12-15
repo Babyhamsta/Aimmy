@@ -1,5 +1,4 @@
-﻿using InputInterceptorNS;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,10 +26,15 @@ namespace SecondaryWindows
 
         string ExtraStrings = string.Empty;
 
-        public ConfigSaver(Dictionary<string, dynamic> CurrentAimmySettings)
+        public ConfigSaver(Dictionary<string, dynamic> CurrentAimmySettings, string lastLoadedModel)
         {
             InitializeComponent();
             aimmySettings = CurrentAimmySettings;
+
+            if (lastLoadedModel != "N/A")
+            {
+                RecommendedModelNameTextBox.Text = lastLoadedModel.Split(".")[0];
+            }
 
         }
 
