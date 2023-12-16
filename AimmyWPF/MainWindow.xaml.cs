@@ -313,8 +313,8 @@ namespace AimmyWPF
 
                 double YOffset = aimmySettings["Y_Offset"];
                 double XOffset = aimmySettings["X_Offset"];
-                int detectedX = (int)((closestPrediction.Rectangle.X * scaleX) + XOffset);
-                int detectedY = (int)((closestPrediction.Rectangle.Y * scaleY) + YOffset);
+                int detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
+                int detectedY = (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
 
                 // Handle Prediction
                 if (toggleState["PredictionToggle"])
