@@ -271,6 +271,10 @@ namespace AimmyWPF
             int targetX = detectedX - halfScreenWidth;
             int targetY = detectedY - halfScreenHeight;
 
+            // Aspect ratio correction factor
+            double aspectRatioCorrection = (double)ScreenWidth / ScreenHeight;
+            targetY = (int)(targetY * aspectRatioCorrection);
+
             // Introduce random jitter
             int jitterX = MouseRandom.Next(-4, 4);
             int jitterY = MouseRandom.Next(-4, 4);
