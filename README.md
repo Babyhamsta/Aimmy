@@ -46,7 +46,6 @@ Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-T
 - AI Aim Aligning
 - Aim Keybind Switching
 - Predictions
-- Driver-Based Mouse Movement
 - Bezier Curve Movement + Fake Jitter
 - Undetection Launcher
 - Adjustable FOV, Mouse Sensitivity, X Axis, Y Axis, and Model Confidence
