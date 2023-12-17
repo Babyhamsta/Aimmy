@@ -1,4 +1,4 @@
-﻿using AimmyWPF.Class;
+using AimmyWPF.Class;
 using AimmyWPF.UserController;
 using System;
 using System.Collections.Generic;
@@ -309,10 +309,7 @@ namespace AimmyWPF
         {
             var closestPrediction = await _onnxModel.GetClosestPredictionToCenterAsync();
             if (closestPrediction == null) return;
-            if (TriggerOnly) { 
-                Task.Run(DoTriggerClick);
-                return;
-            }
+            
             float scaleX = (float)ScreenWidth / 640f;
             float scaleY = (float)ScreenHeight / 640f;
 
@@ -327,8 +324,9 @@ namespace AimmyWPF
 
                 var predictedPosition = predictionManager.GetEstimatedPosition();
                 MoveCrosshair(predictedPosition.X, predictedPosition.Y);
-            } else
-            {
+            } else if (TriggerOnly) 
+            { 
+                Task.Run(DoTriggerClick);
                 MoveCrosshair(detectedX, detectedY);
             }
         }
