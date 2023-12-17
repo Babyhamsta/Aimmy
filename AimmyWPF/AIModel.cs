@@ -15,13 +15,13 @@ using System.Diagnostics;
 
 namespace AimmyAimbot
 {
-    public class AIModel
+    public class AIModel : IDisposable
     {
         private const int IMAGE_SIZE = 640;
         private const int NUM_DETECTIONS = 8400;
 
         private readonly RunOptions _modeloptions;
-        private readonly InferenceSession _onnxModel;
+        private InferenceSession _onnxModel;
 
         public float ConfidenceThreshold = 0.6f;
         public bool CollectData = false;
@@ -29,7 +29,7 @@ namespace AimmyAimbot
 
 
         private DateTime lastSavedTime = DateTime.MinValue;
-        private readonly List<string> _outputNames;
+        private List<string> _outputNames;
 
         private readonly MemoryStream _captureStream = new MemoryStream(IMAGE_SIZE * IMAGE_SIZE * 4);
         private readonly float[] _imageArray = new float[3 * IMAGE_SIZE * IMAGE_SIZE];
@@ -54,27 +54,35 @@ namespace AimmyAimbot
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"There was an error starting the OnnxModel via DirectML: {ex}\n\nProgram will attempt to use CPU only, performance may be poor.", "Model Error");
-                try
-                {
-                    sessionOptions.AppendExecutionProvider_CPU();
-                    _onnxModel = new InferenceSession(modelPath, sessionOptions);
-                    _outputNames = _onnxModel.OutputMetadata.Keys.ToList();
-                }
-                catch (Exception innerEx)
-                {
-                    MessageBox.Show($"There was an error starting the model via CPU: {innerEx}", "Model Error");
-                    System.Windows.Application.Current.Shutdown();
-                }
+                MessageBox.Show($"Error starting the OnnxModel via DirectML: {ex}\n\nTrying to use CPU only.");
+                TryStartModelWithCPU(sessionOptions, modelPath);
             }
 
-            // Checking output shape
+            ValidateOutputShape();
+        }
+        private void TryStartModelWithCPU(SessionOptions sessionOptions, string modelPath)
+        {
+            try
+            {
+                sessionOptions.AppendExecutionProvider_CPU();
+                _onnxModel = new InferenceSession(modelPath, sessionOptions);
+                _outputNames = _onnxModel.OutputMetadata.Keys.ToList();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Error starting the model via CPU: {e}");
+                System.Windows.Application.Current.Shutdown();
+            }
+        }
+
+        private void ValidateOutputShape()
+        {
             foreach (var output in _onnxModel.OutputMetadata)
             {
                 var shape = _onnxModel.OutputMetadata[output.Key].Dimensions;
-                if (shape.Length != 3 || shape[0] != 1 || shape[1] != 5 || shape[2] != 8400)
+                if (shape.Length != 3 || shape[0] != 1 || shape[1] != 5 || shape[2] != NUM_DETECTIONS)
                 {
-                    MessageBox.Show($"Output shape {string.Join("x", shape)} does not match the expected shape of 1x5x8400.\n\nThis model will not work with Aimmy, please use an ONNX V8 model.", "Model Error");
+                    MessageBox.Show($"Output shape {string.Join("x", shape)} does not match the expected shape of 1x5x8400.\n\nThis model will not work with Aimmy, please use an ONNX V8 model.");
                 }
             }
         }
@@ -87,9 +95,11 @@ namespace AimmyAimbot
 
         public static Bitmap ScreenGrab(Rectangle detectionBox)
         {
-            Bitmap bmp = new Bitmap(detectionBox.Width, detectionBox.Height);
-            Graphics g = Graphics.FromImage(bmp);
-            g.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size);
+            var bmp = new Bitmap(detectionBox.Width, detectionBox.Height);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size);
+            }
             return bmp;
         }
 
@@ -97,7 +107,7 @@ namespace AimmyAimbot
         {
             int height = image.Height;
             int width = image.Width;
-            float[] result = new float[3 * height * width];
+            var result = new float[3 * height * width];
             Rectangle rect = new Rectangle(0, 0, width, height);
             BitmapData bmpData = image.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
@@ -106,6 +116,7 @@ namespace AimmyAimbot
             byte[] rgbValues = new byte[bytes];
 
             Marshal.Copy(ptr, rgbValues, 0, bytes);
+
             Parallel.For(0, rgbValues.Length / 3, i =>
             {
                 int index = i * 3;

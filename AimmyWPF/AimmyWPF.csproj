@@ -5,7 +5,7 @@
     <TargetFramework>net7.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>x64</Platforms>
     <Company>$(Authors)</Company>
     <Authors>Babyhamsta</Authors>
     <SignAssembly>True</SignAssembly>

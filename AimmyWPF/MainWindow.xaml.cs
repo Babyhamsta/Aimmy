@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Diagnostics;
 using SecondaryWindows;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace AimmyWPF
 {
@@ -112,15 +113,20 @@ namespace AimmyWPF
             // Check for required folders
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string[] dirs = { "bin", "bin/models", "bin/images", "bin/configs" };
-
-            foreach (string dir in dirs)
+            try
             {
-                string fullPath = Path.Combine(baseDir, dir);
-                if (!Directory.Exists(fullPath))
+                foreach (string dir in dirs)
                 {
-                    // Create the directory
-                    Directory.CreateDirectory(fullPath);
+                    string fullPath = Path.Combine(baseDir, dir);
+                    if (!Directory.Exists(fullPath))
+                    {
+                        // Create the directory
+                        Directory.CreateDirectory(fullPath);
+                    }
                 }
+            } catch(Exception ex)
+            {
+                MessageBox.Show($"Error creating a required directory: {ex}");
             }
 
             // Setup key/mouse hook
@@ -130,27 +136,25 @@ namespace AimmyWPF
             bindingManager.OnBindingReleased += (binding) => { IsHolding_Binding = false; };
 
             // Load settings
-            // Might require some optimizing - Nori
+            // attempt at making optimizations - taylor.
             if (File.Exists("bin/configs/Default.cfg"))
             {
                 string json = File.ReadAllText("bin/configs/Default.cfg");
 
-                // Deserialize JSON directly into a dictionary
                 var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
-                if (config == null) { return; } // invalid config
-
-                // Update aimmySettings with values from the loaded config
-                foreach (var setting in config)
+                if (config != null)
                 {
-                    if (aimmySettings.ContainsKey(setting.Key))
+                    foreach (var (key, value) in config)
                     {
-                        aimmySettings[setting.Key] = setting.Value;
-                    }
-                    else if (setting.Key == "TopMost")
-                    {
-                        //bool topMostValue = setting.Value == 1.0;
-                        toggleState["TopMost"] = setting.Value;
-                        this.Topmost = setting.Value;
+                        if (aimmySettings.TryGetValue(key, out var currentValue))
+                        {
+                            aimmySettings[key] = value;
+                        }
+                        else if (key == "TopMost" && value is bool topMostValue)
+                        {
+                            toggleState["TopMost"] = topMostValue;
+                            this.Topmost = topMostValue;
+                        }
                     }
                 }
             }
@@ -183,35 +187,37 @@ namespace AimmyWPF
             Task.Run(() => StartModelCaptureLoop());
         }
 
-        List<String> AvailableModels = new List<String>();
-        List<String> AvailableConfigs = new List<String>();
+        // using hashset to maybe improve performance when checking configs/models.
+        private HashSet<string> AvailableModels = new HashSet<string>();
+        private HashSet<string> AvailableConfigs = new HashSet<string>();
 
+
+        //cleanup?
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // This is a proof of concept atm so I yanked the code from this:
-            // https://stackoverflow.com/questions/46302570/how-to-get-list-of-files-from-a-specific-github-repo-given-a-link-in-c
-            // nori
+            Task modelTask = RetrieveAndAddFilesAsync("models", "bin\\models", AvailableModels);
+            Task configTask = RetrieveAndAddFilesAsync("configs", "bin\\configs", AvailableConfigs);
 
-            IEnumerable<string> ModelResults = await RetrieveGithubFiles.ListContents("models");
-            foreach (var file in ModelResults)
-            {
-                if (!AvailableModels.Contains(file) && !System.IO.File.Exists($"bin\\models\\{file}"))
-                {
-                    AvailableModels.Add(file);
-                }
-            }
-
-            IEnumerable<string> ConfigResults = await RetrieveGithubFiles.ListContents("configs");
-            foreach (var file in ConfigResults)
-            {
-                if (!AvailableConfigs.Contains(file) && !System.IO.File.Exists($"bin\\configs\\{file}"))
-                {
-                    AvailableConfigs.Add(file);
-                }
-            }
+            await Task.WhenAll(modelTask, configTask);
 
             LoadStoreMenu();
         }
+
+        private async Task RetrieveAndAddFilesAsync(string repositoryPath, string localPath, HashSet<string> availableFiles)
+        {
+            IEnumerable<string> results = await RetrieveGithubFiles.ListContents(repositoryPath);
+
+            foreach (var file in results)
+            {
+                string filePath = Path.Combine(localPath, file);
+
+                if (!availableFiles.Contains(file) && !File.Exists(filePath))
+                {
+                    availableFiles.Add(file);
+                }
+            }
+        }
+
 
         #region Mouse Movement / Clicking Handler
         [DllImport("user32.dll")]
@@ -231,23 +237,22 @@ namespace AimmyWPF
         private static Random MouseRandom = new Random();
 
         private static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
-        {
-            double x = Math.Pow(1 - t, 3) * start.X +
-                       3 * Math.Pow(1 - t, 2) * t * control1.X +
-                       3 * (1 - t) * Math.Pow(t, 2) * control2.X +
-                       Math.Pow(t, 3) * end.X;
+        { // why not make it more readable
+            double u = 1 - t;
+            double tt = t * t;
+            double uu = u * u;
+            double uuu = uu * u;
+            double ttt = tt * t;
 
-            double y = Math.Pow(1 - t, 3) * start.Y +
-                       3 * Math.Pow(1 - t, 2) * t * control1.Y +
-                       3 * (1 - t) * Math.Pow(t, 2) * control2.Y +
-                       Math.Pow(t, 3) * end.Y;
+            double x = uuu * start.X + 3 * uu * t * control1.X + 3 * u * tt * control2.X + ttt * end.X;
+            double y = uuu * start.Y + 3 * uu * t * control1.Y + 3 * u * tt * control2.Y + ttt * end.Y;
 
             return new Point((int)x, (int)y);
         }
 
         private async Task DoTriggerClick()
         {
-            TimeSinceLastClick = (int)(DateTime.Now - LastClickTime).TotalMilliseconds;
+            int TimeSinceLastClick = (int)(DateTime.Now - LastClickTime).TotalMilliseconds;
             int Trigger_Delay_Milliseconds = (int)(aimmySettings["Trigger_Delay"] * 1000);
 
             if (TimeSinceLastClick >= Trigger_Delay_Milliseconds || LastClickTime == DateTime.MinValue)
@@ -257,8 +262,6 @@ namespace AimmyWPF
                 mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                 LastClickTime = DateTime.Now;
             }
-
-            return;
         }
 
         private void MoveCrosshair(int detectedX, int detectedY)
@@ -305,36 +308,28 @@ namespace AimmyWPF
         public async Task ModelCapture(bool TriggerOnly = false)
         {
             var closestPrediction = await _onnxModel.GetClosestPredictionToCenterAsync();
-            if (closestPrediction == null)
-            {
+            if (closestPrediction == null) return;
+            if (TriggerOnly) { 
+                Task.Run(DoTriggerClick);
                 return;
             }
+            float scaleX = (float)ScreenWidth / 640f;
+            float scaleY = (float)ScreenHeight / 640f;
 
-            if (!TriggerOnly)
+            double YOffset = aimmySettings["Y_Offset"];
+            double XOffset = aimmySettings["X_Offset"];
+            int detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
+            int detectedY = (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
+
+            // Handle Prediction
+            if (toggleState["PredictionToggle"]) {
+                predictionManager.UpdateKalmanFilter(detectedX, detectedY);
+
+                var predictedPosition = predictionManager.GetEstimatedPosition();
+                MoveCrosshair(predictedPosition.X, predictedPosition.Y);
+            } else
             {
-                float scaleX = (float)ScreenWidth / 640f;
-                float scaleY = (float)ScreenHeight / 640f;
-
-                double YOffset = aimmySettings["Y_Offset"];
-                double XOffset = aimmySettings["X_Offset"];
-                int detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
-                int detectedY = (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
-
-                // Handle Prediction
-                if (toggleState["PredictionToggle"])
-                {
-                    predictionManager.UpdateKalmanFilter(detectedX, detectedY);
-                    var predictedPosition = predictionManager.GetEstimatedPosition();
-                    MoveCrosshair(predictedPosition.X, predictedPosition.Y);
-                }
-                else 
-                {
-                    MoveCrosshair(detectedX, detectedY);
-                }
-            }
-            else
-            {
-                Task.Run(DoTriggerClick);
+                MoveCrosshair(detectedX, detectedY);
             }
         }
 
@@ -363,7 +358,7 @@ namespace AimmyWPF
         {
             if (cts != null)
             {
-                cts.Cancel();
+                cts?.Cancel();
                 cts = null;
             }
         }
@@ -682,20 +677,21 @@ namespace AimmyWPF
 
         private void InitializeModel()
         {
-            if (SelectorListBox.SelectedItem != null)
+            string selectedModel = SelectorListBox.SelectedItem?.ToString();
+            if (selectedModel == null) return;
+
+            string modelPath = Path.Combine("bin/models", selectedModel);
+
+            _onnxModel?.Dispose();
+            _onnxModel = new AIModel(modelPath)
             {
-                string modelFileName = SelectorListBox.SelectedItem.ToString();
-                string modelPath = Path.Combine("bin/models", modelFileName);
+                ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f),
+                CollectData = toggleState["CollectData"],
+                FovSize = (int)aimmySettings["FOV_Size"]
+            };
 
-                _onnxModel?.Dispose();
-
-                _onnxModel = new AIModel(modelPath);
-                _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
-                _onnxModel.CollectData = toggleState["CollectData"];
-                _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
-                SelectedModelNotifier.Content = "Loaded Model: " + modelFileName;
-                lastLoadedModel = modelFileName;
-            }
+            SelectedModelNotifier.Content = "Loaded Model: " + selectedModel;
+            lastLoadedModel = selectedModel;
         }
 
         private void LoadModelsIntoListBox()
@@ -705,8 +701,8 @@ namespace AimmyWPF
 
             foreach (string filePath in onnxFiles)
             {
-                string fileName = Path.GetFileName(filePath);
-                SelectorListBox.Items.Add(fileName);
+                SelectorListBox.Items.Add(Path.GetFileName(filePath));
+
             }
 
             if (SelectorListBox.Items.Count > 0)
@@ -731,49 +727,49 @@ namespace AimmyWPF
 
         void LoadConfig(string path)
         {
-            if (ConfigSelectorListBox.SelectedItem != null && lastLoadedModel != "N/A")
-            {
-                string json = File.ReadAllText(path);
-
-                // Deserialize JSON directly into a dictionary
-                var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
-                if (config == null) { return; } // invalid config
-
-                // Update aimmySettings with values from the loaded config
-                foreach (var setting in config)
-                {
-                    if (aimmySettings.ContainsKey(setting.Key))
-                    {
-                        aimmySettings[setting.Key] = setting.Value;
-                    }
-                    else if (setting.Key == "TopMost")
-                    {
-                        //bool topMostValue = setting.Value == 1.0;
-                        toggleState["TopMost"] = setting.Value;
-                        this.Topmost = setting.Value;
-                    }
-                }
-
-                if (aimmySettings["Suggested_Model"] != string.Empty)
-                {
-                    MessageBox.Show("The creator of this model suggests you use this model:" +
-                        "\n" +
-                        aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
-                }    
-
-                FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
-                _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
-                _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
-
-                lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
-
-                ReloadMenu();
-            }
-            else
+            if (ConfigSelectorListBox.SelectedItem == null || lastLoadedModel == "N/A")
             {
                 ConfigSelectorListBox.SelectedItem = null;
                 MessageBox.Show("Please select a model in the Model Selector before loading a config.", "Config Error");
+                return;
             }
+
+            string json = File.ReadAllText(path);
+            var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
+
+            if (config == null)
+            {
+                return; // invalid config
+            }
+
+            foreach (var setting in config)
+            {
+                if (aimmySettings.ContainsKey(setting.Key))
+                {
+                    aimmySettings[setting.Key] = setting.Value;
+                }
+                else if (setting.Key == "TopMost")
+                {
+                    toggleState["TopMost"] = setting.Value;
+                    this.Topmost = setting.Value;
+                }
+            }
+
+            if (aimmySettings["Suggested_Model"] != string.Empty)
+            {
+                MessageBox.Show("The creator of this model suggests you use this model:" +
+                    "\n" +
+                    aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
+            }
+
+            int fovSize = (int)aimmySettings["FOV_Size"];
+            FOVOverlay.FovSize = fovSize;
+            _onnxModel.FovSize = fovSize;
+            _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
+
+            lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
+
+            ReloadMenu();
         }
 
         void ReloadMenu()
@@ -789,10 +785,7 @@ namespace AimmyWPF
 
         private void ConfigWatcher_Reload(object sender, FileSystemEventArgs e)
         {
-            this.Dispatcher.Invoke(() =>
-            {
-                LoadConfigsIntoListBox();
-            });
+            this.Dispatcher.Invoke(LoadConfigsIntoListBox);
         }
 
         private void InitializeConfigWatcher()
@@ -807,17 +800,22 @@ namespace AimmyWPF
             ConfigfileWatcher.Renamed += ConfigWatcher_Reload;
         }
 
+        //load and set in different functions to prevent double loading.
         private void LoadConfigsIntoListBox()
         {
-            string[] jsonFiles = Directory.GetFiles("bin/configs");
             ConfigSelectorListBox.Items.Clear();
 
-            foreach (string filePath in jsonFiles)
+            foreach (string filePath in Directory.GetFiles("bin/configs"))
             {
                 string fileName = Path.GetFileName(filePath);
                 ConfigSelectorListBox.Items.Add(fileName);
             }
 
+            SetSelectedConfig();
+        }
+
+        private void SetSelectedConfig()
+        {
             if (ConfigSelectorListBox.Items.Count > 0)
             {
                 if (!ConfigSelectorListBox.Items.Contains(lastLoadedConfig) && lastLoadedConfig != "N/A")
@@ -843,21 +841,22 @@ namespace AimmyWPF
 
         void LoadStoreMenu()
         {
-            if (AvailableModels.Count > 0)
-            {
-                foreach (var entries in AvailableModels)
-                    ModelStoreScroller.Children.Add(new ADownloadGateway(entries, "models"));
-            }
-            else
-                LackOfModelsText.Visibility = Visibility.Visible;
+            DownloadGateway(ModelStoreScroller, AvailableModels, "models");
+            DownloadGateway(ConfigStoreScroller, AvailableConfigs, "configs");
+        }
 
-            if (AvailableConfigs.Count > 0)
+        void DownloadGateway(StackPanel Scroller, HashSet<string> entries, string folder)
+        {
+            if (entries.Count > 0)
             {
-                foreach (var entries in AvailableConfigs)
-                    ConfigStoreScroller.Children.Add(new ADownloadGateway(entries, "configs"));
+                foreach (var entry in entries)
+                    Scroller.Children.Add(new ADownloadGateway(entry, folder));
             }
             else
+            {
+                Scroller.Children.Clear();
                 LackOfConfigsText.Visibility = Visibility.Visible;
+            }
         }
 
         void LoadSettingsMenu()
