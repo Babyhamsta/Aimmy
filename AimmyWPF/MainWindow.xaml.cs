@@ -567,7 +567,6 @@ namespace AimmyWPF
             AimScroller.Children.Add(Show_FOV);
 
             AColorChanger Change_FOVColor = new AColorChanger("FOV Color");
-            //Change_FOVColor.ColorChangingBorder.Background = new SolidColorBrush(OverlayWindow.FOVColor);
             Change_FOVColor.Reader.Click += (s, x) =>
             {
                 // Reference: https://www.c-sharpcorner.com/article/colordialog-in-C-Sharp/

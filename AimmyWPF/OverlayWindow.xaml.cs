@@ -22,7 +22,6 @@ namespace AimmyWPF
         public OverlayWindow()
         {
             InitializeComponent();
-            //UpdateFOVColor();
             var timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(250);
             timer.Tick += Timer_Tick;
