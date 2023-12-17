@@ -14,5 +14,7 @@ namespace AimmyWPF.Class
 
         public static void PostColor(System.Windows.Media.Color newcolor) => ReceiveColor?.Invoke(newcolor);
         public static Action<System.Windows.Media.Color> ReceiveColor { private get; set; } = null;
+        public static void PostNewFOVSize() => ReceiveFOVSize?.Invoke();
+        public static Action ReceiveFOVSize { private get; set; } = null;
     }
 }

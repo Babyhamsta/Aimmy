@@ -32,19 +32,22 @@ namespace AimmyWPF.UserController
 
             DownloadButton.Click += async (s, e) =>
             {
-                using (WebClient webClient = new WebClient())
+                if (DownloadButton.Content != "\xE895")
                 {
-                    DownloadButton.Content = "\xE895";
-                    new NoticeBar("The download is being parsed.").Show();
-                    webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{Path}/{Text}"), $"bin\\{Path}\\{Text}");
-                    webClient.DownloadProgressChanged += (s, e) => DownloadProgress.Value = e.ProgressPercentage;
-
-                    webClient.DownloadFileCompleted += (s, e) =>
+                    using (WebClient webClient = new WebClient())
                     {
-                        webClient.Dispose();
-                        new NoticeBar("The file has been completed.").Show();
-                        (this.Parent as StackPanel).Children.Remove(this);
-                    };
+                        DownloadButton.Content = "\xE895";
+                        new NoticeBar("The download is being parsed.").Show();
+                        webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{Path}/{Text}"), $"bin\\{Path}\\{Text}");
+                        webClient.DownloadProgressChanged += (s, e) => DownloadProgress.Value = e.ProgressPercentage;
+
+                        webClient.DownloadFileCompleted += (s, e) =>
+                        {
+                            webClient.Dispose();
+                            new NoticeBar("The file has been completed.").Show();
+                            (this.Parent as StackPanel).Children.Remove(this);
+                        };
+                    }
                 }
             };
         }

@@ -178,6 +178,8 @@ namespace AimmyWPF
             FOVOverlay = new OverlayWindow();
             FOVOverlay.Hide();
             FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
+            // Nori's Addition
+            AwfulPropertyChanger.PostNewFOVSize();
 
             // Start the loop that runs the model
             Task.Run(() => StartModelCaptureLoop());
@@ -604,6 +606,8 @@ namespace AimmyWPF
 
                 // Update the overlay's FOV size
                 FOVOverlay.FovSize = (int)FovSize;
+                // Nori's Addition
+                AwfulPropertyChanger.PostNewFOVSize();
             };
 
             AimScroller.Children.Add(FovSlider);
@@ -783,6 +787,8 @@ namespace AimmyWPF
                 FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
                 _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
                 _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
+                // Nori's Addition
+                AwfulPropertyChanger.PostNewFOVSize();
 
                 lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
 

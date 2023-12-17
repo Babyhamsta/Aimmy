@@ -67,6 +67,8 @@ namespace SecondaryWindows
                 Console.WriteLine("Error saving configuration: " + x.Message);
             }
 
+            new NoticeBar("Config has been saved to bin/configs.").Show();
+
             this.Close();
         }
 
