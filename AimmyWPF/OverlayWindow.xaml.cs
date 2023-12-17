@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using AimmyWPF.Class;
 using static AimmyWPF.MainWindow;
 
 namespace AimmyWPF
@@ -15,15 +17,34 @@ namespace AimmyWPF
     public partial class OverlayWindow : Window
     {
         public int FovSize { get; set; } = 640;
+        //public static Color FOVColor = Color.FromArgb(255, 255, 0, 0);
 
         public OverlayWindow()
         {
             InitializeComponent();
+            //UpdateFOVColor();
             var timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(250);
             timer.Tick += Timer_Tick;
             timer.Start();
+
+            // Reference: https://www.codeproject.com/Questions/5363839/How-to-change-property-of-element-from-outside-of
+            // not a good coder nori
+
+            // Listens for any new colors
+            AwfulPropertyChanger.ReceiveColor = UpdateFOVColor;
         }
+
+        public void UpdateFOVColor(Color NewColor)
+        {
+            // Similar idea to @iamgiga
+            // maybe not the best way of doing it though :/
+            // nori
+
+            // Changes the color of ur fov circle
+            OverlayCircle.Stroke = new SolidColorBrush(NewColor);
+        }
+
 
         private void Timer_Tick(object sender, EventArgs e)
         {

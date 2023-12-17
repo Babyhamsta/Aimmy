@@ -566,6 +566,26 @@ namespace AimmyWPF
             SetupToggle(Show_FOV, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Show_FOV);
 
+            AColorChanger Change_FOVColor = new AColorChanger("FOV Color");
+            //Change_FOVColor.ColorChangingBorder.Background = new SolidColorBrush(OverlayWindow.FOVColor);
+            Change_FOVColor.Reader.Click += (s, x) =>
+            {
+                // Reference: https://www.c-sharpcorner.com/article/colordialog-in-C-Sharp/
+                // nori the ass at coding coder
+                System.Windows.Forms.ColorDialog colorDialog = new System.Windows.Forms.ColorDialog();
+                if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    Change_FOVColor.ColorChangingBorder.Background = new SolidColorBrush(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
+
+                    // Reference: https://www.codeproject.com/Questions/5363839/How-to-change-property-of-element-from-outside-of
+                    // not a good coder nori
+
+                    // changes color (lol what did u expect would happen?)
+                    AwfulPropertyChanger.PostColor(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
+                }
+            };
+            AimScroller.Children.Add(Change_FOVColor);
+
             ASlider FovSlider = new ASlider(this, "FOV Size", "Size of FOV",
                 "This setting controls how much of your screen is considered in the AI's decision making and how big the circle on your screen will be.",
                 1);

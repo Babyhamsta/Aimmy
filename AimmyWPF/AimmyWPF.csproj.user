@@ -38,5 +38,8 @@
     <Page Update="UserController\AInfoSection.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="UserController\AColorChanger.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>
