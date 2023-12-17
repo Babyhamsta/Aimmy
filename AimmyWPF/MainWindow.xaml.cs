@@ -271,6 +271,10 @@ namespace AimmyWPF
             int targetX = detectedX - halfScreenWidth;
             int targetY = detectedY - halfScreenHeight;
 
+            // Aspect ratio correction factor
+            double aspectRatioCorrection = (double)ScreenWidth / ScreenHeight;
+            targetY = (int)(targetY * aspectRatioCorrection);
+
             // Introduce random jitter
             int jitterX = MouseRandom.Next(-4, 4);
             int jitterY = MouseRandom.Next(-4, 4);
@@ -313,8 +317,8 @@ namespace AimmyWPF
 
                 double YOffset = aimmySettings["Y_Offset"];
                 double XOffset = aimmySettings["X_Offset"];
-                int detectedX = (int)((closestPrediction.Rectangle.X * scaleX) + XOffset);
-                int detectedY = (int)((closestPrediction.Rectangle.Y * scaleY) + YOffset);
+                int detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
+                int detectedY = (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
 
                 // Handle Prediction
                 if (toggleState["PredictionToggle"])
