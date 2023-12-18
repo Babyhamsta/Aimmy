@@ -92,7 +92,7 @@
                         Foreground="White" />
                 <Label x:Name="VersionNumber"
                        Foreground="White"
-                       Content="v1.5.0"
+                       Content="v1.5.1"
                        VerticalContentAlignment="Center"
                        Padding="5,0,0,0"
                        FontSize="20"
