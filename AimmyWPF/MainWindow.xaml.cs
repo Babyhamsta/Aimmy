@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Diagnostics;
 using SecondaryWindows;
 using System.Runtime.InteropServices;
+using static AimmyWPF.PredictionManager;
 
 namespace AimmyWPF
 {
@@ -90,13 +91,8 @@ namespace AimmyWPF
         Thickness WinVeryRight = new Thickness(1120, 0, -1120, 0);
         Thickness WinTooRight = new Thickness(1680, 0, -1680, 0);
 
-        private bool StartedLoad = false;
         public MainWindow()
         {
-
-            if (StartedLoad) { return; }
-            StartedLoad = true;
-
             InitializeComponent();
             this.Title = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
 
@@ -113,14 +109,22 @@ namespace AimmyWPF
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string[] dirs = { "bin", "bin/models", "bin/images", "bin/configs" };
 
-            foreach (string dir in dirs)
+            try
             {
-                string fullPath = Path.Combine(baseDir, dir);
-                if (!Directory.Exists(fullPath))
+                foreach (string dir in dirs)
                 {
-                    // Create the directory
-                    Directory.CreateDirectory(fullPath);
+                    string fullPath = Path.Combine(baseDir, dir);
+                    if (!Directory.Exists(fullPath))
+                    {
+                        // Create the directory
+                        Directory.CreateDirectory(fullPath);
+                    }
                 }
+            } 
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Error creating a required directory: {ex}");
+                Application.Current.Shutdown(); // We don't want to continue running without that folder.
             }
 
             // Setup key/mouse hook
@@ -128,32 +132,6 @@ namespace AimmyWPF
             bindingManager.SetupDefault("Right");
             bindingManager.OnBindingPressed += (binding) => { IsHolding_Binding = true; };
             bindingManager.OnBindingReleased += (binding) => { IsHolding_Binding = false; };
-
-            // Load settings
-            // Might require some optimizing - Nori
-            if (File.Exists("bin/configs/Default.cfg"))
-            {
-                string json = File.ReadAllText("bin/configs/Default.cfg");
-
-                // Deserialize JSON directly into a dictionary
-                var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
-                if (config == null) { return; } // invalid config
-
-                // Update aimmySettings with values from the loaded config
-                foreach (var setting in config)
-                {
-                    if (aimmySettings.ContainsKey(setting.Key))
-                    {
-                        aimmySettings[setting.Key] = setting.Value;
-                    }
-                    else if (setting.Key == "TopMost")
-                    {
-                        //bool topMostValue = setting.Value == 1.0;
-                        toggleState["TopMost"] = setting.Value;
-                        this.Topmost = setting.Value;
-                    }
-                }
-            }
 
             // Load UI
             InitializeMenuPositions();
@@ -165,7 +143,6 @@ namespace AimmyWPF
 
             // Load PredictionManager
             predictionManager = new PredictionManager();
-            predictionManager.InitializeKalmanFilter();
 
             // Load all models into listbox
             LoadModelsIntoListBox();
@@ -178,78 +155,64 @@ namespace AimmyWPF
             FOVOverlay = new OverlayWindow();
             FOVOverlay.Hide();
             FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
-            // Nori's Addition
             AwfulPropertyChanger.PostNewFOVSize();
 
             // Start the loop that runs the model
             Task.Run(() => StartModelCaptureLoop());
         }
 
-        List<String> AvailableModels = new List<String>();
-        List<String> AvailableConfigs = new List<String>();
+        private HashSet<string> AvailableModels = new HashSet<string>();
+        private HashSet<string> AvailableConfigs = new HashSet<string>();
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // This is a proof of concept atm so I yanked the code from this:
-            // https://stackoverflow.com/questions/46302570/how-to-get-list-of-files-from-a-specific-github-repo-given-a-link-in-c
-            // nori
+            await LoadConfigAsync("bin/configs/Default.cfg");
+            Task modelTask = RetrieveAndAddFilesAsync("models", "bin\\models", AvailableModels);
+            Task configTask = RetrieveAndAddFilesAsync("configs", "bin\\configs", AvailableConfigs);
 
-            IEnumerable<string> ModelResults = await RetrieveGithubFiles.ListContents("models");
-            foreach (var file in ModelResults)
-            {
-                if (!AvailableModels.Contains(file) && !System.IO.File.Exists($"bin\\models\\{file}"))
-                {
-                    AvailableModels.Add(file);
-                }
-            }
-
-            IEnumerable<string> ConfigResults = await RetrieveGithubFiles.ListContents("configs");
-            foreach (var file in ConfigResults)
-            {
-                if (!AvailableConfigs.Contains(file) && !System.IO.File.Exists($"bin\\configs\\{file}"))
-                {
-                    AvailableConfigs.Add(file);
-                }
-            }
+            await Task.WhenAll(modelTask, configTask);
 
             LoadStoreMenu();
+        }
+
+        private async Task RetrieveAndAddFilesAsync(string repositoryPath, string localPath, HashSet<string> availableFiles)
+        {
+            IEnumerable<string> results = await RetrieveGithubFiles.ListContents(repositoryPath);
+
+            foreach (var file in results)
+            {
+                string filePath = Path.Combine(localPath, file);
+
+                if (!availableFiles.Contains(file) && !File.Exists(filePath))
+                {
+                    availableFiles.Add(file);
+                }
+            }
         }
 
         #region Mouse Movement / Clicking Handler
         [DllImport("user32.dll")]
         static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
 
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetCursorPos(out POINT lpPoint);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
-            public int X;
-            public int Y;
-        }
-
         private static Random MouseRandom = new Random();
 
         private static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
         {
-            double x = Math.Pow(1 - t, 3) * start.X +
-                       3 * Math.Pow(1 - t, 2) * t * control1.X +
-                       3 * (1 - t) * Math.Pow(t, 2) * control2.X +
-                       Math.Pow(t, 3) * end.X;
+            double u = 1 - t;
+            double tt = t * t;
+            double uu = u * u;
+            double uuu = uu * u;
+            double ttt = tt * t;
 
-            double y = Math.Pow(1 - t, 3) * start.Y +
-                       3 * Math.Pow(1 - t, 2) * t * control1.Y +
-                       3 * (1 - t) * Math.Pow(t, 2) * control2.Y +
-                       Math.Pow(t, 3) * end.Y;
+            double x = uuu * start.X + 3 * uu * t * control1.X + 3 * u * tt * control2.X + ttt * end.X;
+            double y = uuu * start.Y + 3 * uu * t * control1.Y + 3 * u * tt * control2.Y + ttt * end.Y;
 
             return new Point((int)x, (int)y);
         }
 
         private async Task DoTriggerClick()
         {
-            TimeSinceLastClick = (int)(DateTime.Now - LastClickTime).TotalMilliseconds;
+            int TimeSinceLastClick = (int)(DateTime.Now - LastClickTime).TotalMilliseconds;
             int Trigger_Delay_Milliseconds = (int)(aimmySettings["Trigger_Delay"] * 1000);
 
             if (TimeSinceLastClick >= Trigger_Delay_Milliseconds || LastClickTime == DateTime.MinValue)
@@ -310,33 +273,38 @@ namespace AimmyWPF
             if (closestPrediction == null)
             {
                 return;
+            } 
+            else if (TriggerOnly)
+            {
+                Task.Run(DoTriggerClick);
+                return;
             }
 
-            if (!TriggerOnly)
+            float scaleX = (float)ScreenWidth / 640f;
+            float scaleY = (float)ScreenHeight / 640f;
+
+            double YOffset = aimmySettings["Y_Offset"];
+            double XOffset = aimmySettings["X_Offset"];
+            int detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
+            int detectedY = (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
+
+            // Handle Prediction
+            if (toggleState["PredictionToggle"])
             {
-                float scaleX = (float)ScreenWidth / 640f;
-                float scaleY = (float)ScreenHeight / 640f;
-
-                double YOffset = aimmySettings["Y_Offset"];
-                double XOffset = aimmySettings["X_Offset"];
-                int detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
-                int detectedY = (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
-
-                // Handle Prediction
-                if (toggleState["PredictionToggle"])
+                Detection detection = new Detection
                 {
-                    predictionManager.UpdateKalmanFilter(detectedX, detectedY);
-                    var predictedPosition = predictionManager.GetEstimatedPosition();
-                    MoveCrosshair(predictedPosition.X, predictedPosition.Y);
-                }
-                else 
-                {
-                    MoveCrosshair(detectedX, detectedY);
-                }
+                    X = detectedX,
+                    Y = detectedY,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                predictionManager.UpdateKalmanFilter(detection);
+                var predictedPosition = predictionManager.GetEstimatedPosition();
+                MoveCrosshair(predictedPosition.X, predictedPosition.Y);
             }
             else
             {
-                Task.Run(DoTriggerClick);
+                MoveCrosshair(detectedX, detectedY);
             }
         }
 
@@ -349,7 +317,6 @@ namespace AimmyWPF
             {
                 if (toggleState["AimbotToggle"] && (IsHolding_Binding || toggleState["AlwaysOn"]))
                 {
-                    Debug.WriteLine("Doing aimbot");
                     await ModelCapture();
                 }
                 else if (!toggleState["AimbotToggle"] && toggleState["TriggerBot"] && IsHolding_Binding) // Triggerbot Only
@@ -357,6 +324,7 @@ namespace AimmyWPF
                     await ModelCapture(true);
                 }
 
+                // We have to have some sort of delay here to not overload the CPU / reduce CPU usage.
                 await Task.Delay(1);
             }
         }
@@ -365,7 +333,7 @@ namespace AimmyWPF
         {
             if (cts != null)
             {
-                cts.Cancel();
+                cts?.Cancel();
                 cts = null;
             }
         }
@@ -571,17 +539,10 @@ namespace AimmyWPF
             AColorChanger Change_FOVColor = new AColorChanger("FOV Color");
             Change_FOVColor.Reader.Click += (s, x) =>
             {
-                // Reference: https://www.c-sharpcorner.com/article/colordialog-in-C-Sharp/
-                // nori the ass at coding coder
                 System.Windows.Forms.ColorDialog colorDialog = new System.Windows.Forms.ColorDialog();
                 if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     Change_FOVColor.ColorChangingBorder.Background = new SolidColorBrush(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
-
-                    // Reference: https://www.codeproject.com/Questions/5363839/How-to-change-property-of-element-from-outside-of
-                    // not a good coder nori
-
-                    // changes color (lol what did u expect would happen?)
                     AwfulPropertyChanger.PostColor(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
                 }
             };
@@ -604,9 +565,7 @@ namespace AimmyWPF
                     _onnxModel.FovSize = (int)FovSize;
                 }
 
-                // Update the overlay's FOV size
                 FOVOverlay.FovSize = (int)FovSize;
-                // Nori's Addition
                 AwfulPropertyChanger.PostNewFOVSize();
             };
 
@@ -703,21 +662,30 @@ namespace AimmyWPF
             fileWatcher.Renamed += FileWatcher_Reload;
         }
 
+        private bool ModelLoadDebounce = false;
         private void InitializeModel()
         {
-            if (SelectorListBox.SelectedItem != null)
+            if (!ModelLoadDebounce)
             {
-                string modelFileName = SelectorListBox.SelectedItem.ToString();
-                string modelPath = Path.Combine("bin/models", modelFileName);
+                ModelLoadDebounce = true;
+
+                string selectedModel = SelectorListBox.SelectedItem?.ToString();
+                if (selectedModel == null) return;
+
+                string modelPath = Path.Combine("bin/models", selectedModel);
 
                 _onnxModel?.Dispose();
+                _onnxModel = new AIModel(modelPath)
+                {
+                    ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f),
+                    CollectData = toggleState["CollectData"],
+                    FovSize = (int)aimmySettings["FOV_Size"]
+                };
 
-                _onnxModel = new AIModel(modelPath);
-                _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
-                _onnxModel.CollectData = toggleState["CollectData"];
-                _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
-                SelectedModelNotifier.Content = "Loaded Model: " + modelFileName;
-                lastLoadedModel = modelFileName;
+                SelectedModelNotifier.Content = "Loaded Model: " + selectedModel;
+                lastLoadedModel = selectedModel;
+
+                ModelLoadDebounce = false;
             }
         }
 
@@ -728,8 +696,8 @@ namespace AimmyWPF
 
             foreach (string filePath in onnxFiles)
             {
-                string fileName = Path.GetFileName(filePath);
-                SelectorListBox.Items.Add(fileName);
+                SelectorListBox.Items.Add(Path.GetFileName(filePath));
+
             }
 
             if (SelectorListBox.Items.Count > 0)
@@ -752,53 +720,55 @@ namespace AimmyWPF
             InitializeModel();
         }
 
-        void LoadConfig(string path)
+        private async Task LoadConfigAsync(string path)
         {
-            if (ConfigSelectorListBox.SelectedItem != null && lastLoadedModel != "N/A")
+
+            if (File.Exists(path))
             {
-                string json = File.ReadAllText(path);
+                string json = await File.ReadAllTextAsync(path);
 
-                // Deserialize JSON directly into a dictionary
                 var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
-                if (config == null) { return; } // invalid config
-
-                // Update aimmySettings with values from the loaded config
-                foreach (var setting in config)
+                if (config != null)
                 {
-                    if (aimmySettings.ContainsKey(setting.Key))
+                    foreach (var (key, value) in config)
                     {
-                        aimmySettings[setting.Key] = setting.Value;
-                    }
-                    else if (setting.Key == "TopMost")
-                    {
-                        //bool topMostValue = setting.Value == 1.0;
-                        toggleState["TopMost"] = setting.Value;
-                        this.Topmost = setting.Value;
+                        if (aimmySettings.TryGetValue(key, out var currentValue))
+                        {
+                            aimmySettings[key] = value;
+                        }
+                        else if (key == "TopMost" && value is bool topMostValue)
+                        {
+                            toggleState["TopMost"] = topMostValue;
+                            this.Topmost = topMostValue;
+                        }
                     }
                 }
-
-                if (aimmySettings["Suggested_Model"] != string.Empty)
-                {
-                    MessageBox.Show("The creator of this model suggests you use this model:" +
-                        "\n" +
-                        aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
-                }    
-
-                FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
-                _onnxModel.FovSize = (int)aimmySettings["FOV_Size"];
-                _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
-                // Nori's Addition
-                AwfulPropertyChanger.PostNewFOVSize();
-
-                lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
-
-                ReloadMenu();
             }
-            else
+            if (aimmySettings["Suggested_Model"] != string.Empty)
             {
-                ConfigSelectorListBox.SelectedItem = null;
-                MessageBox.Show("Please select a model in the Model Selector before loading a config.", "Config Error");
+                MessageBox.Show("The creator of this model suggests you use this model:" +
+                    "\n" +
+                    aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
             }
+
+            // We'll attempt to update the AI Settings but it may not be loaded yet.
+            try
+            {
+                int fovSize = (int)aimmySettings["FOV_Size"];
+                FOVOverlay.FovSize = fovSize;
+                _onnxModel.FovSize = fovSize;
+                _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
+            } catch { }
+
+            string fileName = Path.GetFileName(path);
+            if (ConfigSelectorListBox.Items.Contains(fileName))
+            {
+                ConfigSelectorListBox.SelectedItem = fileName;
+                lastLoadedConfig = ConfigSelectorListBox.SelectedItem.ToString();
+                SetSelectedConfig();
+            }
+
+            ReloadMenu();
         }
 
         void ReloadMenu()
@@ -814,10 +784,7 @@ namespace AimmyWPF
 
         private void ConfigWatcher_Reload(object sender, FileSystemEventArgs e)
         {
-            this.Dispatcher.Invoke(() =>
-            {
-                LoadConfigsIntoListBox();
-            });
+            this.Dispatcher.Invoke(LoadConfigsIntoListBox);
         }
 
         private void InitializeConfigWatcher()
@@ -834,15 +801,19 @@ namespace AimmyWPF
 
         private void LoadConfigsIntoListBox()
         {
-            string[] jsonFiles = Directory.GetFiles("bin/configs");
             ConfigSelectorListBox.Items.Clear();
 
-            foreach (string filePath in jsonFiles)
+            foreach (string filePath in Directory.GetFiles("bin/configs"))
             {
                 string fileName = Path.GetFileName(filePath);
                 ConfigSelectorListBox.Items.Add(fileName);
             }
 
+            SetSelectedConfig();
+        }
+
+        private void SetSelectedConfig()
+        {
             if (ConfigSelectorListBox.Items.Count > 0)
             {
                 if (!ConfigSelectorListBox.Items.Contains(lastLoadedConfig) && lastLoadedConfig != "N/A")
@@ -858,31 +829,32 @@ namespace AimmyWPF
             }
         }
 
-        private void ConfigSelectorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void ConfigSelectorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ConfigSelectorListBox.SelectedItem != null)
             {
-                LoadConfig($"bin/configs/{ConfigSelectorListBox.SelectedItem.ToString()}");
+                await LoadConfigAsync($"bin/configs/{ConfigSelectorListBox.SelectedItem.ToString()}");
             }
         }
 
         void LoadStoreMenu()
         {
-            if (AvailableModels.Count > 0)
-            {
-                foreach (var entries in AvailableModels)
-                    ModelStoreScroller.Children.Add(new ADownloadGateway(entries, "models"));
-            }
-            else
-                LackOfModelsText.Visibility = Visibility.Visible;
+            DownloadGateway(ModelStoreScroller, AvailableModels, "models");
+            DownloadGateway(ConfigStoreScroller, AvailableConfigs, "configs");
+        }
 
-            if (AvailableConfigs.Count > 0)
+        void DownloadGateway(StackPanel Scroller, HashSet<string> entries, string folder)
+        {
+            if (entries.Count > 0)
             {
-                foreach (var entries in AvailableConfigs)
-                    ConfigStoreScroller.Children.Add(new ADownloadGateway(entries, "configs"));
+                foreach (var entry in entries)
+                    Scroller.Children.Add(new ADownloadGateway(entry, folder));
             }
             else
+            {
+                Scroller.Children.Clear();
                 LackOfConfigsText.Visibility = Visibility.Visible;
+            }
         }
 
         void LoadSettingsMenu()
@@ -990,6 +962,11 @@ namespace AimmyWPF
             // Unhook keybind hooker
             bindingManager.StopListening();
             FOVOverlay.Close();
+
+            // Dispose (best practice)
+            fileWatcher.Dispose();
+            ConfigfileWatcher.Dispose();
+            cts.Dispose();
 
             // Close
             Application.Current.Shutdown();

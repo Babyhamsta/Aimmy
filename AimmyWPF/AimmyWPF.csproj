@@ -11,6 +11,7 @@
     <SignAssembly>True</SignAssembly>
     <NeutralLanguage>en</NeutralLanguage>
     <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
