@@ -14,6 +14,8 @@ namespace AimmyWPF
 
         KalmanFilter2D kalmanFilter;
         private DateTime lastUpdateTime;
+        private const double ResetThreshold = 1;
+        public double PredictionSens = 0.01;
 
         public PredictionManager()
         {
@@ -24,14 +26,9 @@ namespace AimmyWPF
         public void UpdateKalmanFilter(Detection detection)
         {
             var currentTime = DateTime.UtcNow;
-            var timeElapsed = (currentTime - lastUpdateTime).TotalSeconds;
 
-            // Update the filter only if a significant amount of time has passed
-            if (timeElapsed >= 0.02)
-            {
-                kalmanFilter.Push(detection.X, detection.Y);
-                lastUpdateTime = currentTime;
-            }
+            kalmanFilter.Push(detection.X, detection.Y);
+            lastUpdateTime = currentTime;
         }
 
         public Detection GetEstimatedPosition()

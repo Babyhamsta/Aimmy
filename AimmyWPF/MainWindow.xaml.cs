@@ -62,6 +62,7 @@ namespace AimmyWPF
             { "Suggested_Model", ""},
             { "FOV_Size", 640 },
             { "Mouse_Sens", 0.80 },
+            { "Mouse_Jitter", 4 },
             { "Y_Offset", 0 },
             { "X_Offset", 0 },
             { "Trigger_Delay", 0.1 },
@@ -241,8 +242,9 @@ namespace AimmyWPF
             targetY = (int)(targetY * aspectRatioCorrection);
 
             // Introduce random jitter
-            int jitterX = MouseRandom.Next(-4, 4);
-            int jitterY = MouseRandom.Next(-4, 4);
+            int MouseJitter = (int)aimmySettings["Mouse_Jitter"];
+            int jitterX = MouseRandom.Next(-MouseJitter, MouseJitter);
+            int jitterY = MouseRandom.Next(-MouseJitter, MouseJitter);
 
             targetX += jitterX;
             targetY += jitterY;
@@ -586,6 +588,21 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(MouseSensitivty);
 
+            ASlider MouseJitter = new ASlider(this, "Mouse Jitter", "Jitter",
+                "This setting controls how much fake jitter is added to the mouse movements. Aim is almost never steady so this adds a nice layer of humanizing onto aim.",
+                0.01);
+
+            MouseJitter.Slider.Minimum = 0;
+            MouseJitter.Slider.Maximum = 15;
+            MouseJitter.Slider.Value = aimmySettings["Mouse_Jitter"];
+            MouseJitter.Slider.TickFrequency = 1;
+            MouseJitter.Slider.ValueChanged += (s, x) =>
+            {
+                aimmySettings["Mouse_Jitter"] = MouseJitter.Slider.Value;
+            };
+
+            AimScroller.Children.Add(MouseJitter);
+
             ASlider YOffset = new ASlider(this, "Y Offset (Up/Down)", "Offset",
                 "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.", 
                 1);
@@ -754,9 +771,12 @@ namespace AimmyWPF
             // We'll attempt to update the AI Settings but it may not be loaded yet.
             try
             {
+                predictionManager.PredictionSens = aimmySettings["Prediction_Sens"];
+
                 int fovSize = (int)aimmySettings["FOV_Size"];
                 FOVOverlay.FovSize = fovSize;
                 AwfulPropertyChanger.PostNewFOVSize();
+
                 _onnxModel.FovSize = fovSize;
                 _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
             } catch { }
