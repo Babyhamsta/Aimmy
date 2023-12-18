@@ -103,9 +103,6 @@ Once you are finished labeling you'll want to export the labels for AI training:
 Please see the video tutorial bellow on how to label images and train your own model. (Redirects to Youtube)
 [![Watch the video on Youtube](https://img.youtube.com/vi/i98wF4218-Q/maxresdefault.jpg)](https://youtu.be/i98wF4218-Q)
 
-</div>
-
-
 ## How do I upload my model to the "Downloadable Models" menu?
 
 If you are not aware already, Aimmy contains a "Downloadable Models" tab that allows you to download models developed and shared by the Aimmy Community.
@@ -150,3 +147,4 @@ Create the pull request (again)
 You are done! We will review your pull request and your model will be added in 24-48 hours. If you would like to remove your model from the "Downloadable Models" tab, you may make another pull request or contact us on the Issues tab.
 
 For anyone who does this, thank you so much =D, Aimmy genuinely thrives with community contributions and support, and making and sharing your Aimmy models genuinely means a lot to us! Thank you!
+</div>
