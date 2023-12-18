@@ -26,10 +26,7 @@ namespace AimmyWPF
 
         }
 
-        void UpdateFOVColor(Color NewColor)
-        {
-            OverlayCircle.Stroke = new SolidColorBrush(NewColor);
-        }
+        void UpdateFOVColor(Color NewColor) => OverlayCircle.Stroke = new SolidColorBrush(NewColor);
 
         void UpdateFOVSize()
         {
