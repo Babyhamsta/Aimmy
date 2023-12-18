@@ -756,6 +756,7 @@ namespace AimmyWPF
             {
                 int fovSize = (int)aimmySettings["FOV_Size"];
                 FOVOverlay.FovSize = fovSize;
+                AwfulPropertyChanger.PostNewFOVSize();
                 _onnxModel.FovSize = fovSize;
                 _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
             } catch { }
