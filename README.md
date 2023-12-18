@@ -17,6 +17,7 @@ Aimmy also has a myriad of [features](#features) that sets itself apart from oth
 Aimmy is 100% free to use, ad-free, and is actively not for profit. Aimmy is not, and will never be for sale, and is considered a **source-available** product as **we actively discourage other developers from making profit-focused forks of Aimmy**.
 
 Join our Discord: https://discord.gg/Aimmy
+
 If you want to show Aimmy to your friends, check our our website: https://supercomet.cc/
 
 ## Table of Contents
