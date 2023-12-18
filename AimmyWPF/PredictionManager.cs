@@ -14,8 +14,6 @@ namespace AimmyWPF
 
         KalmanFilter2D kalmanFilter;
         private DateTime lastUpdateTime;
-        private const double ResetThreshold = 1;
-        public double PredictionSens = 0.01;
 
         public PredictionManager()
         {
