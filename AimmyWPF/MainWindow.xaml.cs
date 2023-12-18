@@ -63,6 +63,7 @@ namespace AimmyWPF
             { "FOV_Size", 640 },
             { "Mouse_Sens", 0.80 },
             { "Mouse_Jitter", 4 },
+            { "Prediction_Sens", 0.1 },
             { "Y_Offset", 0 },
             { "X_Offset", 0 },
             { "Trigger_Delay", 0.1 },
@@ -739,7 +740,6 @@ namespace AimmyWPF
 
         private async Task LoadConfigAsync(string path)
         {
-
             if (File.Exists(path))
             {
                 string json = await File.ReadAllTextAsync(path);
