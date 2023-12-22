@@ -23,8 +23,8 @@ namespace AimmyWPF
 {
     public partial class MainWindow : Window
     {
-        private PredictionManager predictionManager;
-        private OverlayWindow FOVOverlay;
+        private readonly PredictionManager predictionManager;
+        private readonly OverlayWindow FOVOverlay;
         private FileSystemWatcher fileWatcher;
         private FileSystemWatcher ConfigfileWatcher;
 
@@ -33,18 +33,17 @@ namespace AimmyWPF
 
         private readonly BrushConverter brushcolor = new BrushConverter();
 
-        private int TimeSinceLastClick = 0;
         private DateTime LastClickTime = DateTime.MinValue;
 
         private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         private const uint MOUSEEVENTF_LEFTUP = 0x0004;
         private const uint MOUSEEVENTF_MOVE = 0x0001; // Movement flag
 
-        private static int ScreenWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
-        private static int ScreenHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+        private static readonly int ScreenWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+        private static readonly int ScreenHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
 
-        private AIModel _onnxModel;
-        private InputBindingManager bindingManager;
+        private AIModel? _onnxModel;
+        private readonly InputBindingManager bindingManager;
         private bool IsHolding_Binding = false;
         private CancellationTokenSource cts;
 
@@ -57,7 +56,7 @@ namespace AimmyWPF
         }
 
         // Changed to Dynamic from Double because it was making the Config System hard to rework :/
-        public Dictionary<string, dynamic> aimmySettings = new Dictionary<string, dynamic>
+        public readonly Dictionary<string, dynamic> aimmySettings = new Dictionary<string, dynamic>
         {
             { "Suggested_Model", ""},
             { "FOV_Size", 640 },
@@ -70,7 +69,7 @@ namespace AimmyWPF
         };
 
 
-        private Dictionary<string, bool> toggleState = new Dictionary<string, bool>
+        private readonly Dictionary<string, bool> toggleState = new Dictionary<string, bool>
         {
             { "AimbotToggle", false },
             { "AlwaysOn", false },
@@ -162,8 +161,8 @@ namespace AimmyWPF
             Task.Run(() => StartModelCaptureLoop());
         }
 
-        private HashSet<string> AvailableModels = new HashSet<string>();
-        private HashSet<string> AvailableConfigs = new HashSet<string>();
+        private readonly HashSet<string> AvailableModels = new HashSet<string>();
+        private readonly HashSet<string> AvailableConfigs = new HashSet<string>();
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -195,7 +194,7 @@ namespace AimmyWPF
         [DllImport("user32.dll")]
         static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
 
-        private static Random MouseRandom = new Random();
+        private static readonly Random MouseRandom = new Random();
 
         private static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
         {
@@ -271,9 +270,13 @@ namespace AimmyWPF
         #region Aim Aligner Main and Loop
         public async Task ModelCapture(bool TriggerOnly = false)
         {
+            if (_onnxModel == null)
+            {
+                return;
+            }
             var closestPrediction = await _onnxModel.GetClosestPredictionToCenterAsync();
             if (closestPrediction == null)
-            {
+            { 
                 return;
             } 
             else if (TriggerOnly)
@@ -382,7 +385,10 @@ namespace AimmyWPF
 
             if (toggle.Reader.Name == "CollectData")
             {
-                _onnxModel.CollectData = state;
+                if (_onnxModel != null)
+                {
+                    _onnxModel.CollectData = state;
+                }
             }
             else if (toggle.Reader.Name == "ShowFOV")
             {
@@ -418,7 +424,7 @@ namespace AimmyWPF
 
         private void ApplyMenuAnimations(MenuPosition position)
         {
-            Thickness highlighterMargin = new Thickness(0, 30, 414, 0);
+            Thickness highlighterMargin;
             switch (position)
             {
                 case MenuPosition.AimMenu:
@@ -670,10 +676,12 @@ namespace AimmyWPF
 
         private void InitializeFileWatcher()
         {
-            fileWatcher = new FileSystemWatcher();
-            fileWatcher.Path = "bin/models";
-            fileWatcher.Filter = "*.onnx";
-            fileWatcher.EnableRaisingEvents = true;
+            fileWatcher = new FileSystemWatcher
+            {
+                Path = "bin/models",
+                Filter = "*.onnx",
+                EnableRaisingEvents = true
+            };
             fileWatcher.Created += FileWatcher_Reload;
             fileWatcher.Deleted += FileWatcher_Reload;
             fileWatcher.Renamed += FileWatcher_Reload;
@@ -686,7 +694,7 @@ namespace AimmyWPF
             {
                 ModelLoadDebounce = true;
 
-                string selectedModel = SelectorListBox.SelectedItem?.ToString();
+                string selectedModel = SelectorListBox.SelectedItem.ToString();
                 if (selectedModel == null) return;
 
                 string modelPath = Path.Combine("bin/models", selectedModel);
@@ -748,7 +756,7 @@ namespace AimmyWPF
                 {
                     foreach (var (key, value) in config)
                     {
-                        if (aimmySettings.TryGetValue(key, out var currentValue))
+                        if (aimmySettings.ContainsKey(key))
                         {
                             aimmySettings[key] = value;
                         }
@@ -768,15 +776,15 @@ namespace AimmyWPF
             }
 
             // We'll attempt to update the AI Settings but it may not be loaded yet.
-            try
-            {
-                int fovSize = (int)aimmySettings["FOV_Size"];
-                FOVOverlay.FovSize = fovSize;
-                AwfulPropertyChanger.PostNewFOVSize();
+            int fovSize = (int)aimmySettings["FOV_Size"];
+            FOVOverlay.FovSize = fovSize;
+            AwfulPropertyChanger.PostNewFOVSize();
 
+            if (_onnxModel != null)
+            {
                 _onnxModel.FovSize = fovSize;
                 _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
-            } catch { }
+            }
 
             string fileName = Path.GetFileName(path);
             if (ConfigSelectorListBox.Items.Contains(fileName))
@@ -807,8 +815,10 @@ namespace AimmyWPF
 
         private void InitializeConfigWatcher()
         {
-            ConfigfileWatcher = new FileSystemWatcher();
-            ConfigfileWatcher.Path = "bin/configs";
+            ConfigfileWatcher = new FileSystemWatcher
+            {
+                Path = "bin/configs"
+            };
             ConfigfileWatcher.Filters.Add("*.json");
             ConfigfileWatcher.Filters.Add("*.cfg");
             ConfigfileWatcher.EnableRaisingEvents = true;
@@ -851,7 +861,7 @@ namespace AimmyWPF
         {
             if (ConfigSelectorListBox.SelectedItem != null)
             {
-                await LoadConfigAsync($"bin/configs/{ConfigSelectorListBox.SelectedItem.ToString()}");
+                await LoadConfigAsync($"bin/configs/{ConfigSelectorListBox.SelectedItem}");
             }
         }
 
@@ -899,7 +909,10 @@ namespace AimmyWPF
                 {
                     double ConfVal = ((double)AIMinimumConfidence.Slider.Value);
                     aimmySettings["AI_Min_Conf"] = ConfVal;
-                    _onnxModel.ConfidenceThreshold = (float)(ConfVal / 100.0f);
+                    if (_onnxModel != null)
+                    {
+                        _onnxModel.ConfidenceThreshold = (float)(ConfVal / 100.0f);
+                    }
                 }
                 else 
                 {
@@ -914,7 +927,7 @@ namespace AimmyWPF
 
             SettingsScroller.Children.Add(AIMinimumConfidence);
 
-            bool topMostInitialState = toggleState.ContainsKey("TopMost") ? toggleState["TopMost"] : false;
+            bool topMostInitialState = toggleState.TryGetValue("TopMost", out bool value) && value;
 
             AToggle TopMost = new AToggle(this, "UI TopMost",
                 "This will toggle the UI's TopMost, meaning it can hide behind other windows vs always being on top.");
@@ -966,7 +979,7 @@ namespace AimmyWPF
                 }
 
                 // Add topmost
-                extendedSettings["TopMost"] = this.Topmost ? true : false;
+                extendedSettings["TopMost"] = this.Topmost;
 
                 string json = JsonConvert.SerializeObject(extendedSettings, Formatting.Indented);
                 File.WriteAllText("bin/configs/Default.cfg", json);
