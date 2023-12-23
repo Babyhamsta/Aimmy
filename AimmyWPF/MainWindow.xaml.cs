@@ -664,7 +664,10 @@ namespace AimmyWPF
             this.Dispatcher.Invoke(() =>
             {
                 LoadModelsIntoListBox();
-                InitializeModel();
+
+                // Maybe I broke something removing this, fix it, because it was causing a bug where ListBox stops working when something was added =)
+                // nori
+                //InitializeModel();
             });
         }
 
@@ -730,6 +733,7 @@ namespace AimmyWPF
                 }
                 SelectedModelNotifier.Content = "Loaded Model: " + lastLoadedModel;
             }
+            ModelLoadDebounce = false;
         }
 
         private void SelectorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
