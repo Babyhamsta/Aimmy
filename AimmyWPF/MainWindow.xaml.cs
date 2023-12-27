@@ -18,6 +18,7 @@ using System.Diagnostics;
 using SecondaryWindows;
 using System.Runtime.InteropServices;
 using static AimmyWPF.PredictionManager;
+using Visualization;
 
 namespace AimmyWPF
 {
@@ -25,6 +26,7 @@ namespace AimmyWPF
     {
         private PredictionManager predictionManager;
         private OverlayWindow FOVOverlay;
+        private PlayerDetectionWindow DetectedPlayerOverlay;
         private FileSystemWatcher fileWatcher;
         private FileSystemWatcher ConfigfileWatcher;
 
@@ -136,9 +138,10 @@ namespace AimmyWPF
 
             // Load UI
             InitializeMenuPositions();
-            LoadAimMenu();
-            LoadTriggerMenu();
-            LoadSettingsMenu();
+            //LoadAimMenu();
+            //LoadTriggerMenu();
+            //LoadSettingsMenu();
+            ReloadMenu();
             InitializeFileWatcher();
             InitializeConfigWatcher();
 
@@ -157,6 +160,11 @@ namespace AimmyWPF
             FOVOverlay.Hide();
             FOVOverlay.FovSize = (int)aimmySettings["FOV_Size"];
             AwfulPropertyChanger.PostNewFOVSize();
+            AwfulPropertyChanger.PostTravellingFOV(false);
+
+            // Create Current Detected Player Overlay
+            DetectedPlayerOverlay = new PlayerDetectionWindow();
+            DetectedPlayerOverlay.Hide();
 
             // Start the loop that runs the model
             Task.Run(() => StartModelCaptureLoop());
@@ -168,10 +176,16 @@ namespace AimmyWPF
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             await LoadConfigAsync("bin/configs/Default.cfg");
-            Task modelTask = RetrieveAndAddFilesAsync("models", "bin\\models", AvailableModels);
-            Task configTask = RetrieveAndAddFilesAsync("configs", "bin\\configs", AvailableConfigs);
-
-            await Task.WhenAll(modelTask, configTask);
+            try
+            {
+                Task modelTask = RetrieveAndAddFilesAsync("models", "bin\\models", AvailableModels);
+                Task configTask = RetrieveAndAddFilesAsync("configs", "bin\\configs", AvailableConfigs);
+                await Task.WhenAll(modelTask, configTask);
+            }
+            catch
+            {
+                MessageBox.Show("Github is irretrieveable right now, the Downloadable Model menu will not work right now, sorry!");
+            }
 
             LoadStoreMenu();
         }
@@ -183,7 +197,6 @@ namespace AimmyWPF
             foreach (var file in results)
             {
                 string filePath = Path.Combine(localPath, file);
-
                 if (!availableFiles.Contains(file) && !File.Exists(filePath))
                 {
                     availableFiles.Add(file);
@@ -303,10 +316,33 @@ namespace AimmyWPF
                 predictionManager.UpdateKalmanFilter(detection);
                 var predictedPosition = predictionManager.GetEstimatedPosition();
                 MoveCrosshair(predictedPosition.X, predictedPosition.Y);
+
+                if (Bools.ShowDetectedPlayerWindow)
+                {
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        if (Bools.ShowPrediction)
+                            DetectedPlayerOverlay.PredictionFocus.Margin = new Thickness(predictedPosition.X - (50 / 2), predictedPosition.Y - (50 / 2), 0, 0);
+                    });
+                }
             }
             else
             {
                 MoveCrosshair(detectedX, detectedY);
+            }
+
+            if (Bools.ShowDetectedPlayerWindow)
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    if (Bools.ShowDetectedPlayerWindow)
+                        DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(detectedX - (50 / 2), detectedY - (50 / 2), 0, 0);
+
+                    if (Bools.ShowUnfilteredDetectedPlayer)
+                        DetectedPlayerOverlay.UnfilteredPlayerFocus.Margin = new Thickness(
+                            (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX) - (50 / 2),
+                            (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY) - (50 / 2), 0, 0);
+                });
             }
         }
 
@@ -360,8 +396,8 @@ namespace AimmyWPF
             {
                 bool currentState = (bool)toggle.Reader.Tag;
                 toggle.Reader.Tag = !currentState;
-                SetToggleState(toggle);
                 action.Invoke(!currentState);
+                SetToggleState(toggle);
             };
         }
 
@@ -372,7 +408,13 @@ namespace AimmyWPF
             // Stop them from turning on anything until model has been selected.
             if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "TriggerBot" || toggle.Reader.Name == "CollectData") && lastLoadedModel == "N/A")
             {
+                Bools.AIAimAligner = false;
+                Bools.Triggerbot = false;
+                Bools.CollectDataWhilePlaying = false;
+
                 MessageBox.Show("Please select a model in the Model Selector before toggling.", "Toggle Error");
+
+                
                 return;
             }
 
@@ -387,6 +429,26 @@ namespace AimmyWPF
             else if (toggle.Reader.Name == "ShowFOV")
             {
                 (state ? (Action)(() => FOVOverlay.Show()) : () => FOVOverlay.Hide())();
+            }
+            else if (toggle.Reader.Name == "TravellingFOV")
+            {
+                AwfulPropertyChanger.PostTravellingFOV(state);
+            }
+            else if (toggle.Reader.Name == "ShowDetectedPlayerWindow")
+            {
+                (state ? (Action)(() => DetectedPlayerOverlay.Show()) : () => DetectedPlayerOverlay.Hide())();
+            }
+            else if (toggle.Reader.Name == "ShowCurrentDetectedPlayer")
+            {
+                (state ? (Action)(() => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Collapsed)();
+            }
+            else if (toggle.Reader.Name == "ShowUnfilteredDetectedPlayer")
+            {
+                (state ? (Action)(() => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Collapsed)();
+            }
+            else if (toggle.Reader.Name == "ShowAIPrediction")
+            {
+                (state ? (Action)(() => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Collapsed)();
             }
             else if (toggle.Reader.Name == "TopMost")
             {
@@ -500,7 +562,7 @@ namespace AimmyWPF
 
         void LoadAimMenu()
         {
-            AToggle Enable_AIAimAligner = new AToggle(this, "Enable AI Aim Aligner", 
+            AToggle Enable_AIAimAligner = new AToggle(this, "Enable AI Aim Aligner",
                 "This will enable the AI's ability to align the aim.");
             Enable_AIAimAligner.Reader.Name = "AimbotToggle";
             SetupToggle(Enable_AIAimAligner, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
@@ -532,11 +594,22 @@ namespace AimmyWPF
             SetupToggle(Enable_AIPredictions, state => Bools.AIPredictions = state, Bools.AIPredictions);
             AimScroller.Children.Add(Enable_AIPredictions);
 
-            AToggle Show_FOV = new AToggle(this, "Show FOV", 
+            #region FOV System
+
+            AimScroller.Children.Add(new ALabel("FOV System"));
+
+            AToggle Show_FOV = new AToggle(this, "Show FOV",
                 "This will show a circle around your screen that show what the AI is considering on the screen at a given moment.");
             Show_FOV.Reader.Name = "ShowFOV";
-            SetupToggle(Show_FOV, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
+            SetupToggle(Show_FOV, state => Bools.ShowFOV = state, Bools.ShowFOV);
             AimScroller.Children.Add(Show_FOV);
+
+            AToggle Travelling_FOV = new AToggle(this, "Travelling FOV",
+    "This will allow the FOV circle to travel alongside your mouse.\n" +
+    "[PLEASE NOTE]: This does not have any effect on the AI's personal FOV, this feature is only for the visual effect.");
+            Travelling_FOV.Reader.Name = "TravellingFOV";
+            SetupToggle(Travelling_FOV, state => Bools.TravellingFOV = state, Bools.TravellingFOV);
+            AimScroller.Children.Add(Travelling_FOV);
 
             AColorChanger Change_FOVColor = new AColorChanger("FOV Color");
             Change_FOVColor.Reader.Click += (s, x) =>
@@ -573,6 +646,12 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(FovSlider);
 
+            #endregion
+
+            #region Aiming Configuration
+
+            AimScroller.Children.Add(new ALabel("Aiming Configuration"));
+
             ASlider MouseSensitivty = new ASlider(this, "Mouse Sensitivty", "Sensitivty",
                 "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a higher number.",
                 0.01);
@@ -604,7 +683,7 @@ namespace AimmyWPF
             AimScroller.Children.Add(MouseJitter);
 
             ASlider YOffset = new ASlider(this, "Y Offset (Up/Down)", "Offset",
-                "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.", 
+                "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.",
                 1);
 
             YOffset.Slider.Minimum = -150;
@@ -632,6 +711,38 @@ namespace AimmyWPF
             };
 
             AimScroller.Children.Add(XOffset);
+
+            #endregion
+
+            #region Visual Debugging
+
+            AimScroller.Children.Add(new ALabel("Visual Debugging"));
+
+            AToggle Show_DetectedPlayerWindow = new AToggle(this, "Show Detected Player Window",
+                "Shows the Detected Player Overlay, the options below will not work if this is enabled!");
+            Show_DetectedPlayerWindow.Reader.Name = "ShowDetectedPlayerWindow";
+            SetupToggle(Show_DetectedPlayerWindow, state => Bools.ShowDetectedPlayerWindow = state, Bools.ShowDetectedPlayerWindow);
+            AimScroller.Children.Add(Show_DetectedPlayerWindow);
+
+            AToggle Show_CurrentDetectedPlayer = new AToggle(this, "Show Current Detected Player [Red]",
+    "This will show a rectangle on the player that the AI is considering on the screen at a given moment.");
+            Show_CurrentDetectedPlayer.Reader.Name = "ShowCurrentDetectedPlayer";
+            SetupToggle(Show_CurrentDetectedPlayer, state => Bools.ShowCurrentDetectedPlayer = state, Bools.ShowCurrentDetectedPlayer);
+            AimScroller.Children.Add(Show_CurrentDetectedPlayer);
+
+            AToggle Show_UnfilteredDetectedPlayer = new AToggle(this, "Show Unflitered Version of Current Detected Player [Purple]",
+                "This will show a rectangle on the player that the AI is considering on the screen at a given moment without considering the adjusted X and Y axis.");
+            Show_UnfilteredDetectedPlayer.Reader.Name = "ShowUnfilteredDetectedPlayer";
+            SetupToggle(Show_UnfilteredDetectedPlayer, state => Bools.ShowUnfilteredDetectedPlayer = state, Bools.ShowUnfilteredDetectedPlayer);
+            AimScroller.Children.Add(Show_UnfilteredDetectedPlayer);
+
+            AToggle Show_Prediction = new AToggle(this, "Show AI Prediction [Green]",
+                "This will show a rectangle on where the AI assumes the player will be on the screen at a given moment.");
+            Show_Prediction.Reader.Name = "ShowAIPrediction";
+            SetupToggle(Show_Prediction, state => Bools.ShowPrediction = state, Bools.ShowPrediction);
+            AimScroller.Children.Add(Show_Prediction);
+
+            #endregion
         }
 
         void LoadTriggerMenu()
@@ -831,7 +942,7 @@ namespace AimmyWPF
                 ConfigSelectorListBox.Items.Add(fileName);
             }
 
-            SetSelectedConfig();
+            //SetSelectedConfig();
         }
 
         private void SetSelectedConfig()
@@ -934,8 +1045,6 @@ namespace AimmyWPF
             {
                 new ConfigSaver(aimmySettings, lastLoadedModel).ShowDialog();
             };
-
-            SettingsScroller.Children.Add(SaveConfigSystem);
         }
 
         #region Window Controls

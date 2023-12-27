@@ -55,6 +55,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="BackupFiles\OldOverlayWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>

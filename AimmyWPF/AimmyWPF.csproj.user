@@ -18,9 +18,15 @@
     <Compile Update="SecondaryWindows\NoticeBar.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Visualization\PlayerDetectionWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="BackupFiles\OldOverlayWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="OverlayWindow.xaml">
@@ -39,6 +45,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="UserController\AColorChanger.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Visualization\PlayerDetectionWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
