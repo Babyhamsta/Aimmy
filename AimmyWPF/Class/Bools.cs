@@ -9,6 +9,9 @@ namespace AimmyWPF.Class
     class Bools
     {
         public static bool AIAimAligner = false;
+        public static bool ConstantTracking = false;
+        public static bool AimOnlyWhenBindingHeld = true;
+
         public static bool AIAlwaysOn = false;
         public static bool AIPredictions = false;
 

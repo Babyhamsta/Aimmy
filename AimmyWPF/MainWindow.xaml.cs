@@ -315,7 +315,10 @@ namespace AimmyWPF
 
                 predictionManager.UpdateKalmanFilter(detection);
                 var predictedPosition = predictionManager.GetEstimatedPosition();
-                MoveCrosshair(predictedPosition.X, predictedPosition.Y);
+
+                if ((Bools.AimOnlyWhenBindingHeld && IsHolding_Binding) || Bools.AimOnlyWhenBindingHeld == false)
+                    MoveCrosshair(predictedPosition.X, predictedPosition.Y);
+                //MoveCrosshair(predictedPosition.X, predictedPosition.Y);
 
                 if (Bools.ShowDetectedPlayerWindow && Bools.ShowPrediction)
                 {
@@ -327,7 +330,8 @@ namespace AimmyWPF
             }
             else
             {
-                MoveCrosshair(detectedX, detectedY);
+                if ((Bools.AimOnlyWhenBindingHeld && IsHolding_Binding) || Bools.AimOnlyWhenBindingHeld == false)
+                    MoveCrosshair(detectedX, detectedY);
             }
 
             if (Bools.ShowDetectedPlayerWindow)
@@ -352,14 +356,28 @@ namespace AimmyWPF
 
             while (!cts.Token.IsCancellationRequested)
             {
-                if (toggleState["AimbotToggle"] && (IsHolding_Binding || toggleState["AlwaysOn"]))
+                if (toggleState["AimbotToggle"] && Bools.ConstantTracking == false)
+                {
+                    if (IsHolding_Binding || toggleState["AlwaysOn"])
+                        await ModelCapture();
+                }
+                else if (toggleState["AimbotToggle"] && Bools.ConstantTracking)
                 {
                     await ModelCapture();
                 }
-                else if (!toggleState["AimbotToggle"] && toggleState["TriggerBot"] && IsHolding_Binding) // Triggerbot Only
+                else if (!toggleState["AimbotToggle"] && toggleState["TriggerBot"] && IsHolding_Binding && Bools.ConstantTracking == false) // Triggerbot Only
                 {
                     await ModelCapture(true);
                 }
+
+                //if (toggleState["AimbotToggle"] && (IsHolding_Binding || toggleState["AlwaysOn"]))
+                //{
+                //    await ModelCapture();
+                //}
+                //else if (!toggleState["AimbotToggle"] && toggleState["TriggerBot"] && IsHolding_Binding) // Triggerbot Only
+                //{
+                //    await ModelCapture(true);
+                //}
 
                 // We have to have some sort of delay here to not overload the CPU / reduce CPU usage.
                 await Task.Delay(1);
@@ -395,8 +413,8 @@ namespace AimmyWPF
             {
                 bool currentState = (bool)toggle.Reader.Tag;
                 toggle.Reader.Tag = !currentState;
-                SetToggleState(toggle);
                 action.Invoke(!currentState);
+                SetToggleState(toggle);
             };
         }
 
@@ -567,6 +585,18 @@ namespace AimmyWPF
             SetupToggle(Enable_AIAimAligner, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Enable_AIAimAligner);
 
+            AToggle Enable_ConstantAITracking = new AToggle(this, "Enable Constant AI Aligner",
+    "This will let the AI run 24/7 to let Visual Debugging run.");
+            Enable_ConstantAITracking.Reader.Name = "ConstantAITracking";
+            SetupToggle(Enable_ConstantAITracking, state => Bools.ConstantTracking = state, Bools.ConstantTracking);
+            AimScroller.Children.Add(Enable_ConstantAITracking);
+
+            AToggle AimOnlyWhenBindingHeld = new AToggle(this, "Aim only when Tigger Button is held",
+"This will stop the AI from aiming unless the Trigger Button is held.");
+            AimOnlyWhenBindingHeld.Reader.Name = "AimOnlyWhenBindingHeld";
+            SetupToggle(AimOnlyWhenBindingHeld, state => Bools.AimOnlyWhenBindingHeld = state, Bools.AimOnlyWhenBindingHeld);
+            AimScroller.Children.Add(AimOnlyWhenBindingHeld);
+
             AKeyChanger Change_KeyPress = new AKeyChanger("Change Keybind", "Right");
             Change_KeyPress.Reader.Click += (s, x) =>
             {
@@ -581,11 +611,11 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_KeyPress);
 
-            AToggle Enable_AlwaysOn = new AToggle(this, "Aim Align Always On",
-               "This will keep the aim aligner on 24/7 so you don't have to hold a toggle.");
-            Enable_AlwaysOn.Reader.Name = "AlwaysOn";
-            SetupToggle(Enable_AlwaysOn, state => Bools.AIAlwaysOn = state, Bools.AIAlwaysOn);
-            AimScroller.Children.Add(Enable_AlwaysOn);
+            //AToggle Enable_AlwaysOn = new AToggle(this, "Aim Align Always On",
+            //   "This will keep the aim aligner on 24/7 so you don't have to hold a toggle.");
+            //Enable_AlwaysOn.Reader.Name = "AlwaysOn";
+            //SetupToggle(Enable_AlwaysOn, state => Bools.AIAlwaysOn = state, Bools.AIAlwaysOn);
+            //AimScroller.Children.Add(Enable_AlwaysOn);
 
             AToggle Enable_AIPredictions = new AToggle(this, "Enable Predictions",
                "This will use a KalmanFilter algorithm to predict aim patterns for better tracing of enemies.");
