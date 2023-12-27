@@ -317,12 +317,11 @@ namespace AimmyWPF
                 var predictedPosition = predictionManager.GetEstimatedPosition();
                 MoveCrosshair(predictedPosition.X, predictedPosition.Y);
 
-                if (Bools.ShowDetectedPlayerWindow)
+                if (Bools.ShowDetectedPlayerWindow && Bools.ShowPrediction)
                 {
                     this.Dispatcher.Invoke(() =>
                     {
-                        if (Bools.ShowPrediction)
-                            DetectedPlayerOverlay.PredictionFocus.Margin = new Thickness(predictedPosition.X - (50 / 2), predictedPosition.Y - (50 / 2), 0, 0);
+                        DetectedPlayerOverlay.PredictionFocus.Margin = new Thickness(predictedPosition.X - (50 / 2), predictedPosition.Y - (50 / 2), 0, 0);
                     });
                 }
             }
@@ -396,8 +395,8 @@ namespace AimmyWPF
             {
                 bool currentState = (bool)toggle.Reader.Tag;
                 toggle.Reader.Tag = !currentState;
-                action.Invoke(!currentState);
                 SetToggleState(toggle);
+                action.Invoke(!currentState);
             };
         }
 
@@ -1093,6 +1092,7 @@ namespace AimmyWPF
             // Unhook keybind hooker
             bindingManager.StopListening();
             FOVOverlay.Close();
+            DetectedPlayerOverlay.Close();
 
             // Dispose (best practice)
             fileWatcher.Dispose();
