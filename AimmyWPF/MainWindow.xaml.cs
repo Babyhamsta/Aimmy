@@ -193,13 +193,12 @@ namespace AimmyWPF
                 Task modelTask = RetrieveAndAddFilesAsync("models", "bin\\models", AvailableModels);
                 Task configTask = RetrieveAndAddFilesAsync("configs", "bin\\configs", AvailableConfigs);
                 await Task.WhenAll(modelTask, configTask);
+                LoadStoreMenu();
             }
             catch
             {
                 MessageBox.Show("Github is irretrieveable right now, the Downloadable Model menu will not work right now, sorry!");
             }
-
-            LoadStoreMenu();
         }
 
         private async Task RetrieveAndAddFilesAsync(string repositoryPath, string localPath, HashSet<string> availableFiles)
