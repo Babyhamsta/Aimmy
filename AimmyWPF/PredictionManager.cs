@@ -12,6 +12,7 @@ namespace AimmyWPF
             public DateTime Timestamp;
         }
 
+
         KalmanFilter2D kalmanFilter;
         private DateTime lastUpdateTime;
 

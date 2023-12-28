@@ -33,7 +33,7 @@ namespace AimmyWPF
         private string lastLoadedModel = "N/A";
         private string lastLoadedConfig = "N/A";
 
-        private readonly BrushConverter brushcolor = new BrushConverter();
+        private readonly BrushConverter brushcolor = new();
 
         private int TimeSinceLastClick = 0;
         private DateTime LastClickTime = DateTime.MinValue;
@@ -59,7 +59,7 @@ namespace AimmyWPF
         }
 
         // Changed to Dynamic from Double because it was making the Config System hard to rework :/
-        public Dictionary<string, dynamic> aimmySettings = new Dictionary<string, dynamic>
+        public Dictionary<string, dynamic> aimmySettings = new()
         {
             { "Suggested_Model", ""},
             { "FOV_Size", 640 },
@@ -72,7 +72,7 @@ namespace AimmyWPF
         };
 
 
-        private Dictionary<string, bool> toggleState = new Dictionary<string, bool>
+        private Dictionary<string, bool> toggleState = new()
         {
             { "AimbotToggle", false },
             { "AlwaysOn", false },
@@ -85,7 +85,7 @@ namespace AimmyWPF
 
 
         // PDW == PlayerDetectionWindow
-        public Dictionary<string, dynamic> OverlayProperties = new Dictionary<string, dynamic>
+        public Dictionary<string, dynamic> OverlayProperties = new()
         {
             { "FOV_Color", "#ff0000"},
             { "PDW_Size", 50 },
@@ -95,15 +95,17 @@ namespace AimmyWPF
         };
 
 
-        Thickness WinTooLeft = new Thickness(-1680, 0, 1680, 0);
-        Thickness WinVeryLeft = new Thickness(-1120, 0, 1120, 0);
-        Thickness WinLeft = new Thickness(-560, 0, 560, 0);
 
-        Thickness WinCenter = new Thickness(0, 0, 0, 0);
 
-        Thickness WinRight = new Thickness(560, 0, -560, 0);
-        Thickness WinVeryRight = new Thickness(1120, 0, -1120, 0);
-        Thickness WinTooRight = new Thickness(1680, 0, -1680, 0);
+        Thickness WinTooLeft = new(-1680, 0, 1680, 0);
+        Thickness WinVeryLeft = new(-1120, 0, 1120, 0);
+        Thickness WinLeft = new(-560, 0, 560, 0);
+
+        Thickness WinCenter = new(0, 0, 0, 0);
+
+        Thickness WinRight = new(560, 0, -560, 0);
+        Thickness WinVeryRight = new(1120, 0, -1120, 0);
+        Thickness WinTooRight = new(1680, 0, -1680, 0);
 
         public MainWindow()
         {
@@ -111,7 +113,7 @@ namespace AimmyWPF
             this.Title = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
 
             // Check to see if certain items are installed
-            RequirementsManager RM = new RequirementsManager();
+            RequirementsManager RM = new();
             if (!RM.IsVCRedistInstalled())
             {
                 MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.", "Load Error");
@@ -181,8 +183,8 @@ namespace AimmyWPF
             Task.Run(() => StartModelCaptureLoop());
         }
 
-        private HashSet<string> AvailableModels = new HashSet<string>();
-        private HashSet<string> AvailableConfigs = new HashSet<string>();
+        private HashSet<string> AvailableModels = new();
+        private HashSet<string> AvailableConfigs = new();
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -219,7 +221,7 @@ namespace AimmyWPF
         [DllImport("user32.dll")]
         static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
 
-        private static Random MouseRandom = new Random();
+        private static Random MouseRandom = new();
 
         private static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
         {
@@ -274,10 +276,10 @@ namespace AimmyWPF
             targetY += jitterY;
 
             // Define Bezier curve control points
-            Point start = new Point(0, 0); // Current cursor position (locked to center screen)
-            Point end = new Point(targetX, targetY);
-            Point control1 = new Point(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
-            Point control2 = new Point(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
+            Point start = new(0, 0); // Current cursor position (locked to center screen)
+            Point end = new(targetX, targetY);
+            Point control1 = new(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
+            Point control2 = new(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
 
             // Calculate new position along the Bezier curve
             Point newPosition = CubicBezier(start, end, control1, control2, 1 - Alpha);
@@ -317,7 +319,7 @@ namespace AimmyWPF
             // Handle Prediction
             if (toggleState["PredictionToggle"])
             {
-                Detection detection = new Detection
+                Detection detection = new()
                 {
                     X = detectedX,
                     Y = detectedY,
@@ -433,54 +435,58 @@ namespace AimmyWPF
         {
             bool state = (bool)toggle.Reader.Tag;
 
-            // Stop them from turning on anything until model has been selected.
-            if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "TriggerBot" || toggle.Reader.Name == "CollectData") && lastLoadedModel == "N/A")
+            // Stop them from turning on anything until the model has been selected.
+            if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "AimOnlyWhenBindingHeld" || toggle.Reader.Name == "ConstantAITracking" || toggle.Reader.Name == "TriggerBot" || toggle.Reader.Name == "CollectData") && lastLoadedModel == "N/A")
             {
-                Bools.AIAimAligner = false;
-                Bools.Triggerbot = false;
-                Bools.CollectDataWhilePlaying = false;
-
+                SetToggleStatesOnModelNotSelected();
                 MessageBox.Show("Please select a model in the Model Selector before toggling.", "Toggle Error");
-
-                
                 return;
             }
 
-            (state ? (Action)(() => toggle.EnableSwitch()) : () => toggle.DisableSwitch())();
+            (state ? (Action)toggle.EnableSwitch : (Action)toggle.DisableSwitch)();
 
             toggleState[toggle.Reader.Name] = state;
 
-            if (toggle.Reader.Name == "CollectData")
+            HandleToggleSpecificActions(toggle);
+        }
+
+        private void SetToggleStatesOnModelNotSelected()
+        {
+            Bools.AIAimAligner = false;
+            Bools.Triggerbot = false;
+            Bools.CollectDataWhilePlaying = false;
+        }
+
+        private void HandleToggleSpecificActions(AToggle toggle)
+        {
+            string toggleName = toggle.Reader.Name;
+
+            switch (toggleName)
             {
-                _onnxModel.CollectData = state;
-            }
-            else if (toggle.Reader.Name == "ShowFOV")
-            {
-                (state ? (Action)(() => FOVOverlay.Show()) : () => FOVOverlay.Hide())();
-            }
-            else if (toggle.Reader.Name == "TravellingFOV")
-            {
-                AwfulPropertyChanger.PostTravellingFOV(state);
-            }
-            else if (toggle.Reader.Name == "ShowDetectedPlayerWindow")
-            {
-                (state ? (Action)(() => DetectedPlayerOverlay.Show()) : () => DetectedPlayerOverlay.Hide())();
-            }
-            else if (toggle.Reader.Name == "ShowCurrentDetectedPlayer")
-            {
-                (state ? (Action)(() => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Collapsed)();
-            }
-            else if (toggle.Reader.Name == "ShowUnfilteredDetectedPlayer")
-            {
-                (state ? (Action)(() => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Collapsed)();
-            }
-            else if (toggle.Reader.Name == "ShowAIPrediction")
-            {
-                (state ? (Action)(() => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Collapsed)();
-            }
-            else if (toggle.Reader.Name == "TopMost")
-            {
-                this.Topmost = state;
+                case "CollectData":
+                    _onnxModel.CollectData = (bool)toggle.Reader.Tag;
+                    break;
+                case "ShowFOV":
+                    ((bool)toggle.Reader.Tag ? (Action)FOVOverlay.Show : (Action)FOVOverlay.Hide)();
+                    break;
+                case "TravellingFOV":
+                    AwfulPropertyChanger.PostTravellingFOV((bool)toggle.Reader.Tag);
+                    break;
+                case "ShowDetectedPlayerWindow":
+                    ((bool)toggle.Reader.Tag ? (Action)DetectedPlayerOverlay.Show : (Action)DetectedPlayerOverlay.Hide)();
+                    break;
+                case "ShowCurrentDetectedPlayer":
+                    ((bool)toggle.Reader.Tag ? (Action)(() => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Collapsed)();
+                    break;
+                case "ShowUnfilteredDetectedPlayer":
+                    ((bool)toggle.Reader.Tag ? (Action)(() => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Collapsed)();
+                    break;
+                case "ShowAIPrediction":
+                    ((bool)toggle.Reader.Tag ? (Action)(() => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Collapsed)();
+                    break;
+                case "TopMost":
+                    Topmost = (bool)toggle.Reader.Tag;
+                    break;
             }
         }
 
@@ -508,7 +514,7 @@ namespace AimmyWPF
 
         private void ApplyMenuAnimations(MenuPosition position)
         {
-            Thickness highlighterMargin = new Thickness(0, 30, 414, 0);
+            Thickness highlighterMargin = new(0, 30, 414, 0);
             switch (position)
             {
                 case MenuPosition.AimMenu:
@@ -590,25 +596,25 @@ namespace AimmyWPF
 
         void LoadAimMenu()
         {
-            AToggle Enable_AIAimAligner = new AToggle(this, "Enable AI Aim Aligner",
+            AToggle Enable_AIAimAligner = new(this, "Enable AI Aim Aligner",
                 "This will enable the AI's ability to align the aim.");
             Enable_AIAimAligner.Reader.Name = "AimbotToggle";
             SetupToggle(Enable_AIAimAligner, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Enable_AIAimAligner);
 
-            AToggle Enable_ConstantAITracking = new AToggle(this, "Enable Constant AI Aligner",
+            AToggle Enable_ConstantAITracking = new(this, "Enable Constant AI Aligner",
     "This will let the AI run 24/7 to let Visual Debugging run.");
             Enable_ConstantAITracking.Reader.Name = "ConstantAITracking";
             SetupToggle(Enable_ConstantAITracking, state => Bools.ConstantTracking = state, Bools.ConstantTracking);
             AimScroller.Children.Add(Enable_ConstantAITracking);
 
-            AToggle AimOnlyWhenBindingHeld = new AToggle(this, "Aim only when Trigger Button is held",
+            AToggle AimOnlyWhenBindingHeld = new(this, "Aim only when Trigger Button is held", // this can be simplifed with a toggle between constant and hold (toggle/hold), ill do it later.
 "This will stop the AI from aiming unless the Trigger Button is held.");
             AimOnlyWhenBindingHeld.Reader.Name = "AimOnlyWhenBindingHeld";
             SetupToggle(AimOnlyWhenBindingHeld, state => Bools.AimOnlyWhenBindingHeld = state, Bools.AimOnlyWhenBindingHeld);
             AimScroller.Children.Add(AimOnlyWhenBindingHeld);
 
-            AKeyChanger Change_KeyPress = new AKeyChanger("Change Keybind", "Right");
+            AKeyChanger Change_KeyPress = new("Change Keybind", "Right");
             Change_KeyPress.Reader.Click += (s, x) =>
             {
                 Change_KeyPress.KeyNotifier.Content = "Listening..";
@@ -628,7 +634,7 @@ namespace AimmyWPF
             //SetupToggle(Enable_AlwaysOn, state => Bools.AIAlwaysOn = state, Bools.AIAlwaysOn);
             //AimScroller.Children.Add(Enable_AlwaysOn);
 
-            AToggle Enable_AIPredictions = new AToggle(this, "Enable Predictions",
+            AToggle Enable_AIPredictions = new(this, "Enable Predictions",
                "This will use a KalmanFilter algorithm to predict aim patterns for better tracing of enemies.");
             Enable_AIPredictions.Reader.Name = "PredictionToggle";
             SetupToggle(Enable_AIPredictions, state => Bools.AIPredictions = state, Bools.AIPredictions);
@@ -638,24 +644,24 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(new ALabel("FOV System"));
 
-            AToggle Show_FOV = new AToggle(this, "Show FOV",
+            AToggle Show_FOV = new(this, "Show FOV",
                 "This will show a circle around your screen that show what the AI is considering on the screen at a given moment.");
             Show_FOV.Reader.Name = "ShowFOV";
             SetupToggle(Show_FOV, state => Bools.ShowFOV = state, Bools.ShowFOV);
             AimScroller.Children.Add(Show_FOV);
 
-            AToggle Travelling_FOV = new AToggle(this, "Travelling FOV",
+            AToggle Travelling_FOV = new(this, "Travelling FOV",
     "This will allow the FOV circle to travel alongside your mouse.\n" +
     "[PLEASE NOTE]: This does not have any effect on the AI's personal FOV, this feature is only for the visual effect.");
             Travelling_FOV.Reader.Name = "TravellingFOV";
             SetupToggle(Travelling_FOV, state => Bools.TravellingFOV = state, Bools.TravellingFOV);
             AimScroller.Children.Add(Travelling_FOV);
 
-            AColorChanger Change_FOVColor = new AColorChanger("FOV Color");
+            AColorChanger Change_FOVColor = new("FOV Color");
             Change_FOVColor.ColorChangingBorder.Background = (Brush)new BrushConverter().ConvertFromString(OverlayProperties["FOV_Color"]);
             Change_FOVColor.Reader.Click += (s, x) =>
             {
-                System.Windows.Forms.ColorDialog colorDialog = new System.Windows.Forms.ColorDialog();
+                System.Windows.Forms.ColorDialog colorDialog = new();
                 if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     Change_FOVColor.ColorChangingBorder.Background = new SolidColorBrush(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
@@ -665,7 +671,7 @@ namespace AimmyWPF
             };
             AimScroller.Children.Add(Change_FOVColor);
 
-            ASlider FovSlider = new ASlider(this, "FOV Size", "Size of FOV",
+            ASlider FovSlider = new(this, "FOV Size", "Size of FOV",
                 "This setting controls how much of your screen is considered in the AI's decision making and how big the circle on your screen will be.",
                 1);
 
@@ -694,7 +700,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(new ALabel("Aiming Configuration"));
 
-            ASlider MouseSensitivty = new ASlider(this, "Mouse Sensitivty", "Sensitivty",
+            ASlider MouseSensitivty = new(this, "Mouse Sensitivty", "Sensitivty",
                 "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a higher number.",
                 0.01);
 
@@ -709,7 +715,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(MouseSensitivty);
 
-            ASlider MouseJitter = new ASlider(this, "Mouse Jitter", "Jitter",
+            ASlider MouseJitter = new(this, "Mouse Jitter", "Jitter",
                 "This setting controls how much fake jitter is added to the mouse movements. Aim is almost never steady so this adds a nice layer of humanizing onto aim.",
                 0.01);
 
@@ -722,9 +728,7 @@ namespace AimmyWPF
                 aimmySettings["Mouse_Jitter"] = MouseJitter.Slider.Value;
             };
 
-            AimScroller.Children.Add(MouseJitter);
-
-            ASlider YOffset = new ASlider(this, "Y Offset (Up/Down)", "Offset",
+            ASlider YOffset = new(this, "Y Offset (Up/Down)", "Offset",
                 "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.",
                 1);
 
@@ -739,7 +743,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(YOffset);
 
-            ASlider XOffset = new ASlider(this, "X Offset (Left/Right)", "Offset",
+            ASlider XOffset = new(this, "X Offset (Left/Right)", "Offset",
                 "This setting controls which way your aim leans. A lower number will result in an aim that leans to the left. A higher number will result in an aim that leans to the right",
                 1);
 
@@ -760,25 +764,25 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(new ALabel("Visual Debugging"));
 
-            AToggle Show_DetectedPlayerWindow = new AToggle(this, "Show Detected Player Window",
+            AToggle Show_DetectedPlayerWindow = new(this, "Show Detected Player Window",
                 "Shows the Detected Player Overlay, the options below will not work if this is enabled!");
             Show_DetectedPlayerWindow.Reader.Name = "ShowDetectedPlayerWindow";
             SetupToggle(Show_DetectedPlayerWindow, state => Bools.ShowDetectedPlayerWindow = state, Bools.ShowDetectedPlayerWindow);
             AimScroller.Children.Add(Show_DetectedPlayerWindow);
 
-            AToggle Show_CurrentDetectedPlayer = new AToggle(this, "Show Current Detected Player [Red]",
+            AToggle Show_CurrentDetectedPlayer = new(this, "Show Current Detected Player [Red]",
     "This will show a rectangle on the player that the AI is considering on the screen at a given moment.");
             Show_CurrentDetectedPlayer.Reader.Name = "ShowCurrentDetectedPlayer";
             SetupToggle(Show_CurrentDetectedPlayer, state => Bools.ShowCurrentDetectedPlayer = state, Bools.ShowCurrentDetectedPlayer);
             AimScroller.Children.Add(Show_CurrentDetectedPlayer);
 
-            AToggle Show_UnfilteredDetectedPlayer = new AToggle(this, "Show Unflitered Version of Current Detected Player [Purple]",
+            AToggle Show_UnfilteredDetectedPlayer = new(this, "Show Unflitered Version of Current Detected Player [Purple]",
                 "This will show a rectangle on the player that the AI is considering on the screen at a given moment without considering the adjusted X and Y axis.");
             Show_UnfilteredDetectedPlayer.Reader.Name = "ShowUnfilteredDetectedPlayer";
             SetupToggle(Show_UnfilteredDetectedPlayer, state => Bools.ShowUnfilteredDetectedPlayer = state, Bools.ShowUnfilteredDetectedPlayer);
             AimScroller.Children.Add(Show_UnfilteredDetectedPlayer);
 
-            AToggle Show_Prediction = new AToggle(this, "Show AI Prediction [Green]",
+            AToggle Show_Prediction = new(this, "Show AI Prediction [Green]",
                 "This will show a rectangle on where the AI assumes the player will be on the screen at a given moment.");
             Show_Prediction.Reader.Name = "ShowAIPrediction";
             SetupToggle(Show_Prediction, state => Bools.ShowPrediction = state, Bools.ShowPrediction);
@@ -790,7 +794,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(new ALabel("Visual Debugging Customization"));
 
-            ASlider Change_PDW_Size = new ASlider(this, "Detection Window Size", "Size",
+            ASlider Change_PDW_Size = new(this, "Detection Window Size", "Size",
                 "This setting controls the size of your Detected Player Windows.",
                 1);
 
@@ -807,7 +811,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_PDW_Size);
 
-            ASlider Change_PDW_CornerRadius = new ASlider(this, "Detection Window Corner Radius", "Corner Radius",
+            ASlider Change_PDW_CornerRadius = new(this, "Detection Window Corner Radius", "Corner Radius",
                 "This setting controls the corner radius of your Detected Player Windows.",
                 1);
 
@@ -824,7 +828,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_PDW_CornerRadius);
 
-            ASlider Change_PDW_BorderThickness = new ASlider(this, "Detection Window Border Thickness", "Border Thickness",
+            ASlider Change_PDW_BorderThickness = new(this, "Detection Window Border Thickness", "Border Thickness",
                 "This setting controls the Border Thickness of your Detected Player Windows.",
                 1);
 
@@ -841,7 +845,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_PDW_BorderThickness);
 
-            ASlider Change_PDW_Opacity = new ASlider(this, "Detection Window Opacity", "Opacity",
+            ASlider Change_PDW_Opacity = new(this, "Detection Window Opacity", "Opacity",
                 "This setting controls the Opacity of your Detected Player Windows.",
                 1);
 
@@ -863,13 +867,13 @@ namespace AimmyWPF
 
         void LoadTriggerMenu()
         {
-            AToggle Enable_TriggerBot = new AToggle(this, "Enable Auto Trigger",
+            AToggle Enable_TriggerBot = new(this, "Enable Auto Trigger",
                 "This will enable the AI's ability to shoot whenever it sees a target.");
             Enable_TriggerBot.Reader.Name = "TriggerBot";
             SetupToggle(Enable_TriggerBot, state => Bools.Triggerbot = state, Bools.Triggerbot);
             TriggerScroller.Children.Add(Enable_TriggerBot);
 
-            ASlider TriggerBot_Delay = new ASlider(this, "Auto Trigger Delay", "Seconds", 
+            ASlider TriggerBot_Delay = new(this, "Auto Trigger Delay", "Seconds", 
                 "This slider will control how many miliseconds it will take to initiate a trigger.",
                 0.1);
 
@@ -888,7 +892,7 @@ namespace AimmyWPF
 
         private void FileWatcher_Reload(object sender, FileSystemEventArgs e)
         {
-            this.Dispatcher.Invoke(() =>
+            Dispatcher.Invoke(() =>
             {
                 LoadModelsIntoListBox();
 
@@ -1148,13 +1152,13 @@ namespace AimmyWPF
         {
             SettingsScroller.Children.Add(new AInfoSection());
 
-            AToggle CollectDataWhilePlaying = new AToggle(this, "Collect Data While Playing",
+            AToggle CollectDataWhilePlaying = new(this, "Collect Data While Playing",
                 "This will enable the AI's ability to take a picture of your screen when the trigger key is pressed.");
             CollectDataWhilePlaying.Reader.Name = "CollectData";
             SetupToggle(CollectDataWhilePlaying, state => Bools.CollectDataWhilePlaying = state, Bools.CollectDataWhilePlaying);
             SettingsScroller.Children.Add(CollectDataWhilePlaying);
 
-            ASlider AIMinimumConfidence = new ASlider(this, "AI Minimum Confidence", "% Confidence", 
+            ASlider AIMinimumConfidence = new(this, "AI Minimum Confidence", "% Confidence", 
                 "This setting controls how confident the AI needs to be before making the decision to aim.", 
                 1);
 
@@ -1185,14 +1189,14 @@ namespace AimmyWPF
 
             bool topMostInitialState = toggleState.ContainsKey("TopMost") ? toggleState["TopMost"] : false;
 
-            AToggle TopMost = new AToggle(this, "UI TopMost",
+            AToggle TopMost = new(this, "UI TopMost",
                 "This will toggle the UI's TopMost, meaning it can hide behind other windows vs always being on top.");
             TopMost.Reader.Name = "TopMost";
             SetupToggle(TopMost, state => Bools.TopMost = state, topMostInitialState);
 
             SettingsScroller.Children.Add(TopMost);
 
-            AButton SaveConfigSystem = new AButton(this, "Save Current Config",
+            AButton SaveConfigSystem = new(this, "Save Current Config",
    "This will save the current config for the purposes of publishing.");
 
             SaveConfigSystem.Reader.Click += (s, e) =>

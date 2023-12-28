@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using AimmyWPF.Class;
@@ -35,13 +33,21 @@ namespace AimmyWPF
 
             TravellingFOVTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(1), DispatcherPriority.Normal, async delegate
             {
-                CursorXPos = System.Windows.Forms.Cursor.Position.X;
-                CursorYPos = System.Windows.Forms.Cursor.Position.Y;
-                
-                OverlayCircle.Margin = new Thickness(
-                    CursorXPos - ((OverlayCircle.Width / 2) - CursorWidth),
-                    CursorYPos - ((OverlayCircle.Height / 2) - CursorHeight),
-                    0, 0);
+                // Perform asynchronous cursor position update
+                await Task.Run(() =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CursorXPos = System.Windows.Forms.Cursor.Position.X;
+                        CursorYPos = System.Windows.Forms.Cursor.Position.Y;
+
+                        // Use UI thread to update UI elements
+                        OverlayCircle.Margin = new Thickness(
+                            CursorXPos - (OverlayCircle.Width / 2),
+                            CursorYPos - (OverlayCircle.Height / 2),
+                            0, 0);
+                    });
+                });
             }, Application.Current.Dispatcher);
         }
 
