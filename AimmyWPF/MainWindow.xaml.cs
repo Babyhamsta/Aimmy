@@ -795,7 +795,7 @@ namespace AimmyWPF
                 "This setting controls the size of your Detected Player Windows.",
                 1);
 
-            Change_PDW_Size.Slider.Minimum = 0;
+            Change_PDW_Size.Slider.Minimum = 10;
             Change_PDW_Size.Slider.Maximum = 100;
             Change_PDW_Size.Slider.Value = OverlayProperties["PDW_Size"];
             Change_PDW_Size.Slider.TickFrequency = 1;
@@ -829,7 +829,7 @@ namespace AimmyWPF
                 "This setting controls the Border Thickness of your Detected Player Windows.",
                 1);
 
-            Change_PDW_BorderThickness.Slider.Minimum = 0;
+            Change_PDW_BorderThickness.Slider.Minimum = 1;
             Change_PDW_BorderThickness.Slider.Maximum = 100;
             Change_PDW_BorderThickness.Slider.Value = OverlayProperties["PDW_BorderThickness"];
             Change_PDW_BorderThickness.Slider.TickFrequency = 1;

@@ -42,9 +42,9 @@ namespace Visualization
 
         void ChangeCornerRadius(int newint)
         {
-            DetectedPlayerFocus.CornerRadius = new CornerRadius(newint, newint, newint, newint);
-            UnfilteredPlayerFocus.CornerRadius = new CornerRadius(newint, newint, newint, newint);
-            PredictionFocus.CornerRadius = new CornerRadius(newint, newint, newint, newint);
+            DetectedPlayerFocus.CornerRadius = new CornerRadius(newint);
+            UnfilteredPlayerFocus.CornerRadius = new CornerRadius(newint);
+            PredictionFocus.CornerRadius = new CornerRadius(newint);
         }
 
         void ChangeBorderThickness(int newint)
