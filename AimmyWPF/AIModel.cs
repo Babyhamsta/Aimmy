@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using AimmyWPF.Class;
 
 namespace AimmyAimbot
 {
@@ -158,7 +159,7 @@ namespace AimmyAimbot
             Bitmap frame = ScreenGrab(detectionBox);
 
             // Save frame asynchronously if the option is turned on
-            if (CollectData)
+            if (CollectData && Bools.ConstantTracking == false)
             {
                 DateTime currentTime = DateTime.Now;
                 if ((currentTime - lastSavedTime).TotalSeconds >= 0.5)
