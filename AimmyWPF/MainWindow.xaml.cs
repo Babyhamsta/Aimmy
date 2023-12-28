@@ -84,6 +84,17 @@ namespace AimmyWPF
         };
 
 
+        // PDW == PlayerDetectionWindow
+        public Dictionary<string, dynamic> OverlayProperties = new Dictionary<string, dynamic>
+        {
+            { "FOV_Color", "#ff0000"},
+            { "PDW_Size", 50 },
+            { "PDW_CornerRadius", 0 },
+            { "PDW_BorderThickness", 1 },
+            { "PDW_Opacity", 1 }
+        };
+
+
         Thickness WinTooLeft = new Thickness(-1680, 0, 1680, 0);
         Thickness WinVeryLeft = new Thickness(-1120, 0, 1120, 0);
         Thickness WinLeft = new Thickness(-560, 0, 560, 0);
@@ -175,6 +186,7 @@ namespace AimmyWPF
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            await LoadOverlayPropertiesAsync("bin/Overlay.cfg");
             await LoadConfigAsync("bin/configs/Default.cfg");
             try
             {
@@ -591,7 +603,7 @@ namespace AimmyWPF
             SetupToggle(Enable_ConstantAITracking, state => Bools.ConstantTracking = state, Bools.ConstantTracking);
             AimScroller.Children.Add(Enable_ConstantAITracking);
 
-            AToggle AimOnlyWhenBindingHeld = new AToggle(this, "Aim only when Tigger Button is held",
+            AToggle AimOnlyWhenBindingHeld = new AToggle(this, "Aim only when Trigger Button is held",
 "This will stop the AI from aiming unless the Trigger Button is held.");
             AimOnlyWhenBindingHeld.Reader.Name = "AimOnlyWhenBindingHeld";
             SetupToggle(AimOnlyWhenBindingHeld, state => Bools.AimOnlyWhenBindingHeld = state, Bools.AimOnlyWhenBindingHeld);
@@ -641,12 +653,14 @@ namespace AimmyWPF
             AimScroller.Children.Add(Travelling_FOV);
 
             AColorChanger Change_FOVColor = new AColorChanger("FOV Color");
+            Change_FOVColor.ColorChangingBorder.Background = (Brush)new BrushConverter().ConvertFromString(OverlayProperties["FOV_Color"]);
             Change_FOVColor.Reader.Click += (s, x) =>
             {
                 System.Windows.Forms.ColorDialog colorDialog = new System.Windows.Forms.ColorDialog();
                 if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     Change_FOVColor.ColorChangingBorder.Background = new SolidColorBrush(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
+                    OverlayProperties["FOV_Color"] = Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B).ToString();
                     AwfulPropertyChanger.PostColor(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
                 }
             };
@@ -772,6 +786,80 @@ namespace AimmyWPF
             AimScroller.Children.Add(Show_Prediction);
 
             #endregion
+
+            #region Visual Debugging Customizer
+
+            AimScroller.Children.Add(new ALabel("Visual Debugging Customization"));
+
+            ASlider Change_PDW_Size = new ASlider(this, "Detection Window Size", "Size",
+                "This setting controls the size of your Detected Player Windows.",
+                1);
+
+            Change_PDW_Size.Slider.Minimum = 0;
+            Change_PDW_Size.Slider.Maximum = 100;
+            Change_PDW_Size.Slider.Value = OverlayProperties["PDW_Size"];
+            Change_PDW_Size.Slider.TickFrequency = 1;
+            Change_PDW_Size.Slider.ValueChanged += (s, x) =>
+            {
+                int PDWSize = (int)Change_PDW_Size.Slider.Value;
+                OverlayProperties["PDW_Size"] = PDWSize;
+                AwfulPropertyChanger.PostPDWSize(PDWSize);
+            };
+
+            AimScroller.Children.Add(Change_PDW_Size);
+
+            ASlider Change_PDW_CornerRadius = new ASlider(this, "Detection Window Corner Radius", "Corner Radius",
+                "This setting controls the corner radius of your Detected Player Windows.",
+                1);
+
+            Change_PDW_CornerRadius.Slider.Minimum = 0;
+            Change_PDW_CornerRadius.Slider.Maximum = 100;
+            Change_PDW_CornerRadius.Slider.Value = OverlayProperties["PDW_CornerRadius"];
+            Change_PDW_CornerRadius.Slider.TickFrequency = 1;
+            Change_PDW_CornerRadius.Slider.ValueChanged += (s, x) =>
+            {
+                int CornerRadiusSize = (int)Change_PDW_CornerRadius.Slider.Value;
+                OverlayProperties["PDW_CornerRadius"] = CornerRadiusSize;
+                AwfulPropertyChanger.PostPDWCornerRadius(CornerRadiusSize);
+            };
+
+            AimScroller.Children.Add(Change_PDW_CornerRadius);
+
+            ASlider Change_PDW_BorderThickness = new ASlider(this, "Detection Window Border Thickness", "Border Thickness",
+                "This setting controls the Border Thickness of your Detected Player Windows.",
+                1);
+
+            Change_PDW_BorderThickness.Slider.Minimum = 0;
+            Change_PDW_BorderThickness.Slider.Maximum = 100;
+            Change_PDW_BorderThickness.Slider.Value = OverlayProperties["PDW_BorderThickness"];
+            Change_PDW_BorderThickness.Slider.TickFrequency = 1;
+            Change_PDW_BorderThickness.Slider.ValueChanged += (s, x) =>
+            {
+                int BorderThicknessSize = (int)Change_PDW_BorderThickness.Slider.Value;
+                OverlayProperties["PDW_BorderThickness"] = BorderThicknessSize;
+                AwfulPropertyChanger.PostPDWBorderThickness(BorderThicknessSize);
+            };
+
+            AimScroller.Children.Add(Change_PDW_BorderThickness);
+
+            ASlider Change_PDW_Opacity = new ASlider(this, "Detection Window Opacity", "Opacity",
+                "This setting controls the Opacity of your Detected Player Windows.",
+                1);
+
+            Change_PDW_Opacity.Slider.Minimum = 0;
+            Change_PDW_Opacity.Slider.Maximum = 1;
+            Change_PDW_Opacity.Slider.Value = OverlayProperties["PDW_Opacity"];
+            Change_PDW_Opacity.Slider.TickFrequency = 0.1;
+            Change_PDW_Opacity.Slider.ValueChanged += (s, x) =>
+            {
+                double WindowOpacity = (double)Change_PDW_Opacity.Slider.Value;
+                OverlayProperties["PDW_Opacity"] = WindowOpacity;
+                AwfulPropertyChanger.PostPDWOpacity(WindowOpacity);
+            };
+
+            AimScroller.Children.Add(Change_PDW_Opacity);
+
+            #endregion
         }
 
         void LoadTriggerMenu()
@@ -827,25 +915,28 @@ namespace AimmyWPF
         {
             if (!ModelLoadDebounce)
             {
-                ModelLoadDebounce = true;
-
-                string selectedModel = SelectorListBox.SelectedItem?.ToString();
-                if (selectedModel == null) return;
-
-                string modelPath = Path.Combine("bin/models", selectedModel);
-
-                _onnxModel?.Dispose();
-                _onnxModel = new AIModel(modelPath)
+                if (!(Bools.ConstantTracking && Bools.AIAimAligner))
                 {
-                    ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f),
-                    CollectData = toggleState["CollectData"],
-                    FovSize = (int)aimmySettings["FOV_Size"]
-                };
+                    ModelLoadDebounce = true;
 
-                SelectedModelNotifier.Content = "Loaded Model: " + selectedModel;
-                lastLoadedModel = selectedModel;
+                    string selectedModel = SelectorListBox.SelectedItem?.ToString();
+                    if (selectedModel == null) return;
 
-                ModelLoadDebounce = false;
+                    string modelPath = Path.Combine("bin/models", selectedModel);
+
+                    _onnxModel?.Dispose();
+                    _onnxModel = new AIModel(modelPath)
+                    {
+                        ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f),
+                        CollectData = toggleState["CollectData"],
+                        FovSize = (int)aimmySettings["FOV_Size"]
+                    };
+
+                    SelectedModelNotifier.Content = "Loaded Model: " + selectedModel;
+                    lastLoadedModel = selectedModel;
+
+                    ModelLoadDebounce = false;
+                }
             }
         }
 
@@ -931,6 +1022,41 @@ namespace AimmyWPF
             }
 
             ReloadMenu();
+        }
+
+        private async Task LoadOverlayPropertiesAsync(string path)
+        {
+            if (File.Exists(path))
+            {
+                string json = await File.ReadAllTextAsync(path);
+
+                var config = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
+                if (config != null)
+                {
+                    foreach (var (key, value) in config)
+                    {
+                        if (OverlayProperties.TryGetValue(key, out var currentValue))
+                        {
+                            OverlayProperties[key] = value;
+                        }
+                    }
+                }
+            }
+
+            try
+            {
+                AwfulPropertyChanger.PostColor((Color)ColorConverter.ConvertFromString(OverlayProperties["FOV_Color"]));
+                AwfulPropertyChanger.PostPDWSize((int)OverlayProperties["PDW_Size"]);
+                AwfulPropertyChanger.PostPDWCornerRadius((int)OverlayProperties["PDW_CornerRadius"]);
+                AwfulPropertyChanger.PostPDWBorderThickness((int)OverlayProperties["PDW_BorderThickness"]);
+                AwfulPropertyChanger.PostPDWOpacity((Double)OverlayProperties["PDW_Opacity"]);
+            }
+            catch (Exception ex) 
+            { 
+                MessageBox.Show(ex.ToString()); 
+            }
+
+            //ReloadMenu();
         }
 
         void ReloadMenu()
@@ -1117,6 +1243,25 @@ namespace AimmyWPF
             {
                 Console.WriteLine("Error saving configuration: " + x.Message);
             }
+
+            // Save Overlay Properties Data
+            // Nori
+            try
+            {
+                var OverlaySettings = new Dictionary<string, object>();
+                foreach (var kvp in OverlayProperties)
+                {
+                    OverlaySettings[kvp.Key] = kvp.Value;
+                }
+
+                string json = JsonConvert.SerializeObject(OverlaySettings, Formatting.Indented);
+                File.WriteAllText("bin/Overlay.cfg", json);
+            }
+            catch (Exception x)
+            {
+                Console.WriteLine("Error saving configuration: " + x.Message);
+            }
+
             SavedData = true;
 
             // Unhook keybind hooker
