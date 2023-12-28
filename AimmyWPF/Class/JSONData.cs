@@ -1,10 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-
-namespace AimmyWPF.Class
+﻿namespace AimmyWPF.Class
 {
     public class JSONData
     {
@@ -42,6 +36,5 @@ namespace AimmyWPF.Class
         //    AI_Minimum_Confidence = AimmyJSON.AI_Minimum_Confidence;
 
         //}
-
     }
 }

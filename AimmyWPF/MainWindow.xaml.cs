@@ -1,24 +1,23 @@
-﻿using AimmyWPF.Class;
+﻿using AimmyAimbot;
+using AimmyWPF.Class;
 using AimmyWPF.UserController;
+using Class;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using AimmyAimbot;
-using Class;
-using Newtonsoft.Json;
-using System.Reflection;
-using System.Diagnostics;
-using SecondaryWindows;
-using System.Runtime.InteropServices;
-using static AimmyWPF.PredictionManager;
 using Visualization;
+using static AimmyWPF.PredictionManager;
 
 namespace AimmyWPF
 {
@@ -71,7 +70,6 @@ namespace AimmyWPF
             { "AI_Min_Conf", 50 }
         };
 
-
         private Dictionary<string, bool> toggleState = new()
         {
             { "AimbotToggle", false },
@@ -83,7 +81,6 @@ namespace AimmyWPF
             { "TopMost", false }
         };
 
-
         // PDW == PlayerDetectionWindow
         public Dictionary<string, dynamic> OverlayProperties = new()
         {
@@ -94,18 +91,15 @@ namespace AimmyWPF
             { "PDW_Opacity", 1 }
         };
 
+        private Thickness WinTooLeft = new(-1680, 0, 1680, 0);
+        private Thickness WinVeryLeft = new(-1120, 0, 1120, 0);
+        private Thickness WinLeft = new(-560, 0, 560, 0);
 
+        private Thickness WinCenter = new(0, 0, 0, 0);
 
-
-        Thickness WinTooLeft = new(-1680, 0, 1680, 0);
-        Thickness WinVeryLeft = new(-1120, 0, 1120, 0);
-        Thickness WinLeft = new(-560, 0, 560, 0);
-
-        Thickness WinCenter = new(0, 0, 0, 0);
-
-        Thickness WinRight = new(560, 0, -560, 0);
-        Thickness WinVeryRight = new(1120, 0, -1120, 0);
-        Thickness WinTooRight = new(1680, 0, -1680, 0);
+        private Thickness WinRight = new(560, 0, -560, 0);
+        private Thickness WinVeryRight = new(1120, 0, -1120, 0);
+        private Thickness WinTooRight = new(1680, 0, -1680, 0);
 
         public MainWindow()
         {
@@ -120,6 +114,12 @@ namespace AimmyWPF
                 Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
                 Application.Current.Shutdown();
             }
+            //if(!RM.IsDotNetInstalled()) not working
+            //{
+            //    MessageBox.Show("DotNet 7.0 is not installed on this device, please install them before using Aimmy to avoid issues.", "Load Error");
+            //    Process.Start("https://dotnet.microsoft.com/download/dotnet/7.0");
+            //    Application.Current.Shutdown();
+            //}
 
             // Check for required folders
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -136,8 +136,8 @@ namespace AimmyWPF
                         Directory.CreateDirectory(fullPath);
                     }
                 }
-            } 
-            catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show($"Error creating a required directory: {ex}");
                 Application.Current.Shutdown(); // We don't want to continue running without that folder.
@@ -218,8 +218,9 @@ namespace AimmyWPF
         }
 
         #region Mouse Movement / Clicking Handler
+
         [DllImport("user32.dll")]
-        static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
 
         private static Random MouseRandom = new();
 
@@ -292,16 +293,17 @@ namespace AimmyWPF
             }
         }
 
-        #endregion
+        #endregion Mouse Movement / Clicking Handler
 
         #region Aim Aligner Main and Loop
+
         public async Task ModelCapture(bool TriggerOnly = false)
         {
             var closestPrediction = await _onnxModel.GetClosestPredictionToCenterAsync();
             if (closestPrediction == null)
             {
                 return;
-            } 
+            }
             else if (TriggerOnly)
             {
                 Task.Run(DoTriggerClick);
@@ -405,7 +407,8 @@ namespace AimmyWPF
                 cts = null;
             }
         }
-        #endregion
+
+        #endregion Aim Aligner Main and Loop
 
         #region Menu Initialization and Setup
 
@@ -466,31 +469,38 @@ namespace AimmyWPF
                 case "CollectData":
                     _onnxModel.CollectData = (bool)toggle.Reader.Tag;
                     break;
+
                 case "ShowFOV":
                     ((bool)toggle.Reader.Tag ? (Action)FOVOverlay.Show : (Action)FOVOverlay.Hide)();
                     break;
+
                 case "TravellingFOV":
                     AwfulPropertyChanger.PostTravellingFOV((bool)toggle.Reader.Tag);
                     break;
+
                 case "ShowDetectedPlayerWindow":
                     ((bool)toggle.Reader.Tag ? (Action)DetectedPlayerOverlay.Show : (Action)DetectedPlayerOverlay.Hide)();
                     break;
+
                 case "ShowCurrentDetectedPlayer":
                     ((bool)toggle.Reader.Tag ? (Action)(() => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.DetectedPlayerFocus.Visibility = Visibility.Collapsed)();
                     break;
+
                 case "ShowUnfilteredDetectedPlayer":
                     ((bool)toggle.Reader.Tag ? (Action)(() => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.UnfilteredPlayerFocus.Visibility = Visibility.Collapsed)();
                     break;
+
                 case "ShowAIPrediction":
                     ((bool)toggle.Reader.Tag ? (Action)(() => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Visible) : () => DetectedPlayerOverlay.PredictionFocus.Visibility = Visibility.Collapsed)();
                     break;
+
                 case "TopMost":
                     Topmost = (bool)toggle.Reader.Tag;
                     break;
             }
         }
 
-        #endregion
+        #endregion Menu Initialization and Setup
 
         #region Menu Controls
 
@@ -566,9 +576,11 @@ namespace AimmyWPF
             SelectorMenu.Visibility = (position == MenuPosition.SelectorMenu) ? Visibility.Visible : Visibility.Collapsed;
             SettingsMenu.Visibility = (position == MenuPosition.SettingsMenu) ? Visibility.Visible : Visibility.Collapsed;
         }
-        #endregion
-        
+
+        #endregion Menu Controls
+
         #region More Info Function
+
         public void ActivateMoreInfo(string info)
         {
             SetMenuState(false);
@@ -592,9 +604,10 @@ namespace AimmyWPF
             SelectorMenu.IsEnabled = state;
             SettingsMenu.IsEnabled = state;
         }
-        #endregion
 
-        void LoadAimMenu()
+        #endregion More Info Function
+
+        private void LoadAimMenu()
         {
             AToggle Enable_AIAimAligner = new(this, "Enable AI Aim Aligner",
                 "This will enable the AI's ability to align the aim.");
@@ -694,7 +707,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(FovSlider);
 
-            #endregion
+            #endregion FOV System
 
             #region Aiming Configuration
 
@@ -758,7 +771,7 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(XOffset);
 
-            #endregion
+            #endregion Aiming Configuration
 
             #region Visual Debugging
 
@@ -788,7 +801,7 @@ namespace AimmyWPF
             SetupToggle(Show_Prediction, state => Bools.ShowPrediction = state, Bools.ShowPrediction);
             AimScroller.Children.Add(Show_Prediction);
 
-            #endregion
+            #endregion Visual Debugging
 
             #region Visual Debugging Customizer
 
@@ -862,10 +875,10 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_PDW_Opacity);
 
-            #endregion
+            #endregion Visual Debugging Customizer
         }
 
-        void LoadTriggerMenu()
+        private void LoadTriggerMenu()
         {
             AToggle Enable_TriggerBot = new(this, "Enable Auto Trigger",
                 "This will enable the AI's ability to shoot whenever it sees a target.");
@@ -873,7 +886,7 @@ namespace AimmyWPF
             SetupToggle(Enable_TriggerBot, state => Bools.Triggerbot = state, Bools.Triggerbot);
             TriggerScroller.Children.Add(Enable_TriggerBot);
 
-            ASlider TriggerBot_Delay = new(this, "Auto Trigger Delay", "Seconds", 
+            ASlider TriggerBot_Delay = new(this, "Auto Trigger Delay", "Seconds",
                 "This slider will control how many miliseconds it will take to initiate a trigger.",
                 0.1);
 
@@ -887,7 +900,6 @@ namespace AimmyWPF
             };
 
             TriggerScroller.Children.Add(TriggerBot_Delay);
-
         }
 
         private void FileWatcher_Reload(object sender, FileSystemEventArgs e)
@@ -914,6 +926,7 @@ namespace AimmyWPF
         }
 
         private bool ModelLoadDebounce = false;
+
         private void InitializeModel()
         {
             if (!ModelLoadDebounce)
@@ -951,7 +964,6 @@ namespace AimmyWPF
             foreach (string filePath in onnxFiles)
             {
                 SelectorListBox.Items.Add(Path.GetFileName(filePath));
-
             }
 
             if (SelectorListBox.Items.Count > 0)
@@ -1014,7 +1026,8 @@ namespace AimmyWPF
 
                 _onnxModel.FovSize = fovSize;
                 _onnxModel.ConfidenceThreshold = (float)(aimmySettings["AI_Min_Conf"] / 100.0f);
-            } catch { }
+            }
+            catch { }
 
             string fileName = Path.GetFileName(path);
             if (ConfigSelectorListBox.Items.Contains(fileName))
@@ -1054,15 +1067,15 @@ namespace AimmyWPF
                 AwfulPropertyChanger.PostPDWBorderThickness((int)OverlayProperties["PDW_BorderThickness"]);
                 AwfulPropertyChanger.PostPDWOpacity((Double)OverlayProperties["PDW_Opacity"]);
             }
-            catch (Exception ex) 
-            { 
-                MessageBox.Show(ex.ToString()); 
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
 
             //ReloadMenu();
         }
 
-        void ReloadMenu()
+        private void ReloadMenu()
         {
             AimScroller.Children.Clear();
             TriggerScroller.Children.Clear();
@@ -1128,13 +1141,13 @@ namespace AimmyWPF
             }
         }
 
-        void LoadStoreMenu()
+        private void LoadStoreMenu()
         {
             DownloadGateway(ModelStoreScroller, AvailableModels, "models");
             DownloadGateway(ConfigStoreScroller, AvailableConfigs, "configs");
         }
 
-        void DownloadGateway(StackPanel Scroller, HashSet<string> entries, string folder)
+        private void DownloadGateway(StackPanel Scroller, HashSet<string> entries, string folder)
         {
             if (entries.Count > 0)
             {
@@ -1148,7 +1161,7 @@ namespace AimmyWPF
             }
         }
 
-        void LoadSettingsMenu()
+        private void LoadSettingsMenu()
         {
             SettingsScroller.Children.Add(new AInfoSection());
 
@@ -1158,8 +1171,8 @@ namespace AimmyWPF
             SetupToggle(CollectDataWhilePlaying, state => Bools.CollectDataWhilePlaying = state, Bools.CollectDataWhilePlaying);
             SettingsScroller.Children.Add(CollectDataWhilePlaying);
 
-            ASlider AIMinimumConfidence = new(this, "AI Minimum Confidence", "% Confidence", 
-                "This setting controls how confident the AI needs to be before making the decision to aim.", 
+            ASlider AIMinimumConfidence = new(this, "AI Minimum Confidence", "% Confidence",
+                "This setting controls how confident the AI needs to be before making the decision to aim.",
                 1);
 
             AIMinimumConfidence.Slider.Minimum = 1;
@@ -1174,7 +1187,7 @@ namespace AimmyWPF
                     aimmySettings["AI_Min_Conf"] = ConfVal;
                     _onnxModel.ConfidenceThreshold = (float)(ConfVal / 100.0f);
                 }
-                else 
+                else
                 {
                     // Prevent double messageboxes..
                     if (AIMinimumConfidence.Slider.Value != aimmySettings["AI_Min_Conf"])
@@ -1201,11 +1214,12 @@ namespace AimmyWPF
 
             SaveConfigSystem.Reader.Click += (s, e) =>
             {
-                new ConfigSaver(aimmySettings, lastLoadedModel).ShowDialog();
+                new SecondaryWindows.ConfigSaver(aimmySettings, lastLoadedModel).ShowDialog();
             };
         }
 
         #region Window Controls
+
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
@@ -1222,6 +1236,7 @@ namespace AimmyWPF
         }
 
         private static bool SavedData = false;
+
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             // Prevent saving overwrite
@@ -1280,6 +1295,7 @@ namespace AimmyWPF
             // Close
             Application.Current.Shutdown();
         }
-        #endregion
+
+        #endregion Window Controls
     }
 }

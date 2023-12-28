@@ -1,18 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace SecondaryWindows
 {
@@ -21,10 +13,9 @@ namespace SecondaryWindows
     /// </summary>
     public partial class ConfigSaver : Window
     {
-
         public Dictionary<string, dynamic> aimmySettings = new Dictionary<string, dynamic>();
 
-        string ExtraStrings = string.Empty;
+        private string ExtraStrings = string.Empty;
 
         public ConfigSaver(Dictionary<string, dynamic> CurrentAimmySettings, string lastLoadedModel)
         {
@@ -35,10 +26,9 @@ namespace SecondaryWindows
             {
                 RecommendedModelNameTextBox.Text = lastLoadedModel.Split(".")[0];
             }
-
         }
 
-        void WriteJSON()
+        private void WriteJSON()
         {
             try
             {
@@ -76,7 +66,6 @@ namespace SecondaryWindows
         {
             if (File.Exists($"bin/configs/{ConfigNameTextbox.Text}.cfg"))
             {
-
                 if (MessageBox.Show("A config already exists with the same name, would you like to overwrite it?",
                     "Aimmy - Configuration Saver", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     WriteJSON();
@@ -85,7 +74,7 @@ namespace SecondaryWindows
                 WriteJSON();
         }
 
-        private void DownloadableModelCheckBox_Checked(object sender, RoutedEventArgs e) 
+        private void DownloadableModelCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             ExtraStrings = " (Found in Downloadable Model menu)";
             Storyboard Animation = (Storyboard)TryFindResource("EnableSwitch");
@@ -100,6 +89,7 @@ namespace SecondaryWindows
         }
 
         #region Window Controls
+
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
@@ -114,6 +104,7 @@ namespace SecondaryWindows
         {
             DragMove();
         }
-        #endregion
+
+        #endregion Window Controls
     }
 }

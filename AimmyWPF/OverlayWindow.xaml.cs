@@ -1,11 +1,11 @@
-﻿using System;
+﻿using AimmyWPF.Class;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
-using AimmyWPF.Class;
 
 namespace AimmyWPF
 {
@@ -51,8 +51,9 @@ namespace AimmyWPF
             }, Application.Current.Dispatcher);
         }
 
-        DispatcherTimer TravellingFOVTimer;
-        void UpdateFOVState(bool TravellingFOV = false)
+        private DispatcherTimer TravellingFOVTimer;
+
+        private void UpdateFOVState(bool TravellingFOV = false)
         {
             if (TravellingFOV == true)
             {
@@ -65,13 +66,13 @@ namespace AimmyWPF
                 TravellingFOVTimer.Stop();
                 OverlayCircle.HorizontalAlignment = HorizontalAlignment.Center;
                 OverlayCircle.VerticalAlignment = VerticalAlignment.Center;
-                OverlayCircle.Margin = new Thickness(0,0,0,0);
+                OverlayCircle.Margin = new Thickness(0, 0, 0, 0);
             }
         }
 
-        void UpdateFOVColor(Color NewColor) => OverlayCircle.Stroke = new SolidColorBrush(NewColor);
+        private void UpdateFOVColor(Color NewColor) => OverlayCircle.Stroke = new SolidColorBrush(NewColor);
 
-        void UpdateFOVSize()
+        private void UpdateFOVSize()
         {
             //// Update circle dimensions.
             OverlayCircle.Width = FovSize;

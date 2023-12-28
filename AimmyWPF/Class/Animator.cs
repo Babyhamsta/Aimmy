@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -12,8 +8,8 @@ namespace AimmyWPF.Class
     public static class Animator
     {
         public static Storyboard StoryBoard = new Storyboard();
-        static TimeSpan duration = TimeSpan.FromMilliseconds(500);
-        static TimeSpan duration2 = TimeSpan.FromMilliseconds(1000);
+        private static TimeSpan duration = TimeSpan.FromMilliseconds(500);
+        private static TimeSpan duration2 = TimeSpan.FromMilliseconds(1000);
 
         private static IEasingFunction Smooth
         {
@@ -80,6 +76,5 @@ namespace AimmyWPF.Class
             doubleanimation.EasingFunction = new QuarticEase();
             Object.BeginAnimation(Property, doubleanimation);
         }
-
     }
 }
