@@ -1,17 +1,16 @@
-﻿using KdTree.Math;
+﻿using AimmyWPF.Class;
 using KdTree;
-using Microsoft.ML.OnnxRuntime.Tensors;
+using KdTree.Math;
 using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Windows.Forms;
-using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
-using AimmyWPF.Class;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace AimmyAimbot
 {
@@ -26,7 +25,6 @@ namespace AimmyAimbot
         public float ConfidenceThreshold = 0.6f;
         public bool CollectData = false;
         public int FovSize = 640;
-
 
         private DateTime lastSavedTime = DateTime.MinValue;
         private List<string> _outputNames;
@@ -52,7 +50,8 @@ namespace AimmyAimbot
             try
             {
                 LoadViaDirectML(sessionOptions, modelPath);
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show($"There was an error starting the OnnxModel via DirectML: {ex}\n\nProgram will attempt to use CPU only, performance may be poor.", "Model Error");
                 LoadViaCPU(sessionOptions, modelPath);
@@ -62,7 +61,7 @@ namespace AimmyAimbot
             ValidateOnnxShape();
         }
 
-        void LoadViaDirectML(SessionOptions sessionOptions, string modelPath)
+        private void LoadViaDirectML(SessionOptions sessionOptions, string modelPath)
         {
             sessionOptions.AppendExecutionProvider_DML();
             _onnxModel = new InferenceSession(modelPath, sessionOptions);
@@ -145,7 +144,6 @@ namespace AimmyAimbot
 
         public async Task<Prediction> GetClosestPredictionToCenterAsync()
         {
-
             // Define the detection box
             int halfScreenWidth = Screen.PrimaryScreen.Bounds.Width / 2;
             int halfScreenHeight = Screen.PrimaryScreen.Bounds.Height / 2;

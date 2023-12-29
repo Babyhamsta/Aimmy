@@ -1,7 +1,6 @@
 ﻿<Application x:Class="AimmyWPF.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:AimmyWPF"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -429,8 +428,6 @@
                              Color="#FFFFFF" />
             <SolidColorBrush Color="#191919"
                              x:Key="ListBox.Static.Background" />
-
-
 
             <Style TargetType="{x:Type Button}"
                    x:Key="CloseButton">
@@ -1020,7 +1017,6 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -36,7 +36,7 @@
                 BorderBrush="#FF4EFF00"
                 BorderThickness="1"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Top" 
-                Visibility="Collapsed"/>
+                VerticalAlignment="Top"
+                Visibility="Collapsed" />
     </Grid>
 </Window>

@@ -1,15 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using AimmyWPF.Class;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using AimmyWPF.Class;
 
 namespace Visualization
 {
@@ -28,7 +18,7 @@ namespace Visualization
             AwfulPropertyChanger.ReceivePDWOpacity = ChangeOpacity;
         }
 
-        void ChangeSize(int newint)
+        private void ChangeSize(int newint)
         {
             DetectedPlayerFocus.Width = newint;
             DetectedPlayerFocus.Height = newint;
@@ -40,21 +30,21 @@ namespace Visualization
             PredictionFocus.Height = newint;
         }
 
-        void ChangeCornerRadius(int newint)
+        private void ChangeCornerRadius(int newint)
         {
             DetectedPlayerFocus.CornerRadius = new CornerRadius(newint);
             UnfilteredPlayerFocus.CornerRadius = new CornerRadius(newint);
             PredictionFocus.CornerRadius = new CornerRadius(newint);
         }
 
-        void ChangeBorderThickness(int newint)
+        private void ChangeBorderThickness(int newint)
         {
             DetectedPlayerFocus.BorderThickness = new Thickness(newint);
             UnfilteredPlayerFocus.BorderThickness = new Thickness(newint);
             PredictionFocus.BorderThickness = new Thickness(newint);
         }
 
-        void ChangeOpacity(double newdouble)
+        private void ChangeOpacity(double newdouble)
         {
             DetectedPlayerFocus.Opacity = newdouble;
             UnfilteredPlayerFocus.Opacity = newdouble;
