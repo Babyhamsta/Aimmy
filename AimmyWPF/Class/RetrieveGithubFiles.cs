@@ -1,18 +1,12 @@
-﻿using Newtonsoft.Json.Linq;
-using Octokit;
-using System;
+﻿using Octokit;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Class
 {
-    class RetrieveGithubFiles
+    internal class RetrieveGithubFiles
     {
-
         public static string RepoOwner = "Babyhamsta";
         public static string RepoName = "Aimmy";
         //public static string RepoPath = "models";

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AimmyWPF.Class
+﻿namespace AimmyWPF.Class
 {
-    class Bools
+    internal class Bools
     {
         public static bool AIAimAligner = false;
         public static bool ConstantTracking = false;

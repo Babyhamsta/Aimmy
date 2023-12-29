@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,7 +10,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using AimmyWPF.Class;
-using Octokit;
 
 namespace Visualization
 {
@@ -32,7 +30,7 @@ namespace Visualization
             AwfulPropertyChanger.ReceivePDWOpacity = ChangeOpacity;
         }
 
-        void ChangeSize(int newint)
+        private void ChangeSize(int newint)
         {
             DetectedPlayerFocus.Width = newint;
             DetectedPlayerFocus.Height = newint;
@@ -44,7 +42,7 @@ namespace Visualization
             PredictionFocus.Height = newint;
         }
 
-        void ChangeCornerRadius(int newint)
+        private void ChangeCornerRadius(int newint)
         {
             DetectedPlayerFocus.CornerRadius = new CornerRadius(newint);
             UnfilteredPlayerFocus.CornerRadius = new CornerRadius(newint);
@@ -59,7 +57,7 @@ namespace Visualization
 
         }
 
-        void ChangeOpacity(double newdouble)
+        private void ChangeOpacity(double newdouble)
         {
             DetectedPlayerFocus.Opacity = newdouble;
             UnfilteredPlayerFocus.Opacity = newdouble;

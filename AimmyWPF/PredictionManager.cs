@@ -1,5 +1,5 @@
-﻿using System;
-using Accord.Statistics.Running;
+﻿using Accord.Statistics.Running;
+using System;
 
 namespace AimmyWPF
 {
@@ -12,7 +12,7 @@ namespace AimmyWPF
             public DateTime Timestamp;
         }
 
-        KalmanFilter2D kalmanFilter;
+        private KalmanFilter2D kalmanFilter;
         private DateTime lastUpdateTime;
 
         public PredictionManager()

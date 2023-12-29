@@ -14,66 +14,66 @@
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border">
                 <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF56949F">
                     <EasingColorKeyFrame.EasingFunction>
-                        <QuinticEase EasingMode="EaseOut"/>
+                        <QuinticEase EasingMode="EaseOut" />
                     </EasingColorKeyFrame.EasingFunction>
                 </EasingColorKeyFrame>
             </ColorAnimationUsingKeyFrames>
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border">
                 <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF9CCFD8">
                     <EasingColorKeyFrame.EasingFunction>
-                        <QuinticEase EasingMode="EaseOut"/>
+                        <QuinticEase EasingMode="EaseOut" />
                     </EasingColorKeyFrame.EasingFunction>
                 </EasingColorKeyFrame>
             </ColorAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border">
                 <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="180">
                     <EasingDoubleKeyFrame.EasingFunction>
-                        <QuinticEase EasingMode="EaseOut"/>
+                        <QuinticEase EasingMode="EaseOut" />
                     </EasingDoubleKeyFrame.EasingFunction>
                 </EasingDoubleKeyFrame>
             </DoubleAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Offset)" Storyboard.TargetName="border1">
-                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="0.004"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="0.004" />
             </DoubleAnimationUsingKeyFrames>
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border1">
-                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF56949F"/>
+                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF56949F" />
             </ColorAnimationUsingKeyFrames>
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border1">
-                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF9CCFD8"/>
+                <EasingColorKeyFrame KeyTime="0:0:1.5" Value="#FF9CCFD8" />
             </ColorAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border1">
-                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="180"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="180" />
             </DoubleAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Storyboard.TargetName="border1">
-                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="10"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0" />
+                <EasingDoubleKeyFrame KeyTime="0:0:1.5" Value="10" />
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
         <Storyboard x:Key="DisableSwitch">
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border">
-                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFEB6F92"/>
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFEB6F92" />
             </ColorAnimationUsingKeyFrames>
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border">
-                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFB4637A"/>
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFB4637A" />
             </ColorAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border">
-                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0"/>
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0" />
             </DoubleAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Offset)" Storyboard.TargetName="border1">
-                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0"/>
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0" />
             </DoubleAnimationUsingKeyFrames>
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[0].(GradientStop.Color)" Storyboard.TargetName="border1">
-                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFEB6F92"/>
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFEB6F92" />
             </ColorAnimationUsingKeyFrames>
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(GradientBrush.GradientStops)[1].(GradientStop.Color)" Storyboard.TargetName="border1">
-                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFB4637A"/>
+                <SplineColorKeyFrame KeyTime="0:0:1.5" Value="#FFB4637A" />
             </ColorAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(Brush.RelativeTransform).(TransformGroup.Children)[2].(RotateTransform.Angle)" Storyboard.TargetName="border1">
-                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0"/>
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="0" />
             </DoubleAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Storyboard.TargetName="border1">
-                <SplineDoubleKeyFrame KeyTime="0:0:1" Value="0"/>
-                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="10"/>
+                <SplineDoubleKeyFrame KeyTime="0:0:1" Value="0" />
+                <SplineDoubleKeyFrame KeyTime="0:0:1.5" Value="10" />
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
     </UserControl.Resources>
@@ -154,8 +154,8 @@
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Foreground="{x:Null}"
-                        Margin="0,2,35,2" 
-                        materialDesign:RippleAssist.IsDisabled="True"/>
+                        Margin="0,2,35,2"
+                        materialDesign:RippleAssist.IsDisabled="True" />
                 <Button x:Name="QuestionButton"
                         Content="&#xE897;"
                         HorizontalAlignment="Right"

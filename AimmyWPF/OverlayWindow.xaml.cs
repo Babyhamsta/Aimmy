@@ -1,13 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using AimmyWPF.Class;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using AimmyWPF.Class;
 
 namespace AimmyWPF
 {
@@ -35,18 +33,27 @@ namespace AimmyWPF
 
             TravellingFOVTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(1), DispatcherPriority.Normal, async delegate
             {
-                CursorXPos = System.Windows.Forms.Cursor.Position.X;
-                CursorYPos = System.Windows.Forms.Cursor.Position.Y;
-                
-                OverlayCircle.Margin = new Thickness(
-                    CursorXPos - ((OverlayCircle.Width / 2) - CursorWidth),
-                    CursorYPos - ((OverlayCircle.Height / 2) - CursorHeight),
-                    0, 0);
+                // Perform asynchronous cursor position update
+                await Task.Run(() =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CursorXPos = System.Windows.Forms.Cursor.Position.X;
+                        CursorYPos = System.Windows.Forms.Cursor.Position.Y;
+
+                        // Use UI thread to update UI elements
+                        OverlayCircle.Margin = new Thickness(
+                            CursorXPos - (OverlayCircle.Width / 2),
+                            CursorYPos - (OverlayCircle.Height / 2),
+                            0, 0);
+                    });
+                });
             }, Application.Current.Dispatcher);
         }
 
-        DispatcherTimer TravellingFOVTimer;
-        void UpdateFOVState(bool TravellingFOV = false)
+        private DispatcherTimer TravellingFOVTimer;
+
+        private void UpdateFOVState(bool TravellingFOV = false)
         {
             if (TravellingFOV == true)
             {
@@ -59,13 +66,13 @@ namespace AimmyWPF
                 TravellingFOVTimer.Stop();
                 OverlayCircle.HorizontalAlignment = HorizontalAlignment.Center;
                 OverlayCircle.VerticalAlignment = VerticalAlignment.Center;
-                OverlayCircle.Margin = new Thickness(0,0,0,0);
+                OverlayCircle.Margin = new Thickness(0, 0, 0, 0);
             }
         }
 
-        void UpdateFOVColor(Color NewColor) => OverlayCircle.Stroke = new SolidColorBrush(NewColor);
+        private void UpdateFOVColor(Color NewColor) => OverlayCircle.Stroke = new SolidColorBrush(NewColor);
 
-        void UpdateFOVSize()
+        private void UpdateFOVSize()
         {
             //// Update circle dimensions.
             OverlayCircle.Width = FovSize;
