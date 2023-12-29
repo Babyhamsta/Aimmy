@@ -12,16 +12,18 @@
         Topmost="True"
         Focusable="False"
         ShowInTaskbar="False"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        ResizeMode="NoResize"
+        IsTabStop="False">
     <Grid>
         <Border x:Name="DetectedPlayerFocus"
                 Width="50"
                 Height="50"
-                BorderBrush="Red"
                 BorderThickness="1"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Visibility="Collapsed" />
+                Visibility="Visible"
+                BorderBrush="Red"/>
         <Border x:Name="UnfilteredPlayerFocus"
                 Width="50"
                 Height="50"
@@ -29,7 +31,9 @@
                 BorderThickness="1"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Visibility="Collapsed" />
+                Visibility="Collapsed"
+                IsHitTestVisible="False"
+                IsEnabled="False"/>
         <Border x:Name="PredictionFocus"
                 Width="50"
                 Height="50"
@@ -37,6 +41,8 @@
                 BorderThickness="1"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top" 
-                Visibility="Collapsed"/>
+                Visibility="Collapsed"
+                IsHitTestVisible="False"
+                IsEnabled="False"/>
     </Grid>
 </Window>

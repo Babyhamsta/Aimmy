@@ -335,7 +335,10 @@ namespace AimmyWPF
                 {
                     this.Dispatcher.Invoke(() =>
                     {
-                        DetectedPlayerOverlay.PredictionFocus.Margin = new Thickness(predictedPosition.X - (50 / 2), predictedPosition.Y - (50 / 2), 0, 0);
+                        DetectedPlayerOverlay.PredictionFocus.Margin = new Thickness(
+                            predictedPosition.X - (OverlayProperties["PDW_Size"] / (OverlayProperties["PDW_Size"] / 2)),
+                            predictedPosition.Y - (OverlayProperties["PDW_Size"] / (OverlayProperties["PDW_Size"] / 2)),
+                            0, 0);
                     });
                 }
             }
@@ -349,13 +352,17 @@ namespace AimmyWPF
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    if (Bools.ShowDetectedPlayerWindow)
-                        DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(detectedX - (50 / 2), detectedY - (50 / 2), 0, 0);
+                    if (Bools.ShowCurrentDetectedPlayer)
+                        DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(
+                            detectedX - (OverlayProperties["PDW_Size"] / (OverlayProperties["PDW_Size"] / 2)),
+                            detectedY - (OverlayProperties["PDW_Size"] / (OverlayProperties["PDW_Size"] / 2)),
+                            0, 0);
 
                     if (Bools.ShowUnfilteredDetectedPlayer)
                         DetectedPlayerOverlay.UnfilteredPlayerFocus.Margin = new Thickness(
-                            (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX) - (50 / 2),
-                            (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY) - (50 / 2), 0, 0);
+                            (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX) - (OverlayProperties["PDW_Size"] / (OverlayProperties["PDW_Size"] / 2)),
+                            (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY) - (OverlayProperties["PDW_Size"] / (OverlayProperties["PDW_Size"] / 2)),
+                            0, 0);
                 });
             }
         }
@@ -369,7 +376,7 @@ namespace AimmyWPF
             {
                 if (toggleState["AimbotToggle"] && Bools.ConstantTracking == false)
                 {
-                    if (IsHolding_Binding || toggleState["AlwaysOn"])
+                    if (IsHolding_Binding)
                         await ModelCapture();
                 }
                 else if (toggleState["AimbotToggle"] && Bools.ConstantTracking)
@@ -828,13 +835,13 @@ namespace AimmyWPF
                 "This setting controls the Border Thickness of your Detected Player Windows.",
                 1);
 
-            Change_PDW_BorderThickness.Slider.Minimum = 1;
-            Change_PDW_BorderThickness.Slider.Maximum = 100;
+            Change_PDW_BorderThickness.Slider.Minimum = 0.1;
+            Change_PDW_BorderThickness.Slider.Maximum = 10;
             Change_PDW_BorderThickness.Slider.Value = OverlayProperties["PDW_BorderThickness"];
-            Change_PDW_BorderThickness.Slider.TickFrequency = 1;
+            Change_PDW_BorderThickness.Slider.TickFrequency = 0.1;
             Change_PDW_BorderThickness.Slider.ValueChanged += (s, x) =>
             {
-                int BorderThicknessSize = (int)Change_PDW_BorderThickness.Slider.Value;
+                double BorderThicknessSize = (double)Change_PDW_BorderThickness.Slider.Value;
                 OverlayProperties["PDW_BorderThickness"] = BorderThicknessSize;
                 AwfulPropertyChanger.PostPDWBorderThickness(BorderThicknessSize);
             };
@@ -843,7 +850,7 @@ namespace AimmyWPF
 
             ASlider Change_PDW_Opacity = new ASlider(this, "Detection Window Opacity", "Opacity",
                 "This setting controls the Opacity of your Detected Player Windows.",
-                1);
+                0.1);
 
             Change_PDW_Opacity.Slider.Minimum = 0;
             Change_PDW_Opacity.Slider.Maximum = 1;

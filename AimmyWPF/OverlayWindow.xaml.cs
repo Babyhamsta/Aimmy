@@ -20,8 +20,8 @@ namespace AimmyWPF
 
         public int CursorXPos = System.Windows.Forms.Cursor.Position.X;
         public int CursorYPos = System.Windows.Forms.Cursor.Position.Y;
-        public static double CursorHeight = SystemParameters.CursorHeight / 4;
-        public static double CursorWidth = SystemParameters.CursorWidth / 4;
+        public static double CursorHeight = SystemParameters.CursorHeight / (SystemParameters.CursorWidth / 2);
+        public static double CursorWidth = SystemParameters.CursorWidth / (SystemParameters.CursorWidth / 2);
 
         public OverlayWindow()
         {

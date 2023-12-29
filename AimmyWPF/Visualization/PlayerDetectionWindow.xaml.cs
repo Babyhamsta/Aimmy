@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using AimmyWPF.Class;
+using Octokit;
 
 namespace Visualization
 {
@@ -21,6 +23,8 @@ namespace Visualization
         public PlayerDetectionWindow()
         {
             InitializeComponent();
+
+            this.Title = System.IO.Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
 
             AwfulPropertyChanger.ReceivePDWSize = ChangeSize;
             AwfulPropertyChanger.ReceivePDWCornerRadius = ChangeCornerRadius;
@@ -47,11 +51,12 @@ namespace Visualization
             PredictionFocus.CornerRadius = new CornerRadius(newint);
         }
 
-        void ChangeBorderThickness(int newint)
+        void ChangeBorderThickness(double newdouble)
         {
-            DetectedPlayerFocus.BorderThickness = new Thickness(newint);
-            UnfilteredPlayerFocus.BorderThickness = new Thickness(newint);
-            PredictionFocus.BorderThickness = new Thickness(newint);
+            DetectedPlayerFocus.BorderThickness = new Thickness(newdouble);
+            UnfilteredPlayerFocus.BorderThickness = new Thickness(newdouble);
+            PredictionFocus.BorderThickness = new Thickness(newdouble);
+
         }
 
         void ChangeOpacity(double newdouble)
@@ -60,6 +65,7 @@ namespace Visualization
             UnfilteredPlayerFocus.Opacity = newdouble;
             PredictionFocus.Opacity = newdouble;
         }
+
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {

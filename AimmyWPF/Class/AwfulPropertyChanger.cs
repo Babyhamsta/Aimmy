@@ -33,8 +33,8 @@ namespace AimmyWPF.Class
         public static Action<int> ReceivePDWCornerRadius { private get; set; } = null;
 
         // PDW Border Thickness
-        public static void PostPDWBorderThickness(int newint) => ReceivePDWBorderThickness?.Invoke(newint);
-        public static Action<int> ReceivePDWBorderThickness { private get; set; } = null;
+        public static void PostPDWBorderThickness(double newdouble) => ReceivePDWBorderThickness?.Invoke(newdouble);
+        public static Action<double> ReceivePDWBorderThickness { private get; set; } = null;
 
         // PDW Border Thickness
         public static void PostPDWOpacity(double newdouble) => ReceivePDWOpacity?.Invoke(newdouble);

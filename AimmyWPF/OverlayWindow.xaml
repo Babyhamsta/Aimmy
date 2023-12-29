@@ -6,12 +6,16 @@
         Topmost="True"
         Focusable="False"
         ShowInTaskbar="False"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        ResizeMode="NoResize"
+        IsHitTestVisible="False"
+        IsTabStop="False">
     <Grid>
         <Ellipse x:Name="OverlayCircle" Stroke="Red" StrokeThickness="1"
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center"
                  Width="640"
-                 Height="640" />
+                 Height="640" 
+                 IsHitTestVisible="False"/>
     </Grid>
 </Window>
