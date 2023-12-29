@@ -747,6 +747,8 @@ namespace AimmyWPF
             {
                 aimmySettings["Mouse_Jitter"] = MouseJitter.Slider.Value;
             };
+            
+            AimScroller.Children.Add(MouseJitter);
 
             ASlider YOffset = new(this, "Y Offset (Up/Down)", "Offset",
                 "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.",
