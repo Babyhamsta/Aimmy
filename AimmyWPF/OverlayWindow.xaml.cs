@@ -43,8 +43,8 @@ namespace AimmyWPF
 
                         // Use UI thread to update UI elements
                         OverlayCircle.Margin = new Thickness(
-                            CursorXPos - (OverlayCircle.Width / 2),
-                            CursorYPos - (OverlayCircle.Height / 2),
+                            CursorXPos - ((OverlayCircle.Width / 2) - CursorWidth),
+                            CursorYPos - ((OverlayCircle.Height / 2) - CursorHeight),
                             0, 0);
                     });
                 });
