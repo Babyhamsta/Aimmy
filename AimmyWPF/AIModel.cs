@@ -101,6 +101,8 @@ namespace AimmyAimbot
             public float Confidence { get; set; }
         }
 
+        public static float AIConfidence { get; set; }
+
         public Bitmap ScreenGrab(Rectangle detectionBox)
         {
             if (_screenCaptureBitmap == null || _screenCaptureBitmap.Width != detectionBox.Width || _screenCaptureBitmap.Height != detectionBox.Height)
@@ -196,6 +198,7 @@ namespace AimmyAimbot
             foreach (var i in filteredIndices)
             {
                 float objectness = outputTensor[0, 4, i];
+                AIConfidence = objectness;
 
                 float x_center = outputTensor[0, 0, i];
                 float y_center = outputTensor[0, 1, i];

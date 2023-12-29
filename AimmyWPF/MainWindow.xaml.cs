@@ -318,6 +318,8 @@ namespace AimmyWPF
             int detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
             int detectedY = (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
 
+            Console.WriteLine(AIModel.AIConfidence.ToString());
+
             // Handle Prediction
             if (toggleState["PredictionToggle"])
             {
@@ -747,6 +749,7 @@ namespace AimmyWPF
             {
                 aimmySettings["Mouse_Jitter"] = MouseJitter.Slider.Value;
             };
+            AimScroller.Children.Add(MouseJitter);
 
             ASlider YOffset = new(this, "Y Offset (Up/Down)", "Offset",
                 "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.",
