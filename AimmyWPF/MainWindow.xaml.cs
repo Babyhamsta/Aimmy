@@ -1226,6 +1226,8 @@ namespace AimmyWPF
             {
                 new SecondaryWindows.ConfigSaver(aimmySettings, lastLoadedModel).ShowDialog();
             };
+
+            SettingsScroller.Children.Add(SaveConfigSystem);
         }
 
         #region Window Controls
