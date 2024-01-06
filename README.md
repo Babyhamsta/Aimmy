@@ -1,5 +1,5 @@
 > [!NOTE]
-> If you enjoy Aimmy, please concider giving us a star ⭐! We appreciate it! :)
+> If you enjoy Aimmy, please consider giving us a star ⭐! We appreciate it! :)
 
 <div align="center">
   
