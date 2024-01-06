@@ -1,5 +1,5 @@
-> [!WARNING]
-> How many times do I have to tell you to stop using Aimmy in Fortnite! If you keep using it in Fortnite, it's not our fault you get banned!
+> [!NOTE]
+> If you enjoy Aimmy, please concider giving us a star ⭐! We appreciate it! :)
 
 <div align="center">
   
