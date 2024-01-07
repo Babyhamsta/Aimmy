@@ -70,7 +70,7 @@ Our program comes default with 2 AI models, 1 game specific (Phantom Forces) and
 
 ![Example of Model switching](https://external-content.duckduckgo.com/iu/?u=https://i.imgur.com/4GYUhyp.gif)
 
-Unlike most Aim Aligners of the same caliber, Aimmy comes bundled with a clean user-interface that allows you to adjust your settings live and to share those settings to friends and community members. We also provide better performance across the board compared to other AI Aim Aligners. Detecting opponents in milliseconds across the board on most CPUs & GPUs.
+We also provide better performance across the board compared to other AI Aim Aligners. Detecting opponents in milliseconds across the board on most CPUs & GPUs.
 
 Aimmy comes pre-bundled with a well-designed user interface that is beautiful, and accessible. With many features to customize your personal user experience.
 
