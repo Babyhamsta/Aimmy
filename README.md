@@ -67,9 +67,10 @@ Additionally, a Gamer that uses Aimmy is also given the option to turn on Auto-T
 
 ## How is Aimmy better than similar AI-Based tools?
 Our program comes default with 2 AI models, 1 game specific (Phantom Forces) and 1 universal model. We also let users make their own models, share them, and switch between them painlessly. We also provide a downloadable model menu with dozens of community made models for various games and types of games. This makes Aimmy very versatile and universal for thousands of games.
+
 ![Example of Model switching](https://external-content.duckduckgo.com/iu/?u=https://i.imgur.com/4GYUhyp.gif)
 
-We also provide better performance across the board compared to other AI Aim Aligners. Detecting opponents in milliseconds across the board on most CPUs & GPUs.
+Unlike most Aim Aligners of the same caliber, Aimmy comes bundled with a clean user-interface that allows you to adjust your settings live and to share those settings to friends and community members. We also provide better performance across the board compared to other AI Aim Aligners. Detecting opponents in milliseconds across the board on most CPUs & GPUs.
 
 Aimmy comes pre-bundled with a well-designed user interface that is beautiful, and accessible. With many features to customize your personal user experience.
 
