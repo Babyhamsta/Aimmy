@@ -61,13 +61,14 @@ namespace AimmyWPF
         public Dictionary<string, dynamic> aimmySettings = new()
         {
             { "Suggested_Model", ""},
-            { "FOV_Size", 640 },
+            { "FOV_Size", 300 },
             { "Mouse_Sens", 0.80 },
-            { "Mouse_Jitter", 4 },
-            { "Y_Offset", 0 },
+            { "Mouse_SensY", 0.90 },
+            { "Mouse_Jitter", 0 },
+            { "Y_Offset", 60 },
             { "X_Offset", 0 },
             { "Trigger_Delay", 0.1 },
-            { "AI_Min_Conf", 50 }
+            { "AI_Min_Conf", 60 }
         };
 
         private Dictionary<string, bool> toggleState = new()
@@ -257,6 +258,7 @@ namespace AimmyWPF
         private void MoveCrosshair(int detectedX, int detectedY)
         {
             double Alpha = aimmySettings["Mouse_Sens"];
+            double Beta = aimmySettings["Mouse_SensY"];
 
             int halfScreenWidth = ScreenWidth / 2;
             int halfScreenHeight = ScreenHeight / 2;
@@ -279,13 +281,17 @@ namespace AimmyWPF
             // Define Bezier curve control points
             Point start = new(0, 0); // Current cursor position (locked to center screen)
             Point end = new(targetX, targetY);
-            Point control1 = new(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
-            Point control2 = new(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
+            Point control1 = new Point(start.X + (end.X - start.X) / 3, 0);
+            Point control2 = new Point(start.X + 2 * (end.X - start.X) / 3, 0);
+            Point control3 = new Point(0, start.Y + (end.Y - start.Y) / 3);
+            Point control4 = new Point(0, start.Y + 2 * (end.Y - start.Y) / 3);
 
             // Calculate new position along the Bezier curve
             Point newPosition = CubicBezier(start, end, control1, control2, 1 - Alpha);
+            Point newPosition2 = CubicBezier(start, end, control3, control4, 1 - Beta);
 
             mouse_event(MOUSEEVENTF_MOVE, (uint)newPosition.X, (uint)newPosition.Y, 0, 0);
+            mouse_event(MOUSEEVENTF_MOVE, (uint)newPosition2.X, (uint)newPosition2.Y, 0, 0);
 
             if (toggleState["TriggerBot"])
             {
@@ -722,20 +728,35 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(new ALabel("Aiming Configuration"));
 
-            ASlider MouseSensitivty = new(this, "Mouse Sensitivty", "Sensitivty",
+            ASlider MouseSensitivtyX = new ASlider(this, "Mouse Sensitivty X", "Sensitivty",
+                "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a higher number.",
+                0.01);
+            
+            MouseSensitivtyX.Slider.Minimum = 0.01;
+            MouseSensitivtyX.Slider.Maximum = 1;
+            MouseSensitivtyX.Slider.Value = aimmySettings["Mouse_Sens"];
+            MouseSensitivtyX.Slider.TickFrequency = 0.01;
+            MouseSensitivtyX.Slider.ValueChanged += (s, x) =>
+            {
+                aimmySettings["Mouse_Sens"] = MouseSensitivtyX.Slider.Value;
+            };
+
+            AimScroller.Children.Add(MouseSensitivtyX);
+
+            ASlider MouseSensitivtyY = new ASlider(this, "Mouse Sensitivty Y", "Sensitivty",
                 "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a higher number.",
                 0.01);
 
-            MouseSensitivty.Slider.Minimum = 0.01;
-            MouseSensitivty.Slider.Maximum = 1;
-            MouseSensitivty.Slider.Value = aimmySettings["Mouse_Sens"];
-            MouseSensitivty.Slider.TickFrequency = 0.01;
-            MouseSensitivty.Slider.ValueChanged += (s, x) =>
+            MouseSensitivtyY.Slider.Minimum = 0.01;
+            MouseSensitivtyY.Slider.Maximum = 1;
+            MouseSensitivtyY.Slider.Value = aimmySettings["Mouse_SensY"];
+            MouseSensitivtyY.Slider.TickFrequency = 0.01;
+            MouseSensitivtyY.Slider.ValueChanged += (s, x) =>
             {
-                aimmySettings["Mouse_Sens"] = MouseSensitivty.Slider.Value;
+                aimmySettings["Mouse_SensY"] = MouseSensitivtyY.Slider.Value;
             };
 
-            AimScroller.Children.Add(MouseSensitivty);
+            AimScroller.Children.Add(MouseSensitivtyY);
 
             ASlider MouseJitter = new(this, "Mouse Jitter", "Jitter",
                 "This setting controls how much fake jitter is added to the mouse movements. Aim is almost never steady so this adds a nice layer of humanizing onto aim.",
