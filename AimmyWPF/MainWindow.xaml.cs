@@ -61,14 +61,14 @@ namespace AimmyWPF
         public Dictionary<string, dynamic> aimmySettings = new()
         {
             { "Suggested_Model", ""},
-            { "FOV_Size", 300 },
+            { "FOV_Size", 640 },
             { "Mouse_Sens", 0.80 },
             { "Mouse_SensY", 0.90 },
-            { "Mouse_Jitter", 0 },
-            { "Y_Offset", 60 },
+            { "Mouse_Jitter", 4 },
+            { "Y_Offset", 0 },
             { "X_Offset", 0 },
             { "Trigger_Delay", 0.1 },
-            { "AI_Min_Conf", 60 }
+            { "AI_Min_Conf", 50 }
         };
 
         private Dictionary<string, bool> toggleState = new()
