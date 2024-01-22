@@ -290,8 +290,7 @@ namespace AimmyWPF
             Point newPosition = CubicBezier(start, end, control1, control2, 1 - Alpha);
             Point newPosition2 = CubicBezier(start, end, control3, control4, 1 - Beta);
 
-            mouse_event(MOUSEEVENTF_MOVE, (uint)newPosition.X, (uint)newPosition.Y, 0, 0);
-            mouse_event(MOUSEEVENTF_MOVE, (uint)newPosition2.X, (uint)newPosition2.Y, 0, 0);
+            mouse_event(MOUSEEVENTF_MOVE, (uint)newPosition.X, (uint)newPosition2.Y, 0, 0);
 
             if (toggleState["TriggerBot"])
             {
