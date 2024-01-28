@@ -110,7 +110,7 @@ namespace AimmyWPF
             RequirementsManager RM = new();
             if (!RM.IsVCRedistInstalled())
             {
-                MessageBox.Show("Visual C++ Redistributables x64 are not installed on this device, please install them before using Aimmy to avoid issues.", "Load Error");
+                MessageBox.Show("这个设备上没有安装Visual c++ redistributable x64，请在使用aimy之前安装它们，以避免问题。", "加载错误");
                 Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
                 Application.Current.Shutdown();
             }
@@ -199,7 +199,7 @@ namespace AimmyWPF
             }
             catch
             {
-                MessageBox.Show("Github is irretrieveable right now, the Downloadable Model menu will not work right now, sorry!");
+                MessageBox.Show("Github现在无法恢复，下载的模型菜单现在不能工作，抱歉!");
             }
         }
 
@@ -451,7 +451,7 @@ namespace AimmyWPF
             if ((toggle.Reader.Name == "AimbotToggle" || toggle.Reader.Name == "AimOnlyWhenBindingHeld" || toggle.Reader.Name == "ConstantAITracking" || toggle.Reader.Name == "TriggerBot" || toggle.Reader.Name == "CollectData") && lastLoadedModel == "N/A")
             {
                 SetToggleStatesOnModelNotSelected();
-                MessageBox.Show("Please select a model in the Model Selector before toggling.", "Toggle Error");
+                MessageBox.Show("切换前请在模型选择器中选择一个模型。", "切换错误");
                 return;
             }
 
@@ -618,28 +618,28 @@ namespace AimmyWPF
 
         private void LoadAimMenu()
         {
-            AToggle Enable_AIAimAligner = new(this, "Enable AI Aim Aligner",
-                "This will enable the AI's ability to align the aim.");
+            AToggle Enable_AIAimAligner = new(this, "启用AI瞄准校准器",
+                "这将使AI能够调整目标。");
             Enable_AIAimAligner.Reader.Name = "AimbotToggle";
             SetupToggle(Enable_AIAimAligner, state => Bools.AIAimAligner = state, Bools.AIAimAligner);
             AimScroller.Children.Add(Enable_AIAimAligner);
 
-            AToggle Enable_ConstantAITracking = new(this, "Enable Constant AI Aligner",
-    "This will let the AI run 24/7 to let Visual Debugging run.");
+            AToggle Enable_ConstantAITracking = new(this, "启用恒定AI校准器",
+    "这将让AI运行24/7可视化调试运行。");
             Enable_ConstantAITracking.Reader.Name = "ConstantAITracking";
             SetupToggle(Enable_ConstantAITracking, state => Bools.ConstantTracking = state, Bools.ConstantTracking);
             AimScroller.Children.Add(Enable_ConstantAITracking);
 
-            AToggle AimOnlyWhenBindingHeld = new(this, "Aim only when Trigger Button is held", // this can be simplifed with a toggle between constant and hold (toggle/hold), ill do it later.
-"This will stop the AI from aiming unless the Trigger Button is held.");
+            AToggle AimOnlyWhenBindingHeld = new(this, "只有当触发按钮被按住时才恒定", // this can be simplifed with a toggle between constant and hold (toggle/hold), ill do it later.
+"这将阻止AI瞄准，除非触发按钮被按住。");
             AimOnlyWhenBindingHeld.Reader.Name = "AimOnlyWhenBindingHeld";
             SetupToggle(AimOnlyWhenBindingHeld, state => Bools.AimOnlyWhenBindingHeld = state, Bools.AimOnlyWhenBindingHeld);
             AimScroller.Children.Add(AimOnlyWhenBindingHeld);
 
-            AKeyChanger Change_KeyPress = new("Change Keybind", "Right");
+            AKeyChanger Change_KeyPress = new("改变按键监听", "右键");
             Change_KeyPress.Reader.Click += (s, x) =>
             {
-                Change_KeyPress.KeyNotifier.Content = "Listening..";
+                Change_KeyPress.KeyNotifier.Content = "监听中..";
                 bindingManager.StartListeningForBinding();
             };
 
@@ -656,30 +656,30 @@ namespace AimmyWPF
             //SetupToggle(Enable_AlwaysOn, state => Bools.AIAlwaysOn = state, Bools.AIAlwaysOn);
             //AimScroller.Children.Add(Enable_AlwaysOn);
 
-            AToggle Enable_AIPredictions = new(this, "Enable Predictions",
-               "This will use a KalmanFilter algorithm to predict aim patterns for better tracing of enemies.");
+            AToggle Enable_AIPredictions = new(this, "启用预测",
+               "这将使用KalmanFilter算法来预测目标模式，以便更好地追踪敌人。");
             Enable_AIPredictions.Reader.Name = "PredictionToggle";
             SetupToggle(Enable_AIPredictions, state => Bools.AIPredictions = state, Bools.AIPredictions);
             AimScroller.Children.Add(Enable_AIPredictions);
 
             #region FOV System
 
-            AimScroller.Children.Add(new ALabel("FOV System"));
+            AimScroller.Children.Add(new ALabel("FOV 系统"));
 
-            AToggle Show_FOV = new(this, "Show FOV",
-                "This will show a circle around your screen that show what the AI is considering on the screen at a given moment.");
+            AToggle Show_FOV = new(this, "显示 FOV",
+                "这将在你的屏幕周围显示一个圆圈，显示AI在特定时刻在屏幕上考虑的内容。");
             Show_FOV.Reader.Name = "ShowFOV";
             SetupToggle(Show_FOV, state => Bools.ShowFOV = state, Bools.ShowFOV);
             AimScroller.Children.Add(Show_FOV);
 
-            AToggle Travelling_FOV = new(this, "Travelling FOV",
-    "This will allow the FOV circle to travel alongside your mouse.\n" +
-    "[PLEASE NOTE]: This does not have any effect on the AI's personal FOV, this feature is only for the visual effect.");
+            AToggle Travelling_FOV = new(this, "移动 FOV",
+    "这将允许FOV圈与鼠标一起移动。\n" +
+    "[请注意]: 这对AI的个人FOV没有任何影响，这个功能只是为了视觉效果。");
             Travelling_FOV.Reader.Name = "TravellingFOV";
             SetupToggle(Travelling_FOV, state => Bools.TravellingFOV = state, Bools.TravellingFOV);
             AimScroller.Children.Add(Travelling_FOV);
 
-            AColorChanger Change_FOVColor = new("FOV Color");
+            AColorChanger Change_FOVColor = new("FOV 颜色");
             Change_FOVColor.ColorChangingBorder.Background = (Brush)new BrushConverter().ConvertFromString(OverlayProperties["FOV_Color"]);
             Change_FOVColor.Reader.Click += (s, x) =>
             {
@@ -693,12 +693,12 @@ namespace AimmyWPF
             };
             AimScroller.Children.Add(Change_FOVColor);
 
-            ASlider FovSlider = new(this, "FOV Size", "Size of FOV",
-                "This setting controls how much of your screen is considered in the AI's decision making and how big the circle on your screen will be.",
+            ASlider FovSlider = new(this, "FOV 大小", "大小 FOV",
+                "这一设置控制着AI在你的屏幕上所占的比例以及屏幕上的圆圈的大小。",
                 1);
 
             FovSlider.Slider.Minimum = 10;
-            FovSlider.Slider.Maximum = 640;
+            FovSlider.Slider.Maximum = 320;
             FovSlider.Slider.Value = aimmySettings["FOV_Size"];
             FovSlider.Slider.TickFrequency = 1;
             FovSlider.Slider.ValueChanged += (s, x) =>
@@ -720,10 +720,10 @@ namespace AimmyWPF
 
             #region Aiming Configuration
 
-            AimScroller.Children.Add(new ALabel("Aiming Configuration"));
+            AimScroller.Children.Add(new ALabel("目标配置"));
 
-            ASlider MouseSensitivty = new(this, "Mouse Sensitivty", "Sensitivty",
-                "This setting controls how fast your mouse moves to a detection, if it moves too fast you need to set it to a higher number.",
+            ASlider MouseSensitivty = new(this, "鼠标灵敏度", "灵敏度",
+                "此设置控制您的鼠标移动到检测的速度，如果移动太快，则需要将其设置为更高的数字。",
                 0.01);
 
             MouseSensitivty.Slider.Minimum = 0.01;
@@ -737,8 +737,8 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(MouseSensitivty);
 
-            ASlider MouseJitter = new(this, "Mouse Jitter", "Jitter",
-                "This setting controls how much fake jitter is added to the mouse movements. Aim is almost never steady so this adds a nice layer of humanizing onto aim.",
+            ASlider MouseJitter = new(this, "鼠标抖动", "抖动",
+                "这个设置控制了鼠标移动的假抖动程度。Aim几乎从不稳定，所以这给Aim增加了一个很好的人性化层。",
                 0.01);
 
             MouseJitter.Slider.Minimum = 0;
@@ -751,8 +751,8 @@ namespace AimmyWPF
             };
             AimScroller.Children.Add(MouseJitter);
 
-            ASlider YOffset = new(this, "Y Offset (Up/Down)", "Offset",
-                "This setting controls how high / low you aim. A lower number will result in a higher aim. A higher number will result in a lower aim.",
+            ASlider YOffset = new(this, "Y偏移量(上/下)", "偏移",
+                "这个设置控制你的目标有多高/多低。数字越低，目标越高。较高的数字将导致较低的目标。",
                 1);
 
             YOffset.Slider.Minimum = -150;
@@ -766,8 +766,8 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(YOffset);
 
-            ASlider XOffset = new(this, "X Offset (Left/Right)", "Offset",
-                "This setting controls which way your aim leans. A lower number will result in an aim that leans to the left. A higher number will result in an aim that leans to the right",
+            ASlider XOffset = new(this, "X偏移量(左/右)", "偏移",
+                "这个设置控制你瞄准的方向。数字越低，目标就越偏左。数字越大，目标就越偏右",
                 1);
 
             XOffset.Slider.Minimum = -150;
@@ -785,28 +785,28 @@ namespace AimmyWPF
 
             #region Visual Debugging
 
-            AimScroller.Children.Add(new ALabel("Visual Debugging"));
+            AimScroller.Children.Add(new ALabel("可视化调试"));
 
-            AToggle Show_DetectedPlayerWindow = new(this, "Show Detected Player Window",
-                "Shows the Detected Player Overlay, the options below will not work if this is enabled!");
+            AToggle Show_DetectedPlayerWindow = new(this, "显示检测到的玩家窗口",
+                "显示检测到的玩家覆盖，如果启用，下面的选项将不起作用!");
             Show_DetectedPlayerWindow.Reader.Name = "ShowDetectedPlayerWindow";
             SetupToggle(Show_DetectedPlayerWindow, state => Bools.ShowDetectedPlayerWindow = state, Bools.ShowDetectedPlayerWindow);
             AimScroller.Children.Add(Show_DetectedPlayerWindow);
 
-            AToggle Show_CurrentDetectedPlayer = new(this, "Show Current Detected Player [Red]",
-    "This will show a rectangle on the player that the AI is considering on the screen at a given moment.");
+            AToggle Show_CurrentDetectedPlayer = new(this, "显示当前检测到的玩家[红色]",
+    "这将在玩家上显示一个矩形，AI在给定时刻在屏幕上考虑。");
             Show_CurrentDetectedPlayer.Reader.Name = "ShowCurrentDetectedPlayer";
             SetupToggle(Show_CurrentDetectedPlayer, state => Bools.ShowCurrentDetectedPlayer = state, Bools.ShowCurrentDetectedPlayer);
             AimScroller.Children.Add(Show_CurrentDetectedPlayer);
 
-            AToggle Show_UnfilteredDetectedPlayer = new(this, "Show Unflitered Version of Current Detected Player [Purple]",
-                "This will show a rectangle on the player that the AI is considering on the screen at a given moment without considering the adjusted X and Y axis.");
+            AToggle Show_UnfilteredDetectedPlayer = new(this, "显示当前检测到的玩家的原始版本[紫色]",
+                "这将在玩家上显示AI在给定时刻在屏幕上考虑的矩形，而不考虑调整的X和Y轴。");
             Show_UnfilteredDetectedPlayer.Reader.Name = "ShowUnfilteredDetectedPlayer";
             SetupToggle(Show_UnfilteredDetectedPlayer, state => Bools.ShowUnfilteredDetectedPlayer = state, Bools.ShowUnfilteredDetectedPlayer);
             AimScroller.Children.Add(Show_UnfilteredDetectedPlayer);
 
-            AToggle Show_Prediction = new(this, "Show AI Prediction [Green]",
-                "This will show a rectangle on where the AI assumes the player will be on the screen at a given moment.");
+            AToggle Show_Prediction = new(this, "显示AI预测[绿色]",
+                "这将显示一个矩形，AI假设玩家在给定时刻将出现在屏幕上。");
             Show_Prediction.Reader.Name = "ShowAIPrediction";
             SetupToggle(Show_Prediction, state => Bools.ShowPrediction = state, Bools.ShowPrediction);
             AimScroller.Children.Add(Show_Prediction);
@@ -815,10 +815,10 @@ namespace AimmyWPF
 
             #region Visual Debugging Customizer
 
-            AimScroller.Children.Add(new ALabel("Visual Debugging Customization"));
+            AimScroller.Children.Add(new ALabel("可视化调试自定义"));
 
-            ASlider Change_PDW_Size = new(this, "Detection Window Size", "Size",
-                "This setting controls the size of your Detected Player Windows.",
+            ASlider Change_PDW_Size = new(this, "检测窗口大小", "大小",
+                "此设置控制检测到的玩家窗口的大小。",
                 1);
 
             Change_PDW_Size.Slider.Minimum = 10;
@@ -834,8 +834,8 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_PDW_Size);
 
-            ASlider Change_PDW_CornerRadius = new(this, "Detection Window Corner Radius", "Corner Radius",
-                "This setting controls the corner radius of your Detected Player Windows.",
+            ASlider Change_PDW_CornerRadius = new(this, "检测窗口圆角半径", "圆角半径",
+                "此设置控制检测到的玩家窗口的圆角半径。",
                 1);
 
             Change_PDW_CornerRadius.Slider.Minimum = 0;
@@ -851,8 +851,8 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_PDW_CornerRadius);
 
-            ASlider Change_PDW_BorderThickness = new(this, "Detection Window Border Thickness", "Border Thickness",
-                "This setting controls the Border Thickness of your Detected Player Windows.",
+            ASlider Change_PDW_BorderThickness = new(this, "检测窗口边框粗细", "边框粗细",
+                "此设置控制检测到的玩家窗口的边框粗细。",
                 1);
 
             Change_PDW_BorderThickness.Slider.Minimum = 0.1;
@@ -868,8 +868,8 @@ namespace AimmyWPF
 
             AimScroller.Children.Add(Change_PDW_BorderThickness);
 
-            ASlider Change_PDW_Opacity = new(this, "Detection Window Opacity", "Opacity",
-                "This setting controls the Opacity of your Detected Player Windows.",
+            ASlider Change_PDW_Opacity = new(this, "检测窗口不透明度", "不透明度",
+                "此设置控制检测到的玩家窗口的不透明度。",
                 0.1);
 
             Change_PDW_Opacity.Slider.Minimum = 0;
@@ -890,14 +890,14 @@ namespace AimmyWPF
 
         private void LoadTriggerMenu()
         {
-            AToggle Enable_TriggerBot = new(this, "Enable Auto Trigger",
-                "This will enable the AI's ability to shoot whenever it sees a target.");
+            AToggle Enable_TriggerBot = new(this, "开启自动触发",
+                "这将使AI能够在看到目标时射击。");
             Enable_TriggerBot.Reader.Name = "TriggerBot";
             SetupToggle(Enable_TriggerBot, state => Bools.Triggerbot = state, Bools.Triggerbot);
             TriggerScroller.Children.Add(Enable_TriggerBot);
 
-            ASlider TriggerBot_Delay = new(this, "Auto Trigger Delay", "Seconds",
-                "This slider will control how many miliseconds it will take to initiate a trigger.",
+            ASlider TriggerBot_Delay = new(this, "自动触发延时", "秒",
+                "这个滑块将控制触发所需的秒数。",
                 0.1);
 
             TriggerBot_Delay.Slider.Minimum = 0.01;
@@ -958,7 +958,7 @@ namespace AimmyWPF
                         FovSize = (int)aimmySettings["FOV_Size"]
                     };
 
-                    SelectedModelNotifier.Content = "Loaded Model: " + selectedModel;
+                    SelectedModelNotifier.Content = "加载模型: " + selectedModel;
                     lastLoadedModel = selectedModel;
 
                     ModelLoadDebounce = false;
@@ -987,7 +987,7 @@ namespace AimmyWPF
                 {
                     SelectorListBox.SelectedItem = lastLoadedModel;
                 }
-                SelectedModelNotifier.Content = "Loaded Model: " + lastLoadedModel;
+                SelectedModelNotifier.Content = "加载模型: " + lastLoadedModel;
             }
             ModelLoadDebounce = false;
         }
@@ -1022,9 +1022,9 @@ namespace AimmyWPF
             }
             if (aimmySettings["Suggested_Model"] != string.Empty)
             {
-                MessageBox.Show("The creator of this model suggests you use this model:" +
+                MessageBox.Show("这个模型的创建者推荐您使用这个模型:" +
                     "\n" +
-                    aimmySettings["Suggested_Model"], "Suggested Model - Aimmy");
+                    aimmySettings["Suggested_Model"], "推荐模型 - Aimmy");
             }
 
             // We'll attempt to update the AI Settings but it may not be loaded yet.
@@ -1139,7 +1139,7 @@ namespace AimmyWPF
                 {
                     ConfigSelectorListBox.SelectedItem = lastLoadedConfig;
                 }
-                SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;
+                SelectedConfigNotifier.Content = "加载配置: " + lastLoadedConfig;
             }
         }
 
@@ -1175,14 +1175,14 @@ namespace AimmyWPF
         {
             SettingsScroller.Children.Add(new AInfoSection());
 
-            AToggle CollectDataWhilePlaying = new(this, "Collect Data While Playing",
-                "This will enable the AI's ability to take a picture of your screen when the trigger key is pressed.");
+            AToggle CollectDataWhilePlaying = new(this, "玩游戏时收集数据",
+                "这将使AI能够在按下触发键时拍摄你的屏幕。");
             CollectDataWhilePlaying.Reader.Name = "CollectData";
             SetupToggle(CollectDataWhilePlaying, state => Bools.CollectDataWhilePlaying = state, Bools.CollectDataWhilePlaying);
             SettingsScroller.Children.Add(CollectDataWhilePlaying);
 
-            ASlider AIMinimumConfidence = new(this, "AI Minimum Confidence", "% Confidence",
-                "This setting controls how confident the AI needs to be before making the decision to aim.",
+            ASlider AIMinimumConfidence = new(this, "AI最小置信度", "% 置信度",
+                "这一设置控制着AI在做出瞄准决定前的自信程度。",
                 1);
 
             AIMinimumConfidence.Slider.Minimum = 1;
@@ -1202,7 +1202,7 @@ namespace AimmyWPF
                     // Prevent double messageboxes..
                     if (AIMinimumConfidence.Slider.Value != aimmySettings["AI_Min_Conf"])
                     {
-                        MessageBox.Show("Unable to set confidence, please select a model and try again.", "Slider Error");
+                        MessageBox.Show("无法设置置信度，请选择一个模型再试一次。", "滑块的错误");
                         AIMinimumConfidence.Slider.Value = aimmySettings["AI_Min_Conf"];
                     }
                 }
@@ -1212,15 +1212,15 @@ namespace AimmyWPF
 
             bool topMostInitialState = toggleState.ContainsKey("TopMost") ? toggleState["TopMost"] : false;
 
-            AToggle TopMost = new(this, "UI TopMost",
-                "This will toggle the UI's TopMost, meaning it can hide behind other windows vs always being on top.");
+            AToggle TopMost = new(this, "用户界面最顶端",
+                "这将切换UI的顶部，这意味着它可以隐藏在其他窗口后面，而不是始终在顶部。");
             TopMost.Reader.Name = "TopMost";
             SetupToggle(TopMost, state => Bools.TopMost = state, topMostInitialState);
 
             SettingsScroller.Children.Add(TopMost);
 
-            AButton SaveConfigSystem = new(this, "Save Current Config",
-   "This will save the current config for the purposes of publishing.");
+            AButton SaveConfigSystem = new(this, "保存当前配置",
+   "这将保存当前配置以便发布。");
 
             SaveConfigSystem.Reader.Click += (s, e) =>
             {
@@ -1271,7 +1271,7 @@ namespace AimmyWPF
             }
             catch (Exception x)
             {
-                Console.WriteLine("Error saving configuration: " + x.Message);
+                Console.WriteLine("保存配置时出错: " + x.Message);
             }
 
             // Save Overlay Properties Data
@@ -1289,7 +1289,7 @@ namespace AimmyWPF
             }
             catch (Exception x)
             {
-                Console.WriteLine("Error saving configuration: " + x.Message);
+                Console.WriteLine("保存配置时出错: " + x.Message);
             }
 
             SavedData = true;

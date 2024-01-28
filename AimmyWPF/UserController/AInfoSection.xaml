@@ -33,7 +33,7 @@
                        VerticalAlignment="Top" />
                 <Label x:Name="Notice"
                        Foreground="White"
-                       Content="Aimmy is free, and will never be for sale."
+                       Content="Aimmy 是免费的，永远不会被出售。"
                        FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                        VerticalContentAlignment="Center"
                        Padding="5,0,0,0"
@@ -58,7 +58,7 @@
                 </Path>
                 <Label x:Name="Description"
                        Foreground="White"
-                       Content="Aimmy - Universal Second Eye"
+                       Content="Aimmy - 残疾人玩家的万能第二眼"
                        FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                        VerticalContentAlignment="Center"
                        Padding="0,0,0,0"
@@ -68,7 +68,7 @@
                        RenderTransformOrigin="0.602,0.353" />
                 <Label x:Name="Credit"
                        Foreground="White"
-                       Content="By Babyhamsta &amp; Nori"
+                       Content="By Babyhamsta &amp; Nori （该分支由PTA00创建）"
                        FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                        VerticalContentAlignment="Center"
                        Padding="0,0,0,0"
@@ -84,7 +84,7 @@
                         BorderBrush="{x:Null}"
                         Padding="0,0,0,0"
                         BorderThickness="0,0,0,0"
-                        Content="Check for Update"
+                        Content="检查更新"
                         FontWeight="Normal"
                         FontSize="12"
                         Height="27"

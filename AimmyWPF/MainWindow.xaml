@@ -5,7 +5,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Aimmy"
+        Title="This is a ass"
         Height="378"
         Width="564"
         WindowStyle="None"
@@ -28,7 +28,7 @@
                     <Label HorizontalAlignment="Left"
                            Width="78"
                            Foreground="White"
-                           Content="Aimmy"
+                           Content="For r6s"
                            FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                            VerticalContentAlignment="Center"
                            Padding="15,10,15,10"
@@ -79,7 +79,7 @@
                                     BorderBrush="{x:Null}"
                                     Padding="0,0,0,0"
                                     BorderThickness="0,0,0,0"
-                                    Content="Aim Aligner"
+                                    Content="瞄准矫正"
                                     FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                                     HorizontalAlignment="Left"
                                     Width="134"
@@ -92,7 +92,7 @@
                                     BorderBrush="{x:Null}"
                                     Padding="0,0,0,0"
                                     BorderThickness="0,0,0,0"
-                                    Content="Auto Trigger"
+                                    Content="自动触发"
                                     FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                                     HorizontalAlignment="Left"
                                     Width="136"
@@ -106,7 +106,7 @@
                                     BorderBrush="{x:Null}"
                                     Padding="0,0,0,0"
                                     BorderThickness="0,0,0,0"
-                                    Content="Model Selector"
+                                    Content="模式选择"
                                     FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                                     HorizontalAlignment="Left"
                                     Width="134"
@@ -120,7 +120,7 @@
                                     BorderBrush="{x:Null}"
                                     Padding="0,0,0,0"
                                     BorderThickness="0,0,0,0"
-                                    Content="Settings"
+                                    Content="设置"
                                     FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                                     HorizontalAlignment="Left"
                                     Width="134"
@@ -153,7 +153,7 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Local Models"
+                                    <TextBlock Text="加载模型"
                                                FontSize="11"
                                                Foreground="White" />
                                 </TabItem.Header>
@@ -179,7 +179,7 @@
                                             Height="39">
                                         <Label x:Name="SelectedModelNotifier"
                                                Foreground="#DDFFFFFF"
-                                               Content="Loaded Model: N/A"
+                                               Content="加载模型: N/A"
                                                FontFamily="Atkinson Hyperlegible"
                                                Padding="10"></Label>
                                     </Border>
@@ -189,7 +189,7 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Local Configs"
+                                    <TextBlock Text="加载配置"
                                                FontSize="11"
                                                Foreground="White" />
                                 </TabItem.Header>
@@ -224,7 +224,7 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Downloadable Models"
+                                    <TextBlock Text="可下载模型"
                                                FontSize="11"
                                                Foreground="White" />
                                 </TabItem.Header>
@@ -233,7 +233,7 @@
                                            Visibility="Collapsed"
                                            HorizontalContentAlignment="Center"
                                            VerticalContentAlignment="Center"
-                                           Content="There is no downloadable models at the moment, please check again later."
+                                           Content="暂时没有可下载的模型，请稍后再检查。"
                                            Foreground="#DDFFFFFF" />
                                     <ScrollViewer x:Name="ModelStoreMenu"
                                                   VerticalScrollBarVisibility="Hidden"
@@ -246,7 +246,7 @@
                                      Padding="10,0,10,0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Downloadable Configs"
+                                    <TextBlock Text="可下载配置"
                                                FontSize="11"
                                                Foreground="White" />
                                 </TabItem.Header>
@@ -255,7 +255,7 @@
                                            Visibility="Collapsed"
                                            HorizontalContentAlignment="Center"
                                            VerticalContentAlignment="Center"
-                                           Content="There is no downloadable configs at the moment, please check again later."
+                                           Content="目前没有可下载的配置，请稍后再检查。"
                                            Foreground="#DDFFFFFF" />
                                     <ScrollViewer x:Name="ConfigStoreMenu"
                                                   VerticalScrollBarVisibility="Hidden"
@@ -286,7 +286,7 @@
                         <Label HorizontalAlignment="Left"
                                Width="93"
                                Foreground="White"
-                               Content="More Info"
+                               Content="更多信息"
                                FontFamily="/AimmyWPF;component/Fonts/#Atkinson Hyperlegible"
                                VerticalContentAlignment="Center"
                                Padding="15,10,15,10"
