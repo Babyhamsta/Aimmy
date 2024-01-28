@@ -16,15 +16,15 @@ namespace AimmyAimbot
 {
     public class AIModel : IDisposable
     {
-        private const int IMAGE_SIZE = 640;
-        private const int NUM_DETECTIONS = 8400; // Standard for OnnxV8 model (Shape: 1x5x8400)
+        private const int IMAGE_SIZE = 320;
+        private const int NUM_DETECTIONS = 8500; // Standard for OnnxV8 model (Shape: 1x5x8400)
 
         private readonly RunOptions _modeloptions;
         private InferenceSession _onnxModel;
 
         public float ConfidenceThreshold = 0.6f;
         public bool CollectData = false;
-        public int FovSize = 640;
+        public int FovSize = 320;
 
         private DateTime lastSavedTime = DateTime.MinValue;
         private List<string> _outputNames;
@@ -32,7 +32,7 @@ namespace AimmyAimbot
         private Bitmap _screenCaptureBitmap = null;
 
         // Image size will always be 640x640
-        private static byte[] _rgbValuesCache = new byte[640 * 640 * 3];
+        private static byte[] _rgbValuesCache = new byte[320 * 320 * 3];
 
         public AIModel(string modelPath)
         {
@@ -53,7 +53,7 @@ namespace AimmyAimbot
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"There was an error starting the OnnxModel via DirectML: {ex}\n\nProgram will attempt to use CPU only, performance may be poor.", "Model Error");
+                MessageBox.Show($"通过DirectML启动OnnxModel时出现错误: {ex}\n\n程序将尝试只使用CPU，性能可能较差。", "模型错误");
                 LoadViaCPU(sessionOptions, modelPath);
             }
 
@@ -78,7 +78,7 @@ namespace AimmyAimbot
             }
             catch (Exception e)
             {
-                MessageBox.Show($"Error starting the model via CPU: {e}");
+                MessageBox.Show($"通过CPU启动模型出错: {e}");
                 System.Windows.Application.Current.Shutdown();
             }
         }
@@ -88,9 +88,9 @@ namespace AimmyAimbot
             foreach (var output in _onnxModel.OutputMetadata)
             {
                 var shape = _onnxModel.OutputMetadata[output.Key].Dimensions;
-                if (shape.Length != 3 || shape[0] != 1 || shape[1] != 5 || shape[2] != NUM_DETECTIONS)
+                if (shape.Length != 3 || shape[0] != 1 || shape[1] != 6 || shape[2] != NUM_DETECTIONS)
                 {
-                    MessageBox.Show($"Output shape {string.Join("x", shape)} does not match the expected shape of 1x5x8400.\n\nThis model will not work with Aimmy, please use an ONNX V8 model.", "Model Error");
+                    MessageBox.Show($"输出的形状 {string.Join("x", shape)} 不符合预期的（举例：1x5x8400）的形状。\n\n这个模型不适合Aimmy，请使用ONNX V8模型。", "Model Error");
                 }
             }
         }
