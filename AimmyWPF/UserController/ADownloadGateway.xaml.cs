@@ -23,14 +23,14 @@ namespace AimmyWPF.UserController
                     using (WebClient webClient = new WebClient())
                     {
                         DownloadButton.Content = "\xE895";
-                        new NoticeBar("The download is being parsed.").Show();
+                        new NoticeBar("").Show();
                         webClient.DownloadFileAsync(new Uri($"https://github.com/{RetrieveGithubFiles.RepoOwner}/{RetrieveGithubFiles.RepoName}/raw/master/{Path}/{Text}"), $"bin\\{Path}\\{Text}");
                         webClient.DownloadProgressChanged += (s, e) => DownloadProgress.Value = e.ProgressPercentage;
 
                         webClient.DownloadFileCompleted += (s, e) =>
                         {
                             webClient.Dispose();
-                            new NoticeBar("The file has been completed.").Show();
+                            new NoticeBar("正在解析下载。").Show();
                             (this.Parent as StackPanel).Children.Remove(this);
                         };
                     }
