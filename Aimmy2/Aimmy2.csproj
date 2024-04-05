@@ -1,0 +1,105 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
+    <Platforms>AnyCPU;x64</Platforms>	  <Product></Product>
+	  <Title></Title>
+	  <AssemblyName>OemDrv.exe</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SignAssembly>False</SignAssembly>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>False</Optimize>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Accord.Statistics" Version="3.8.0" />
+    <PackageReference Include="AntWpf" Version="1.0.3" />
+    <PackageReference Include="Costura.Fody" Version="5.8.0-alpha0098">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Emgu.CV" Version="4.8.1.5350" />
+    <PackageReference Include="Emgu.CV.Bitmap" Version="4.8.1.5350" />
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.8.1.5350" />
+    <PackageReference Include="Fody" Version="6.8.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.17.0" />
+    <PackageReference Include="MouseKeyHook" Version="5.7.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Supercluster.KDTree" Version="1.0.4" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="XamlRadialProgressBar" Version="1.0.3" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Graphics\Fonts\akony.otf" />
+		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-Bold.ttf" />
+		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-BoldItalic.ttf" />
+		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-Italic.ttf" />
+		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-Regular.ttf" />
+		<Resource Include="Graphics\Fonts\Font Awesome 6 Free-Regular-400.otf" />
+		<Resource Include="Graphics\Fonts\Font Awesome 6 Free-Solid-900.otf" />
+		<Resource Include="Graphics\Fonts\Font Awesome 6 Brands-Regular-400.otf" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="UILibrary\ACredit.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="UILibrary\AFileLocator.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="UILibrary\ASpacer.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="UILibrary\ASlider.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="UILibrary\AColorChanger.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="UILibrary\AKeyChanger.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="UILibrary\ARectangleBottom.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="UILibrary\APButton.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="MouseMovementLibraries\GHubSupport\LGDownloader.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+
+</Project>

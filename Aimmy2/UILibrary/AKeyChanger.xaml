@@ -1,0 +1,52 @@
+﻿<UserControl x:Class="Aimmy2.UILibrary.AKeyChanger"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
+             xmlns:local="clr-namespace:Aimmy2.UILibrary"
+             mc:Ignorable="d"
+             d:DesignWidth="282.5"
+             d:DesignHeight="40">
+    <Grid>
+        <Border Height="40"
+                Background="#3F3C3C3C"
+                CornerRadius="00"
+                BorderThickness="1,0,1,0"
+                BorderBrush="#3FFFFFFF">
+            <Grid>
+                <Label x:Name="KeyChangerTitle"
+                       Padding="10,10,10,10"
+                       FontFamily="{StaticResource Atkinson Hyperlegible}"
+                       Content="Change Aim Keybind"
+                       Foreground="#DDFFFFFF"
+                       VerticalContentAlignment="Center"
+                       FontSize="13"
+                       Margin="0,0,76,0" />
+
+                <Border HorizontalAlignment="Right"
+                        Margin="0,5,10,6"
+                        BorderBrush="#3FFFFFFF"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                    <Label x:Name="KeyNotifier"
+                           FontFamily="{StaticResource Atkinson Hyperlegible}"
+                           Content="Right"
+                           FontSize="13"
+                           HorizontalContentAlignment="Center"
+                           VerticalContentAlignment="Center"
+                           Padding="10,0,10,0"
+                           Foreground="#DDFFFFFF" />
+                </Border>
+
+                <Button x:Name="Reader"
+                        Background="{x:Null}"
+                        BorderBrush="{x:Null}"
+                        Padding="0,0,0,0"
+                        Height="40"
+                        Margin="0"></Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
