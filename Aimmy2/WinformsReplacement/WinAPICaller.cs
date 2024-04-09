@@ -1,9 +1,9 @@
-﻿using static WinformsReplacement.NativeMethods;
-using System.Windows.Interop;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Forms;
-using System.Drawing;
+using System.Windows.Interop;
+using static WinformsReplacement.NativeMethods;
 
 namespace Class
 {
@@ -14,7 +14,7 @@ namespace Class
         // Below is written by ChatGPT 3.5
         // Nori
 
-        static Graphics GraphicsThing = Graphics.FromHwnd(IntPtr.Zero);
+        private static Graphics GraphicsThing = Graphics.FromHwnd(IntPtr.Zero);
 
         public static float scalingFactorX = GraphicsThing.DpiX / (float)96;
         public static float scalingFactorY = GraphicsThing.DpiY / (float)96;
@@ -24,21 +24,30 @@ namespace Class
 
         //public static int ScreenWidth = Convert.ToInt16(Screen.PrimaryScreen!.Bounds.Width / scalingFactorX);
         //public static int ScreenHeight = Convert.ToInt16(Screen.PrimaryScreen!.Bounds.Height / scalingFactorY);
-        #endregion
+
+        #endregion Variables
+
         #region P/Invoke signatures
+
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetCursorPos(out POINT lpPoint);
-        #endregion
+
+        #endregion P/Invoke signatures
+
         #region Structures
+
         [StructLayout(LayoutKind.Sequential)]
-        private struct POINT    
+        private struct POINT
         {
             public int X;
             public int Y;
         }
-        #endregion
+
+        #endregion Structures
+
         #region Functions
+
         // https://stackoverflow.com/questions/254197/how-can-i-get-the-active-screen-dimensions
         public void GetScreenWidth(Window MW)
         {
@@ -68,6 +77,7 @@ namespace Class
                 throw new Exception("Failed to get cursor position.");
             }
         }
-        #endregion
+
+        #endregion Functions
     }
 }

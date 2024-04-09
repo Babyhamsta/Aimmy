@@ -1,10 +1,7 @@
-﻿using Aimmy2.Class;
-using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Visuality;
 
 namespace Aimmy2.Other
 {

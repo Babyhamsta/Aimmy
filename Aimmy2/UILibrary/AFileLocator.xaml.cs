@@ -1,7 +1,6 @@
 ﻿using Aimmy2.Class;
 using Microsoft.Win32;
 using System.IO;
-using System.Windows.Controls;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace UILibrary
@@ -15,6 +14,7 @@ namespace UILibrary
         private string main_dictionary_path { get; set; }
         private string OFDFilter = "All files (*.*)|*.*";
         private string DefaultLocationExtension = "";
+
         public AFileLocator(string title, string dictionary_path, string FileFilter = "All files (*.*)|*.*", string DLExtension = "")
         {
             InitializeComponent();

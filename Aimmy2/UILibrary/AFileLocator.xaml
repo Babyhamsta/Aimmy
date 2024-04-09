@@ -62,7 +62,6 @@
                             Foreground="White"
                             Click="OpenFileB_Click" />
             </Grid>
-
         </Border>
     </Grid>
 </UserControl>

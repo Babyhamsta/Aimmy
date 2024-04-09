@@ -4,7 +4,6 @@ using System.Security.Principal;
 using System.Windows;
 using Visuality;
 
-
 namespace MouseMovementLibraries.ddxoftSupport
 {
     internal class DdxoftMain
@@ -35,8 +34,7 @@ namespace MouseMovementLibraries.ddxoftSupport
             }
         }
 
-
-        public async static Task<bool> DLLLoading()
+        public static async Task<bool> DLLLoading()
         {
             try
             {
@@ -61,11 +59,12 @@ namespace MouseMovementLibraries.ddxoftSupport
                 return true;
             }
             catch (Exception ex)
-            { 
+            {
                 MessageBox.Show("Failed to load ddxoft virtual input driver.\n\n" + ex.ToString(), "Aimmy");
                 return false;
             }
         }
+
         public static async Task<bool> Load() => await DLLLoading();
     }
 }

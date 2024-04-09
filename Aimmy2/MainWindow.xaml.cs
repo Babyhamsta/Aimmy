@@ -4,7 +4,6 @@ using Aimmy2.Other;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
 using Class;
-using Emgu.CV.Ocl;
 using InputLogic;
 using Microsoft.Win32;
 using MouseMovementLibraries.ddxoftSupport;
@@ -50,7 +49,7 @@ namespace Aimmy2
         {
             InitializeComponent();
 
-            if (Directory.GetCurrentDirectory().Contains("Temp")) MessageBox.Show("Hi, it is made aware that you are running Aimmy without extracting it from the zip file. Please extract Aimmy from the zip file or Aimmy will not be able to run properly.\n\nThank you.","Aimmy V2");
+            if (Directory.GetCurrentDirectory().Contains("Temp")) MessageBox.Show("Hi, it is made aware that you are running Aimmy without extracting it from the zip file. Please extract Aimmy from the zip file or Aimmy will not be able to run properly.\n\nThank you.", "Aimmy V2");
 
             CurrentScrollViewer = FindName("AimMenu") as ScrollViewer;
             if (CurrentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
@@ -156,39 +155,6 @@ namespace Aimmy2
             Application.Current.Shutdown();
         }
 
-        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var textBox = (TextBox)sender;
-            string searchText = textBox.Text.ToLower();
-
-            foreach (ADownloadGateway item in ModelStoreScroller.Children)
-            {
-                if (item.Title.Content.ToString().Contains(searchText, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    item.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    item.Visibility = Visibility.Collapsed;
-                }
-            }
-        }
-
-        private void Main_Background_Gradient(object sender, MouseEventArgs e)
-        {
-            if (Dictionary.toggleState["Mouse Background Effect"])
-            {
-                var mousePosition = WinAPICaller.GetCursorPosition();
-                var translatedMousePos = PointFromScreen(new Point(mousePosition.X, mousePosition.Y));
-
-                double targetAngle = Math.Atan2(translatedMousePos.Y - (MainBorder.ActualHeight / 2), translatedMousePos.X - (MainBorder.ActualWidth / 2)) * (180 / Math.PI);
-
-                double angleDifference = CalculateAngleDifference(targetAngle, 360, 180, 1);
-                currentGradientAngle = (currentGradientAngle + angleDifference + 360) % 360;
-                RotaryGradient.Angle = currentGradientAngle;
-            }
-        }
-
         #endregion Loading Window
 
         #region Menu Logic
@@ -219,6 +185,43 @@ namespace Aimmy2
             CurrentScrollViewer.Visibility = Visibility.Collapsed;
             CurrentScrollViewer = MovingScrollViewer;
             CurrentlySwitching = false;
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateVisibilityBasedOnSearchText((TextBox)sender, ModelStoreScroller);
+        }
+
+        private void CSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateVisibilityBasedOnSearchText((TextBox)sender, ConfigStoreScroller);
+        }
+
+        private void UpdateVisibilityBasedOnSearchText(TextBox textBox, Panel panel)
+        {
+            string searchText = textBox.Text.ToLower();
+
+            foreach (ADownloadGateway item in panel.Children.OfType<ADownloadGateway>())
+            {
+                item.Visibility = item.Title.Content.ToString()?.ToLower().Contains(searchText) == true
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+        }
+
+        private void Main_Background_Gradient(object sender, MouseEventArgs e)
+        {
+            if (Dictionary.toggleState["Mouse Background Effect"])
+            {
+                var mousePosition = WinAPICaller.GetCursorPosition();
+                var translatedMousePos = PointFromScreen(new Point(mousePosition.X, mousePosition.Y));
+
+                double targetAngle = Math.Atan2(translatedMousePos.Y - (MainBorder.ActualHeight * 0.5), translatedMousePos.X - (MainBorder.ActualWidth * 0.5)) * (180 / Math.PI);
+
+                double angleDifference = CalculateAngleDifference(targetAngle, 360, 180, 1);
+                currentGradientAngle = (currentGradientAngle + angleDifference + 360) % 360;
+                RotaryGradient.Angle = currentGradientAngle;
+            }
         }
 
         private void LoadDropdownStates()
@@ -817,11 +820,13 @@ namespace Aimmy2
             AddCredit(CreditsPanel, "Babyhamsta", "AI Logic");
             AddCredit(CreditsPanel, "MarsQQ", "Design");
             AddCredit(CreditsPanel, "Taylor", "Optimization, Cleanup");
-            AddCredit(CreditsPanel, "Ninja", "MarsQQ's emotional support");
+
+            AddTitle(CreditsPanel, "Contributors");
             AddCredit(CreditsPanel, "Shall0e", "Prediction Method");
             AddCredit(CreditsPanel, "wisethef0x", "EMA Prediction Method");
             AddCredit(CreditsPanel, "HakaCat", "Idea for Auto Labelling Data");
             AddCredit(CreditsPanel, "Themida", "LGHub check");
+            AddCredit(CreditsPanel, "Ninja", "MarsQQ's emotional support");
             AddSeparator(CreditsPanel);
 
             AddTitle(CreditsPanel, "Model Creators");
@@ -1047,7 +1052,8 @@ namespace Aimmy2
                 }.Start();
             }
         }
-        #endregion
+
+        #endregion Open Folder
 
         #region Menu Functions
 
@@ -1116,6 +1122,5 @@ namespace Aimmy2
         }
 
         #endregion Window Handling
-
     }
 }

@@ -3,7 +3,6 @@ using Class;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Color = System.Windows.Media.Color;
 
 namespace Visuality
@@ -18,14 +17,15 @@ namespace Visuality
             base.OnSourceInitialized(e);
             ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
         }
+
         public FOV()
         {
             InitializeComponent();
             //new WinAPICaller().GetScreenWidth(this);
 
             Application.Current.Dispatcher.BeginInvoke(() => FOVStrictEnclosure.Margin = new Thickness(
-                Convert.ToInt16((WinAPICaller.ScreenWidth / 2) / WinAPICaller.scalingFactorX) - 320, 
-                Convert.ToInt16((WinAPICaller.ScreenHeight / 2) / WinAPICaller.scalingFactorY) - 320, 
+                Convert.ToInt16((WinAPICaller.ScreenWidth / 2) / WinAPICaller.scalingFactorX) - 320,
+                Convert.ToInt16((WinAPICaller.ScreenHeight / 2) / WinAPICaller.scalingFactorY) - 320,
                 0, 0));
 
             PropertyChanger.ReceiveColor = UpdateFOVColor;
@@ -33,10 +33,10 @@ namespace Visuality
         }
 
         private void UpdateFOVColor(Color NewColor) => Circle.Stroke = new SolidColorBrush(NewColor);
+
         private void UpdateFOVSize(double newdouble)
         {
             Circle.Width = Circle.Height = newdouble;
         }
-
     }
 }

@@ -11,11 +11,12 @@ namespace InputLogic
         private string? settingBindingId = null;
 
         public event Action<string, string>? OnBindingSet;
+
         public event Action<string>? OnBindingPressed;
+
         public event Action<string>? OnBindingReleased;
 
         public static bool IsHoldingBinding(string bindingId) => isHolding.TryGetValue(bindingId, out bool holding) && holding;
-        
 
         public void SetupDefault(string bindingId, string keyCode)
         {

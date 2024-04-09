@@ -1,7 +1,5 @@
 ﻿using Other;
-using System.Diagnostics;
 using System.Windows;
-using Visuality;
 
 namespace Aimmy2.MouseMovementLibraries.GHubSupport
 {

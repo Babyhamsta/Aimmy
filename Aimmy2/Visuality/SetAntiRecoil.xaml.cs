@@ -1,10 +1,8 @@
 ﻿using Aimmy2;
 using Aimmy2.Class;
 using AimmyWPF.Class;
-using Class;
 using InputLogic;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace Visuality

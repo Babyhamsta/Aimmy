@@ -74,8 +74,8 @@ namespace Visuality
             if (Dictionary.toggleState["Mouse Background Effect"])
             {
                 var CurrentMousePos = WinAPICaller.GetCursorPosition();
-                var TranslatedMousePos = PointFromScreen(new Point(CurrentMousePos.X, CurrentMousePos.Y));
-                double targetAngle = Math.Atan2(TranslatedMousePos.Y - (MainBorder.ActualHeight / 2), TranslatedMousePos.X - (MainBorder.ActualWidth / 2)) * (180 / Math.PI);
+                var translatedMousePos = PointFromScreen(new Point(CurrentMousePos.X, CurrentMousePos.Y));
+                double targetAngle = Math.Atan2(translatedMousePos.Y - (MainBorder.ActualHeight * 0.5), translatedMousePos.X - (MainBorder.ActualWidth * 0.5)) * (180 / Math.PI);
 
                 double angleDifference = (targetAngle - currentGradientAngle + 360) % 360;
                 if (angleDifference > 180)

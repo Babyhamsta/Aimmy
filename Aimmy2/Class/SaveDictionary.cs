@@ -1,12 +1,5 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Configuration;
-using System.Diagnostics;
-using System.Dynamic;
 using System.IO;
-using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Input;
 using MessageBox = System.Windows.MessageBox;
 
 namespace Class

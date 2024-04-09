@@ -17,6 +17,7 @@ namespace Visuality
             base.OnSourceInitialized(e);
             ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
         }
+
         public DetectedPlayerWindow()
         {
             InitializeComponent();

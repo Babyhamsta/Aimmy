@@ -2,7 +2,6 @@
 using System.IO;
 using System.Management;
 using System.Net.Http;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using Visuality;

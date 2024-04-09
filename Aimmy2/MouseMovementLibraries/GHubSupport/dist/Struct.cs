@@ -2,7 +2,7 @@
 
 namespace Aimmy2.MouseMovementLibraries.GHubSupport.dist
 {
-    class Struct
+    internal class Struct
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct MOUSE_IO

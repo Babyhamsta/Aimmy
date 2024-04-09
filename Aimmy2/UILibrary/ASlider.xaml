@@ -44,7 +44,7 @@
                         Foreground="White"
                         IsSnapToTickEnabled="True"
                         Value="2"
-                        TickFrequency="0.01"/>
+                        TickFrequency="0.01" />
                 <Ant:Button x:Name="SubtractOne"
                         BorderBrush="#FFD3ADF7"
                         Background="#FF722ED1"

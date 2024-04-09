@@ -41,6 +41,5 @@
                 </ComboBox>
             </Grid>
         </Border>
-
     </Grid>
 </UserControl>

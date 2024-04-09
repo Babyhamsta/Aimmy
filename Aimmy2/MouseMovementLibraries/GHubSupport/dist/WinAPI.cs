@@ -2,7 +2,7 @@
 
 namespace Aimmy2.MouseMovementLibraries.GHubSupport.dist
 {
-    class WinAPI
+    internal class WinAPI
     {
         [DllImport("ntdll.dll")]
         public static extern void RtlInitUnicodeString(nint DestinationString, [MarshalAs(UnmanagedType.LPWStr)] string SourceString);

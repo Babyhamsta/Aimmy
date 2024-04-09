@@ -10,6 +10,7 @@ namespace UILibrary
     public partial class ADropdown : UserControl
     {
         private string main_dictionary_path { get; set; }
+
         public ADropdown(string title, string dictionary_path)
         {
             InitializeComponent();

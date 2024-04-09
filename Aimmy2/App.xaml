@@ -1,7 +1,6 @@
 ﻿<Application x:Class="Aimmy2.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Aimmy2"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -15,7 +14,7 @@
             <FontFamily x:Key="AKONY">pack://application:,,,/Graphics/Fonts/#AKONY</FontFamily>
             <FontFamily x:Key="Atkinson Hyperlegible">pack://application:,,,/Graphics/Fonts/#Atkinson Hyperlegible</FontFamily>
             <FontFamily x:Key="Font Awesome 6 Brands">pack://application:,,,/Graphics/Fonts/#Font Awesome 6 Brands Regular</FontFamily>
-            
+
             <!--#region Material Main Hues  -->
             <SolidColorBrush x:Key="PrimaryHueLightBrush"
                              Color="White" />

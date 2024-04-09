@@ -45,13 +45,13 @@
                          CornerRadius="5"
                          Background="#d48806">
                     <Label x:Name="Label"
-                                Content="Models" 
+                                Content="Models"
                                 FontFamily="{StaticResource Atkinson Hyperlegible}"
                                 Foreground="#DDFFFFFF"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center"
                                 Padding="0,0,0,0"
-                                FontSize="10" />    
+                                FontSize="10" />
                         </Border>
                     <Button x:Name="RemovalButton"
                              Content="&#xE74D;"

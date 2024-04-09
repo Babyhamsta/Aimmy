@@ -2,7 +2,7 @@
 
 namespace Aimmy2.Class
 {
-    class GetSpecs
+    internal class GetSpecs
     {
         // Reference: https://www.youtube.com/watch?v=rou471Evuzc
         // Nori

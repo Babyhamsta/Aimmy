@@ -1,5 +1,4 @@
 ﻿using Other;
-using System.Windows.Input;
 
 namespace Aimmy2.UILibrary
 {

@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
+﻿using Aimmy2.Other;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
-using Aimmy2.Other;
 using Visuality;
 
 namespace Other

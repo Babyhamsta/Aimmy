@@ -125,8 +125,8 @@
                                 FontFamily="{StaticResource ResourceKey=Atkinson Hyperlegible}"
                                 HorizontalContentAlignment="Left"
                                 FontSize="12"
-                                Click="DownloadFile" 
-                                Visibility="Collapsed"/>
+                                Click="DownloadFile"
+                                Visibility="Collapsed" />
                     </StackPanel>
                 </Grid>
             </Grid>

@@ -2,7 +2,7 @@
 
 namespace Aimmy2.MouseMovementLibraries.GHubSupport.dist
 {
-    class Properties
+    internal class Properties
     {
         [StructLayout(LayoutKind.Sequential, Pack = 0)]
         public struct OBJECT_ATTRIBUTES : IDisposable

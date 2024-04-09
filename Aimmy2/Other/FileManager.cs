@@ -2,7 +2,6 @@
 using Aimmy2.Class;
 using Aimmy2.Other;
 using Class;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;

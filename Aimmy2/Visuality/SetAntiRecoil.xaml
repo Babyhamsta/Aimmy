@@ -111,8 +111,7 @@
                          Margin="10,46,10,0"
                          HorizontalContentAlignment="Center"
                          VerticalContentAlignment="Center"
-                         TextChanged="BulletNumberTextbox_TextChanged"
-                          />
+                         TextChanged="BulletNumberTextbox_TextChanged" />
                 <Ant:Button x:Name="ConfirmB"
                             BorderBrush="#FFD3ADF7"
                             Background="#FF722ED1"

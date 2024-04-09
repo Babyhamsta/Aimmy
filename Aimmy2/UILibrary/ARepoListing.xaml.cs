@@ -1,6 +1,4 @@
 ﻿using Aimmy2.Class;
-using Class;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Visuality;

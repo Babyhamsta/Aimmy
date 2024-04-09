@@ -12,7 +12,8 @@ namespace MouseMovementLibraries.ddxoftSupport
         Shift = 4,
         Windows = 8
     }
-    class ddxoftMouse
+
+    internal class ddxoftMouse
     {
         [DllImport("Kernel32")]
         private static extern System.IntPtr LoadLibrary(string dllfile);
@@ -24,18 +25,24 @@ namespace MouseMovementLibraries.ddxoftSupport
         public static extern bool FreeLibrary(IntPtr hModule);
 
         public delegate int pDD_btn(int btn);
+
         public delegate int pDD_whl(int whl);
+
         public delegate int pDD_key(int ddcode, int flag);
+
         public delegate int pDD_mov(int x, int y);
+
         public delegate int pDD_movR(int dx, int dy);
+
         public delegate int pDD_str(string str);
+
         public delegate int pDD_todc(int vkcode);
 
-        public pDD_btn btn;         //Mouse button 
+        public pDD_btn btn;         //Mouse button
         public pDD_whl whl;         //Mouse wheel
-        public pDD_mov mov;      //Mouse move abs. 
-        public pDD_movR movR;  //Mouse move rel. 
-        public pDD_key key;         //Keyboard 
+        public pDD_mov mov;      //Mouse move abs.
+        public pDD_movR movR;  //Mouse move rel.
+        public pDD_key key;         //Keyboard
         public pDD_str str;            //Input visible char
         public pDD_todc todc;      //VK to ddcode
 
@@ -48,7 +55,6 @@ namespace MouseMovementLibraries.ddxoftSupport
                 FreeLibrary(m_hinst);
             }
         }
-
 
         public int Load(string dllfile)
         {

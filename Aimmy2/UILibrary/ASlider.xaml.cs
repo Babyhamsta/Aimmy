@@ -30,7 +30,6 @@ namespace Aimmy2.UILibrary
 
         private void Slider_MouseUp(object sender, MouseButtonEventArgs e)
         {
-
         }
 
         private void Slider_MouseUp_1(object sender, MouseButtonEventArgs e)

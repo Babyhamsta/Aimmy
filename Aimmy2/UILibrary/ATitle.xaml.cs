@@ -1,5 +1,4 @@
 ﻿using Aimmy2.Class;
-using System.Diagnostics;
 
 namespace Aimmy2.UILibrary
 {

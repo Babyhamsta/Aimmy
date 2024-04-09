@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿using System.Runtime.InteropServices;
 
 namespace MouseMovementLibraries.SendInputSupport
 {
-    class SendInputMouse
+    internal class SendInputMouse
     {
         // Admittedly written by ChatGPT, I accidentially had ChatGPT cook this up while asking it to rewrite some
         // python script someone sent me over "Raw Input Manipulation" (never heard of it) and it came up with a SendInput Class
@@ -15,24 +11,24 @@ namespace MouseMovementLibraries.SendInputSupport
         // Nori
 
         [DllImport("user32.dll")]
-        static extern void SendInput(int nInputs, INPUT[] pInputs, int cbSize);
+        private static extern void SendInput(int nInputs, INPUT[] pInputs, int cbSize);
 
         [StructLayout(LayoutKind.Sequential)]
-        struct INPUT
+        private struct INPUT
         {
             public int type;
             public InputUnion U;
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        struct InputUnion
+        private struct InputUnion
         {
             [FieldOffset(0)]
             public MOUSEINPUT mi;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        struct MOUSEINPUT
+        private struct MOUSEINPUT
         {
             public int dx;
             public int dy;
@@ -46,7 +42,7 @@ namespace MouseMovementLibraries.SendInputSupport
         {
             INPUT input = new INPUT
             {
-                type = 0, 
+                type = 0,
                 U = new InputUnion
                 {
                     mi = new MOUSEINPUT

@@ -2,7 +2,7 @@
 
 namespace Aimmy2.Class
 {
-    class ClickThroughOverlay
+    internal class ClickThroughOverlay
     {
         // Thanks to cobble (@castme) for giving me the hint :)
         // Based on: https://social.msdn.microsoft.com/Forums/en-US/a3cb7db6-5014-430f-a5c2-c9746b077d4f/click-through-windows-and-child-image-issue?forum=wpf

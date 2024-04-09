@@ -1,8 +1,6 @@
 ﻿using Aimmy2.Class;
 using AimmyWPF.Class;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace Visuality
@@ -23,6 +21,7 @@ namespace Visuality
             base.OnSourceInitialized(e);
             ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
         }
+
         public NoticeBar(string text, int waitingTime)
         {
             InitializeComponent();
@@ -31,7 +30,7 @@ namespace Visuality
             WaitingTime = waitingTime;
         }
 
-        private  void OnLoaded(object sender, RoutedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
             AdjustMargin();
             ShowNotice();
