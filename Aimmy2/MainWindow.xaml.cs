@@ -1117,7 +1117,7 @@ namespace Aimmy2
         private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
         {
             UpdateManager updateManager = new UpdateManager();
-            await updateManager.CheckForUpdate("2.1.1");
+            await updateManager.CheckForUpdate("2.1.5");
             updateManager.Dispose();
         }
 
