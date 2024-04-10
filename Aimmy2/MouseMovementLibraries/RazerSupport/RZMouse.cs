@@ -83,12 +83,12 @@ namespace MouseMovementLibraries.RazerSupport
                 new NoticeBar($"{rzctlpath} is missing, attempting to download {rzctlpath}.", 4000).Show();
 
                 using HttpClient httpClient = new();
+                using var response = await httpClient.GetAsync(new Uri(rzctlDownloadUrl), HttpCompletionOption.ResponseHeadersRead);
 
-                var response = await httpClient.GetAsync(new Uri(rzctlDownloadUrl), HttpCompletionOption.ResponseHeadersRead);
                 if (response.IsSuccessStatusCode)
                 {
                     using var contentStream = await response.Content.ReadAsStreamAsync();
-                    using var fileStream = File.Create(rzctlpath);
+                    using var fileStream = new FileStream(rzctlpath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
                     await contentStream.CopyToAsync(fileStream);
                     new NoticeBar($"{rzctlpath} has downloaded successfully, please re-select Razer Synapse to load the DLL.", 4000).Show();
                 }

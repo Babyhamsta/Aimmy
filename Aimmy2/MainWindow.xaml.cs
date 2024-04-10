@@ -820,6 +820,7 @@ namespace Aimmy2
             AddCredit(CreditsPanel, "Babyhamsta", "AI Logic");
             AddCredit(CreditsPanel, "MarsQQ", "Design");
             AddCredit(CreditsPanel, "Taylor", "Optimization, Cleanup");
+            AddSeparator(CreditsPanel);
 
             AddTitle(CreditsPanel, "Contributors");
             AddCredit(CreditsPanel, "Shall0e", "Prediction Method");
