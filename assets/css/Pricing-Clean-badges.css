@@ -1,0 +1,14 @@
+.bg-white-300 {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.rounded-bottom-left {
+  border-radius: 0;
+  border-bottom-left-radius: .25rem!important;
+}
+
+.rounded-bottom-right {
+  border-radius: 0;
+  border-bottom-right-radius: .25rem!important;
+}
+
