@@ -29,7 +29,9 @@ namespace Aimmy2.Class
             { "Mouse Sensitivity (+/-)", 0.80 },
             { "Mouse Jitter", 4 },
             { "Y Offset (Up/Down)", 0 },
+            { "Y Offset (%)", 50 },
             { "X Offset (Left/Right)", 0 },
+            { "X Offset (%)", 50 },
             { "Auto Trigger Delay", 0.1 },
             { "AI Minimum Confidence", 45 },
             { "AI Confidence Font Size", 20 },
@@ -59,7 +61,10 @@ namespace Aimmy2.Class
             { "Auto Label Data", false },
             { "LG HUB Mouse Movement", false },
             { "Mouse Background Effect", true },
-            { "UI TopMost", true }
+            { "UI TopMost", true },
+
+            { "X Axis Percentage Adjustment", false },
+            { "Y Axis Percentage Adjustment", false }
         };
 
         public static Dictionary<string, dynamic> minimizeState = new()
@@ -71,7 +76,8 @@ namespace Aimmy2.Class
             { "Anti Recoil Config", false },
             { "FOV Config", false },
             { "ESP Config", false },
-            { "Settings Menu", false }
+            { "Settings Menu", false },
+            { "X/Y Percentage Adjustment", false }
         };
 
         public static Dictionary<string, dynamic> dropdownState = new()

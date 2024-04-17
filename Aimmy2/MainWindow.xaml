@@ -449,7 +449,9 @@
                         </StackPanel>
                         <StackPanel x:Name="SSP2"
                                     Grid.Column="1"
-                                    Margin="5,0,10,0" />
+                                    Margin="5,0,10,0">
+                            <StackPanel x:Name="XYPercentageEnablerMenu" />
+                        </StackPanel>
                     </Grid>
                 </ScrollViewer>
                 <ScrollViewer x:Name="AboutMenu"

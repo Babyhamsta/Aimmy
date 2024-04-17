@@ -90,9 +90,7 @@ namespace Class
 
         // Settings UI
         public ATitle? AT_SettingsMenu { get; set; }
-
         public AToggle? T_CollectDataWhilePlaying { get; set; }
-
         public AToggle? T_AutoLabelData { get; set; }
         public ADropdown? D_MouseMovementMethod { get; set; }
         public ComboBoxItem? DDI_LGHUB { get; set; }
@@ -103,6 +101,11 @@ namespace Class
         public AToggle? T_UITopMost { get; set; }
         public APButton? B_SaveConfig { get; set; }
         public APButton? B_Debug { get; set; }
+
+        // X/Y Percentage Adjustment Enabler
+        public ATitle? AT_XYPercentageAdjustmentEnabler { get; set; }
+        public AToggle? T_XAxisPercentageAdjustment { get; set; }
+        public AToggle? T_YAxisPercentageAdjustment { get; set; }
 
         // ddxoft UI
         public AFileLocator? AFL_ddxoftDLLLocator { get; set; }

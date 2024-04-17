@@ -623,8 +623,13 @@ namespace Aimmy2
                 else if (uiManager.S_MouseSensitivity.Slider.Value <= 0.1) new NoticeBar("The Mouse Sensitivity you have set can cause Aimmy to be unstable to aim, please increase if you suffer from this problem", 10000).Show();
             };
             uiManager.S_MouseJitter = AddSlider(AimConfig, "Mouse Jitter", "Jitter", 1, 1, 0, 15);
+
             uiManager.S_YOffset = AddSlider(AimConfig, "Y Offset (Up/Down)", "Offset", 1, 1, -150, 150);
+            uiManager.S_YOffset = AddSlider(AimConfig, "Y Offset (%)", "Percent", 1, 1, 0, 100);
+
             uiManager.S_XOffset = AddSlider(AimConfig, "X Offset (Left/Right)", "Offset", 1, 1, -150, 150);
+            uiManager.S_XOffset = AddSlider(AimConfig, "X Offset (%)", "Percent", 1, 1, 0, 100);
+
             AddSeparator(AimConfig);
 
             #endregion Config
@@ -808,6 +813,12 @@ namespace Aimmy2
 
             AddSeparator(SettingsConfig);
 
+            // X/Y Percentage Adjustment Enabler
+            uiManager.AT_XYPercentageAdjustmentEnabler = AddTitle(XYPercentageEnablerMenu, "X/Y Percentage Adjustment", true);
+            uiManager.T_XAxisPercentageAdjustment = AddToggle(XYPercentageEnablerMenu, "X Axis Percentage Adjustment");
+            uiManager.T_YAxisPercentageAdjustment = AddToggle(XYPercentageEnablerMenu, "Y Axis Percentage Adjustment");
+            AddSeparator(XYPercentageEnablerMenu);
+
             // ddxoft Menu
             //AddTitle(SSP2, "ddxoft Configurator");
             //uiManager.AFL_ddxoftDLLLocator = AddFileLocator(SSP2, "ddxoft DLL Location", "ddxoft dll (*.dll)|*.dll");
@@ -918,6 +929,8 @@ namespace Aimmy2
 
         private void ToggleSettingsMenu() => SetMenuVisibility(SettingsConfig, !Dictionary.minimizeState["Settings Menu"]);
 
+        private void ToggleXYPercentageAdjustmentEnabler() => SetMenuVisibility(XYPercentageEnablerMenu, !Dictionary.minimizeState["X/Y Percentage Adjustment"]);
+
         private void LoadMenuMinimizers()
         {
             ToggleAimMenu();
@@ -928,6 +941,7 @@ namespace Aimmy2
             ToggleFOVConfigMenu();
             ToggleESPConfigMenu();
             ToggleSettingsMenu();
+            ToggleXYPercentageAdjustmentEnabler();
 
             uiManager.AT_Aim.Minimize.Click += (s, e) => ToggleAimMenu();
 
@@ -944,6 +958,8 @@ namespace Aimmy2
             uiManager.AT_DetectedPlayer.Minimize.Click += (s, e) => ToggleESPConfigMenu();
 
             uiManager.AT_SettingsMenu.Minimize.Click += (s, e) => ToggleSettingsMenu();
+
+            uiManager.AT_XYPercentageAdjustmentEnabler.Minimize.Click += (s, e) => ToggleXYPercentageAdjustmentEnabler();
         }
 
         private static void SetMenuVisibility(StackPanel panel, bool isVisible)

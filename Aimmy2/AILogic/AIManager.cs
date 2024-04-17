@@ -203,8 +203,18 @@ namespace Aimmy2.AILogic
                         double YOffset = Dictionary.sliderSettings["Y Offset (Up/Down)"];
                         double XOffset = Dictionary.sliderSettings["X Offset (Left/Right)"];
 
-                        detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
-                        detectedY = CalculateDetectedY(scaleY, YOffset, closestPrediction);
+                        double YOffsetPercentage = Dictionary.sliderSettings["Y Offset (%)"];
+                        double XOffsetPercentage = Dictionary.sliderSettings["X Offset (%)"];
+
+                        if (Dictionary.toggleState["X Axis Percentage Adjustment"])
+                            detectedX = (int)((closestPrediction.Rectangle.X + (closestPrediction.Rectangle.Width * (XOffsetPercentage / 100))) * scaleX);
+                        else
+                            detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
+
+                        if (Dictionary.toggleState["Y Axis Percentage Adjustment"])
+                            detectedY = (int)(((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height) - (closestPrediction.Rectangle.Height * (YOffsetPercentage / 100))) * scaleY + YOffset);
+                        else
+                            detectedY = CalculateDetectedY(scaleY, YOffset, closestPrediction);
 
                         if (Dictionary.dropdownState["Prediction Method"] == "Shall0e's Prediction")
                         {
