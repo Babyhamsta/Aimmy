@@ -6,7 +6,6 @@ using MouseMovementLibraries.RazerSupport;
 using MouseMovementLibraries.SendInputSupport;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Security.RightsManagement;
 
 namespace InputLogic
 {
