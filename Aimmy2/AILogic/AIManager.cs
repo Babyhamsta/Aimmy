@@ -359,6 +359,9 @@ namespace Aimmy2.AILogic
                     DetectedPlayerOverlay.DetectedTracers.Opacity = 1;
                     DetectedPlayerOverlay.DetectedTracers.X2 = Convert.ToInt16(LastDetectionBox.X / WinAPICaller.scalingFactorX) + (LastDetectionBox.Width / 2);
                     DetectedPlayerOverlay.DetectedTracers.Y2 = Convert.ToInt16(LastDetectionBox.Y / WinAPICaller.scalingFactorY) + LastDetectionBox.Height;
+                }else if (!Dictionary.toggleState["Show Tracers"])
+                {
+                    DetectedPlayerOverlay.DetectedTracers.Opacity = 0;
                 }
 
                 DetectedPlayerOverlay.DetectedPlayerFocus.Opacity = 1;
