@@ -312,11 +312,7 @@ namespace Aimmy2
                     break;
 
                 case "Show AI Confidence":
-                    if (!Dictionary.toggleState[title])
-                    {
-                        DPWindow.DetectedPlayerConfidence.Margin = new Thickness(0, 0, 0, 0);
-                        DPWindow.DetectedPlayerConfidence.Width = 0;
-                    }
+                    DPWindow.DetectedPlayerConfidence.Visibility = Dictionary.toggleState[title] ? Visibility.Visible : Visibility.Collapsed;
                     break;
 
                 case "Mouse Background Effect":
