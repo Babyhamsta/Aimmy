@@ -364,6 +364,8 @@ namespace Aimmy2.AILogic
                     DetectedPlayerOverlay.DetectedTracers.Opacity = 0;
                 }
 
+                DetectedPlayerOverlay.Opacity = Dictionary.sliderSettings["Opacity"];
+
                 DetectedPlayerOverlay.DetectedPlayerFocus.Opacity = 1;
                 DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(Convert.ToInt16(LastDetectionBox.X / WinAPICaller.scalingFactorX),
                     Convert.ToInt16(LastDetectionBox.Y / WinAPICaller.scalingFactorY),
