@@ -768,7 +768,6 @@ namespace Aimmy2
             uiManager.S_DPBorderThickness.Slider.ValueChanged += (s, x) => PropertyChanger.PostDPWBorderThickness(uiManager.S_DPBorderThickness.Slider.Value);
 
             uiManager.S_DPOpacity = AddSlider(ESPConfig, "Opacity", "Opacity", 0.1, 0.1, 0, 1);
-            uiManager.S_DPOpacity.Slider.ValueChanged += (s, x) => PropertyChanger.PostDPWOpacity(uiManager.S_DPOpacity.Slider.Value);
 
             AddSeparator(ESPConfig);
 
