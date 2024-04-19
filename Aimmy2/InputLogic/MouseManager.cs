@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Class;
 using MouseMovementLibraries.ddxoftSupport;
@@ -6,6 +6,7 @@ using MouseMovementLibraries.RazerSupport;
 using MouseMovementLibraries.SendInputSupport;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Security.RightsManagement;
 
 namespace InputLogic
 {
@@ -14,14 +15,17 @@ namespace InputLogic
         private static readonly double ScreenWidth = WinAPICaller.ScreenWidth;
         private static readonly double ScreenHeight = WinAPICaller.ScreenHeight;
 
-        //private int TimeSinceLastClick = 0;
         private static DateTime LastClickTime = DateTime.MinValue;
-
         private static int LastAntiRecoilClickTime = 0;
 
         private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         private const uint MOUSEEVENTF_LEFTUP = 0x0004;
         private const uint MOUSEEVENTF_MOVE = 0x0001;
+        private static double previousX = 0;
+        private static double previousY = 0;
+        public static double smoothingFactor = 0.5;
+        public static bool IsEMASmoothingEnabled = false;
+
 
         [DllImport("user32.dll")]
         private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
@@ -36,10 +40,21 @@ namespace InputLogic
 
             double x = uu * u * start.X + 3 * uu * t * control1.X + 3 * u * tt * control2.X + tt * t * end.X;
             double y = uu * u * start.Y + 3 * uu * t * control1.Y + 3 * u * tt * control2.Y + tt * t * end.Y;
+            if (IsEMASmoothingEnabled) { 
+            double smoothedX = EmaSmoothing(previousX, x, smoothingFactor);
+            double smoothedY = EmaSmoothing(previousY, y, smoothingFactor);
+
+            x = smoothedX;
+            y = smoothedY;
+            }
 
             return new Point((int)x, (int)y);
         }
 
+        private static double EmaSmoothing(double previousValue, double currentValue, double smoothingFactor)
+        {
+            return (currentValue * smoothingFactor) + (previousValue * (1 - smoothingFactor));
+        }
         public static async Task DoTriggerClick()
         {
             int timeSinceLastClick = (int)(DateTime.UtcNow - LastClickTime).TotalMilliseconds;
@@ -94,7 +109,6 @@ namespace InputLogic
         {
             int timeSinceLastClick = Math.Abs(DateTime.UtcNow.Millisecond - LastAntiRecoilClickTime);
 
-            //Debug.WriteLine(timeSinceLastClick);
             if (timeSinceLastClick < Dictionary.AntiRecoilSettings["Fire Rate"])
             {
                 return;
@@ -131,8 +145,6 @@ namespace InputLogic
 
         public static void MoveCrosshair(int detectedX, int detectedY)
         {
-            #region Variables
-
             int halfScreenWidth = (int)ScreenWidth / 2;
             int halfScreenHeight = (int)ScreenHeight / 2;
 
@@ -151,10 +163,6 @@ namespace InputLogic
             Point control2 = new(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
             Point newPosition = CubicBezier(start, end, control1, control2, 1 - Dictionary.sliderSettings["Mouse Sensitivity (+/-)"]);
 
-            #endregion Variables
-
-            #region Variable Changes
-
             targetX = Math.Clamp(targetX, -150, 150);
             targetY = Math.Clamp(targetY, -150, 150);
 
@@ -162,8 +170,6 @@ namespace InputLogic
 
             targetX += jitterX;
             targetY += jitterY;
-
-            #endregion Variable Changes
 
             switch (Dictionary.dropdownState["Mouse Movement Method"])
             {
