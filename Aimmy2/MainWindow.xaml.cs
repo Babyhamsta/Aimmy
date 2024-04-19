@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.Other;
 using Aimmy2.UILibrary;
@@ -11,6 +11,7 @@ using MouseMovementLibraries.RazerSupport;
 using Other;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -325,6 +326,10 @@ namespace Aimmy2
                 case "UI TopMost":
                     Topmost = Dictionary.toggleState[title];
                     break;
+                case "EMA Smoothening":
+                    MouseManager.IsEMASmoothingEnabled = Dictionary.toggleState[title];
+                    Debug.WriteLine(MouseManager.IsEMASmoothingEnabled);
+                    break;
             }
         }
 
@@ -580,6 +585,7 @@ namespace Aimmy2
                 }
             };
             uiManager.T_Predictions = AddToggle(AimAssist, "Predictions");
+            uiManager.T_EMASmoothing = AddToggle(AimAssist, "EMA Smoothening");
             uiManager.C_EmergencyKeybind = AddKeyChanger(AimAssist, "Emergency Stop Keybind", Dictionary.bindingSettings["Emergency Stop Keybind"]);
             uiManager.T_EnableModelSwitchKeybind = AddToggle(AimAssist, "Enable Model Switch Keybind");
             uiManager.C_ModelSwitchKeybind = AddKeyChanger(AimAssist, "Model Switch Keybind", Dictionary.bindingSettings["Model Switch Keybind"]);
@@ -629,6 +635,8 @@ namespace Aimmy2
 
             uiManager.S_XOffset = AddSlider(AimConfig, "X Offset (Left/Right)", "Offset", 1, 1, -150, 150);
             uiManager.S_XOffset = AddSlider(AimConfig, "X Offset (%)", "Percent", 1, 1, 0, 100);
+
+            uiManager.S_EMASmoothing = AddSlider(AimConfig, "EMA Smoothening", "Amount", 0.01, 0.01, 0.01, 1);
 
             AddSeparator(AimConfig);
 
@@ -721,6 +729,14 @@ namespace Aimmy2
                 if (Dictionary.toggleState["Dynamic FOV"])
                 {
                     PropertyChanger.PostNewFOVSize(uiManager.S_DynamicFOVSize.Slider.Value);
+                }
+            };
+            uiManager.S_EMASmoothing.Slider.ValueChanged += (s, x) =>
+            {
+                if (Dictionary.toggleState["EMA Smoothening"])
+                {
+                    MouseManager.smoothingFactor = uiManager.S_EMASmoothing.Slider.Value;
+                    Debug.WriteLine(MouseManager.smoothingFactor);
                 }
             };
             AddSeparator(FOVConfig);
