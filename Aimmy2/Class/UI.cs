@@ -31,6 +31,7 @@ namespace Class
         public ASlider? S_MouseJitter { get; set; }
         public ASlider? S_YOffset { get; set; }
         public ASlider? S_XOffset { get; set; }
+        public ASlider? S_EMASmoothing { get; set; }
 
         // Triggerbot
         public ATitle? AT_TriggerBot { get; set; }
