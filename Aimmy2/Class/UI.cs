@@ -14,6 +14,7 @@ namespace Class
         public AKeyChanger? C_Keybind { get; set; }
         public AToggle? T_ConstantAITracking { get; set; }
         public AToggle? T_Predictions { get; set; }
+        public AToggle? T_EMASmoothing { get; set; }
         public AKeyChanger? C_EmergencyKeybind { get; set; }
         public AToggle? T_EnableModelSwitchKeybind { get; set; }
         public AKeyChanger? C_ModelSwitchKeybind { get; set; }
