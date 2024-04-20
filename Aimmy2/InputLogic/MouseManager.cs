@@ -52,6 +52,8 @@ namespace InputLogic
 
         private static double EmaSmoothing(double previousValue, double currentValue, double smoothingFactor)
         {
+            // I Dont like math so I use copilot for this
+            // whip
             return (currentValue * smoothingFactor) + (previousValue * (1 - smoothingFactor));
         }
         public static async Task DoTriggerClick()
