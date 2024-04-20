@@ -1,4 +1,4 @@
-﻿using Visuality;
+using Visuality;
 
 namespace Aimmy2.Class
 {
@@ -32,6 +32,7 @@ namespace Aimmy2.Class
             { "Y Offset (%)", 50 },
             { "X Offset (Left/Right)", 0 },
             { "X Offset (%)", 50 },
+            { "EMA Smoothening", 0.5},
             { "Auto Trigger Delay", 0.1 },
             { "AI Minimum Confidence", 45 },
             { "AI Confidence Font Size", 20 },
@@ -47,6 +48,7 @@ namespace Aimmy2.Class
             { "Aim Assist", false },
             { "Constant AI Tracking", false },
             { "Predictions", false },
+            { "EMA Smoothening", false },
             { "Enable Model Switch Keybind", true },
             { "Enable Gun Switching Keybind", false },
             { "Auto Trigger", false },
@@ -62,7 +64,6 @@ namespace Aimmy2.Class
             { "LG HUB Mouse Movement", false },
             { "Mouse Background Effect", true },
             { "UI TopMost", true },
-
             { "X Axis Percentage Adjustment", false },
             { "Y Axis Percentage Adjustment", false }
         };
