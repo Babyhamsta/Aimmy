@@ -14,6 +14,7 @@ namespace Class
         public AKeyChanger? C_Keybind { get; set; }
         public AToggle? T_ConstantAITracking { get; set; }
         public AToggle? T_Predictions { get; set; }
+        public AToggle? T_EMASmoothing { get; set; }
         public AKeyChanger? C_EmergencyKeybind { get; set; }
         public AToggle? T_EnableModelSwitchKeybind { get; set; }
         public AKeyChanger? C_ModelSwitchKeybind { get; set; }
@@ -30,6 +31,7 @@ namespace Class
         public ASlider? S_MouseJitter { get; set; }
         public ASlider? S_YOffset { get; set; }
         public ASlider? S_XOffset { get; set; }
+        public ASlider? S_EMASmoothing { get; set; }
 
         // Triggerbot
         public ATitle? AT_TriggerBot { get; set; }
