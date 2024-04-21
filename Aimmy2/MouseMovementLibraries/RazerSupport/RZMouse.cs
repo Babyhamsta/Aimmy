@@ -48,8 +48,12 @@ namespace MouseMovementLibraries.RazerSupport
                 if (result == MessageBoxResult.No)
                 {
                     await InstallRazerSynapse();
+                    return false;
                 }
-                return false;
+                else
+                {
+                    return true;
+                }
             }
             else return true;
         }
@@ -101,23 +105,24 @@ namespace MouseMovementLibraries.RazerSupport
 
         public static async Task<bool> Load()
         {
+            Debug.WriteLine("1");
             if (!await CheckRazerSynapseInstall())
             {
                 return false;
             }
-
+            Debug.WriteLine("2");
             if (!File.Exists(rzctlpath))
             {
                 await downloadrzctl();
                 return false;
             }
-
+            Debug.WriteLine("3");
             if (!CheckForRazerDevices())
             {
                 MessageBox.Show("No Razer Peripheral is detected, this Mouse Movement Method is unusable.", "Aimmy");
                 return false;
             }
-
+            Debug.WriteLine("4");
             try
             {
                 return init();
