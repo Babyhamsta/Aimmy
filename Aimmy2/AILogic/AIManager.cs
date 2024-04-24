@@ -220,8 +220,8 @@ namespace Aimmy2.AILogic
                         {
                             UpdateShalloePrediction();
                         }
-
-                        if (Dictionary.toggleState["Aim Assist"] && (Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Aim Keybind")))
+                        
+                        if (Dictionary.toggleState["Aim Assist"] && (Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || InputBindingManager.IsHoldingBinding("Second Aim Keybind")))
                         {
                             if (Dictionary.toggleState["Predictions"])
                             {
