@@ -12,6 +12,7 @@ namespace Aimmy2.Class
         public static Dictionary<string, dynamic> bindingSettings = new()
         {
             { "Aim Keybind", "Right"},
+            { "Second Aim Keybind", "LMenu"},
             { "Dynamic FOV Keybind", "Left"},
             { "Emergency Stop Keybind", "Delete"},
             { "Model Switch Keybind", "OemPipe"},

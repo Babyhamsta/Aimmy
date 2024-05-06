@@ -173,7 +173,7 @@ namespace Aimmy2.AILogic
 
                 if (Dictionary.toggleState["Aim Assist"] || Dictionary.toggleState["Show Detected Player"] || Dictionary.toggleState["Auto Trigger"])
                 {
-                    if (Dictionary.toggleState["Show Detected Player"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"])
+                    if (Dictionary.toggleState["Show Detected Player"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Second Aim Keybind"))
                     {
                         var closestPrediction = await GetClosestPrediction();
 
@@ -220,8 +220,8 @@ namespace Aimmy2.AILogic
                         {
                             UpdateShalloePrediction();
                         }
-
-                        if (Dictionary.toggleState["Aim Assist"] && (Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Aim Keybind")))
+                        
+                        if (Dictionary.toggleState["Aim Assist"] && (Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || InputBindingManager.IsHoldingBinding("Second Aim Keybind")))
                         {
                             if (Dictionary.toggleState["Predictions"])
                             {

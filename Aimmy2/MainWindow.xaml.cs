@@ -77,6 +77,7 @@ namespace Aimmy2
 
             bindingManager = new InputBindingManager();
             bindingManager.SetupDefault("Aim Keybind", Dictionary.bindingSettings["Aim Keybind"]);
+            bindingManager.SetupDefault("Second Aim Keybind", Dictionary.bindingSettings["Second Aim Keybind"]);
             bindingManager.SetupDefault("Dynamic FOV Keybind", Dictionary.bindingSettings["Dynamic FOV Keybind"]);
             bindingManager.SetupDefault("Emergency Stop Keybind", Dictionary.bindingSettings["Emergency Stop Keybind"]);
             bindingManager.SetupDefault("Model Switch Keybind", Dictionary.bindingSettings["Model Switch Keybind"]);
@@ -566,6 +567,7 @@ namespace Aimmy2
                 }
             };
             uiManager.C_Keybind = AddKeyChanger(AimAssist, "Aim Keybind", Dictionary.bindingSettings["Aim Keybind"]);
+            uiManager.C_Keybind = AddKeyChanger(AimAssist, "Second Aim Keybind", Dictionary.bindingSettings["Second Aim Keybind"]);
             uiManager.T_ConstantAITracking = AddToggle(AimAssist, "Constant AI Tracking");
             uiManager.T_ConstantAITracking.Reader.Click += (s, e) =>
             {
@@ -1145,7 +1147,7 @@ namespace Aimmy2
         private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
         {
             UpdateManager updateManager = new UpdateManager();
-            await updateManager.CheckForUpdate("2.1.5");
+            await updateManager.CheckForUpdate("v2.1.5");
             updateManager.Dispose();
         }
 
