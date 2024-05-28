@@ -11,7 +11,6 @@ using MouseMovementLibraries.RazerSupport;
 using Other;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -323,6 +322,7 @@ namespace Aimmy2
                 case "UI TopMost":
                     Topmost = Dictionary.toggleState[title];
                     break;
+
                 case "EMA Smoothening":
                     MouseManager.IsEMASmoothingEnabled = Dictionary.toggleState[title];
                     Debug.WriteLine(MouseManager.IsEMASmoothingEnabled);
@@ -849,6 +849,7 @@ namespace Aimmy2
             AddTitle(CreditsPanel, "Contributors");
             AddCredit(CreditsPanel, "Shall0e", "Prediction Method");
             AddCredit(CreditsPanel, "wisethef0x", "EMA Prediction Method");
+            AddCredit(CreditsPanel, "whoswhip", "Bug fixes & EMA");
             AddCredit(CreditsPanel, "HakaCat", "Idea for Auto Labelling Data");
             AddCredit(CreditsPanel, "Themida", "LGHub check");
             AddCredit(CreditsPanel, "Ninja", "MarsQQ's emotional support");
@@ -1070,16 +1071,7 @@ namespace Aimmy2
         {
             if (sender is Button clickedButton)
             {
-                new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        WindowStyle = ProcessWindowStyle.Normal,
-                        FileName = "explorer.exe",
-                        Arguments = "bin\\" + clickedButton.Tag.ToString(),
-                        WorkingDirectory = Directory.GetCurrentDirectory()
-                    }
-                }.Start();
+                Process.Start("explorer.exe", Directory.GetCurrentDirectory() + "bin\\" + clickedButton.Tag.ToString());
             }
         }
 
@@ -1111,11 +1103,11 @@ namespace Aimmy2
 
         #region System Information
 
-        private string? GetProcessorName() => GetSpecs.GetSpecification("Win32_Processor", "Name");
+        private static string? GetProcessorName() => GetSpecs.GetSpecification("Win32_Processor", "Name");
 
-        private string? GetVideoControllerName() => GetSpecs.GetSpecification("Win32_VideoController", "Name");
+        private static string? GetVideoControllerName() => GetSpecs.GetSpecification("Win32_VideoController", "Name");
 
-        private string? GetFormattedMemorySize()
+        private static string? GetFormattedMemorySize()
         {
             long totalMemorySize = long.Parse(GetSpecs.GetSpecification("CIM_OperatingSystem", "TotalVisibleMemorySize")!);
             return Math.Round(totalMemorySize / (1024.0 * 1024.0), 0).ToString();
@@ -1130,7 +1122,7 @@ namespace Aimmy2
         private double CalculateAngleDifference(double targetAngle, double fullCircle, double halfCircle, double clamp)
         {
             double angleDifference = (targetAngle - currentGradientAngle + fullCircle) % fullCircle;
-            if (angleDifference > halfCircle) angleDifference -= fullCircle;
+            if (angleDifference > halfCircle) { angleDifference -= fullCircle; }
             return Math.Max(Math.Min(angleDifference, clamp), -clamp);
         }
 

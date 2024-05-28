@@ -46,7 +46,7 @@ namespace AILogic
         }
 
         private DateTime lastUpdateTime;
-        private readonly double alpha = 0.5; // Smoothing factor, adjust as necessary
+        private const double alpha = 0.5; // Smoothing factor, adjust as necessary
 
         private double emaX;
         private double emaY;
@@ -86,7 +86,7 @@ namespace AILogic
         {
             var xVelocity = CurrentX - PrevX;
             var EnemySize = EnemyWidth * EnemyHeight;
-            var EnemyDistance = (1 - (EnemySize / ScreenResolution));
+            var EnemyDistance = 1 - (EnemySize / ScreenResolution);
 
             return WinAPICaller.GetCursorPosition().X + (xVelocity * (EnemyDistance * BulletSpeedX));
         }

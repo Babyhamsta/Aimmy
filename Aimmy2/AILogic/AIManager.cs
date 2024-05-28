@@ -207,20 +207,27 @@ namespace Aimmy2.AILogic
                         double XOffsetPercentage = Dictionary.sliderSettings["X Offset (%)"];
 
                         if (Dictionary.toggleState["X Axis Percentage Adjustment"])
+                        {
                             detectedX = (int)((closestPrediction.Rectangle.X + (closestPrediction.Rectangle.Width * (XOffsetPercentage / 100))) * scaleX);
+                        }
                         else
+                        {
                             detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
-
+                        }
                         if (Dictionary.toggleState["Y Axis Percentage Adjustment"])
+                        {
                             detectedY = (int)(((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height) - (closestPrediction.Rectangle.Height * (YOffsetPercentage / 100))) * scaleY + YOffset);
+                        }
                         else
+                        {
                             detectedY = CalculateDetectedY(scaleY, YOffset, closestPrediction);
+                        }
 
                         if (Dictionary.dropdownState["Prediction Method"] == "Shall0e's Prediction")
                         {
                             UpdateShalloePrediction();
                         }
-                        
+
                         if (Dictionary.toggleState["Aim Assist"] && (Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || InputBindingManager.IsHoldingBinding("Second Aim Keybind")))
                         {
                             if (Dictionary.toggleState["Predictions"])
@@ -238,12 +245,12 @@ namespace Aimmy2.AILogic
 
                     stopwatch.Stop();
 
-                    if (iterationCount == 1000)
-                    {
-                        double averageTime = totalTime / 1000.0;
-                        Debug.WriteLine($"Average loop iteration time: {averageTime} ms");
-                        //MessageBox.Show($"Average loop iteration time: {averageTime} ms (per 1000 loops)");
-                    }
+                    //if (iterationCount == 1000)
+                    //{
+                    //    double averageTime = totalTime / 1000.0;
+                    //    Debug.WriteLine($"Average loop iteration time: {averageTime} ms");
+                    //    //MessageBox.Show($"Average loop iteration time: {averageTime} ms (per 1000 loops)");
+                    //}
                 }
 
                 await Task.Delay(1); // Add a small delay to avoid high CPU usage
@@ -274,10 +281,14 @@ namespace Aimmy2.AILogic
             ShalloePredictionV2.yValues.Add(detectedY - PrevY);
 
             if (ShalloePredictionV2.xValues.Count > 5)
+            {
                 ShalloePredictionV2.xValues.RemoveAt(0);
+            }
 
             if (ShalloePredictionV2.yValues.Count > 5)
+            {
                 ShalloePredictionV2.yValues.RemoveAt(0);
+            }
         }
 
         private void HandlePredictions(KalmanPrediction kalmanPrediction, Prediction closestPrediction, int detectedX, int detectedY)

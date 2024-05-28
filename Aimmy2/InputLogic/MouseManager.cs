@@ -25,7 +25,6 @@ namespace InputLogic
         public static double smoothingFactor = 0.5;
         public static bool IsEMASmoothingEnabled = false;
 
-
         [DllImport("user32.dll")]
         private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
 
@@ -39,23 +38,18 @@ namespace InputLogic
 
             double x = uu * u * start.X + 3 * uu * t * control1.X + 3 * u * tt * control2.X + tt * t * end.X;
             double y = uu * u * start.Y + 3 * uu * t * control1.Y + 3 * u * tt * control2.Y + tt * t * end.Y;
-            if (IsEMASmoothingEnabled) { 
-            double smoothedX = EmaSmoothing(previousX, x, smoothingFactor);
-            double smoothedY = EmaSmoothing(previousY, y, smoothingFactor);
 
-            x = smoothedX;
-            y = smoothedY;
+            if (IsEMASmoothingEnabled)
+            {
+                x = EmaSmoothing(previousX, x, smoothingFactor);
+                y = EmaSmoothing(previousY, y, smoothingFactor);
             }
 
             return new Point((int)x, (int)y);
         }
 
-        private static double EmaSmoothing(double previousValue, double currentValue, double smoothingFactor)
-        {
-            // I Dont like math so I use copilot for this
-            // whip
-            return (currentValue * smoothingFactor) + (previousValue * (1 - smoothingFactor));
-        }
+        private static double EmaSmoothing(double previousValue, double currentValue, double smoothingFactor) => (currentValue * smoothingFactor) + (previousValue * (1 - smoothingFactor));
+
         public static async Task DoTriggerClick()
         {
             int timeSinceLastClick = (int)(DateTime.UtcNow - LastClickTime).TotalMilliseconds;
@@ -196,7 +190,9 @@ namespace InputLogic
             }
 
             if (Dictionary.toggleState["Auto Trigger"])
+            {
                 Task.Run(DoTriggerClick);
+            }
         }
     }
 }
