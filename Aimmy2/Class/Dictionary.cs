@@ -110,11 +110,5 @@ namespace Aimmy2.Class
             { "Gun 1 Config", "" },
             { "Gun 2 Config", "" }
         };
-
-        public static Dictionary<string, dynamic> repoList = new()
-        {
-            {"Babyhamsta/Aimmy/models", "https://api.github.com/repos/Babyhamsta/Aimmy/contents/models"},
-            {"Babyhamsta/Aimmy/configs", "https://api.github.com/repos/Babyhamsta/Aimmy/contents/configs"}
-        };
     }
 }

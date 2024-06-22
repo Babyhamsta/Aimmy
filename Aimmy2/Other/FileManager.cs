@@ -221,23 +221,26 @@ namespace Other
             }
         }
 
-        public static async Task<Dictionary<string, GitHubFile>> RetrieveAndAddFiles()
+        public static async Task<HashSet<string>> RetrieveAndAddFiles(string repoLink, string localPath, HashSet<string> allFiles)
         {
             try
             {
                 GithubManager githubManager = new();
-                Dictionary<string, GitHubFile> allFiles = [];
 
-                foreach (var repo in Dictionary.repoList)
+                var files = await githubManager.FetchGithubFilesAsync(repoLink);
+
+                foreach (var file in files)
                 {
-                    var FetchedFiles = await githubManager.FetchGithubFilesAsync(repo.Value);
-                    foreach (var FetchedFile in FetchedFiles)
+                    if (file == null) continue;
+
+                    if (!allFiles.Contains(file) && !File.Exists(Path.Combine(localPath, file)))
                     {
-                        allFiles[FetchedFile.Key] = FetchedFile.Value;
+                        allFiles.Add(file);
                     }
                 }
 
                 githubManager.Dispose();
+
                 return allFiles;
             }
             catch (Exception ex)

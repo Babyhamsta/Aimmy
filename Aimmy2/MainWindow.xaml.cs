@@ -39,6 +39,9 @@ namespace Aimmy2
         private bool CurrentlySwitching;
         private ScrollViewer? CurrentScrollViewer;
 
+        private HashSet<string> AvailableModels = new();
+        private HashSet<string> AvailableConfigs = new();
+
         private static double ActualFOV = 640;
 
         #endregion Main Variables
@@ -49,7 +52,15 @@ namespace Aimmy2
         {
             InitializeComponent();
 
-            if (Directory.GetCurrentDirectory().Contains("Temp")) MessageBox.Show("Hi, it is made aware that you are running Aimmy without extracting it from the zip file. Please extract Aimmy from the zip file or Aimmy will not be able to run properly.\n\nThank you.", "Aimmy V2");
+            if (Directory.GetCurrentDirectory().Contains("Temp"))
+            {
+                MessageBox.Show(
+                    "Hi, it is made aware that you are running Aimmy without extracting it from the zip file." +
+                    " Please extract Aimmy from the zip file or Aimmy will not be able to run properly." +
+                    "\n\nThank you.",
+                    "Aimmy V2"
+                    );
+            }
 
             CurrentScrollViewer = FindName("AimMenu") as ScrollViewer;
             if (CurrentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
@@ -58,7 +69,6 @@ namespace Aimmy2
             Dictionary.FOVWindow = FOVWindow;
 
             fileManager = new FileManager(ModelListBox, SelectedModelNotifier, ConfigsListBox, SelectedConfigNotifier);
-            //fileManager.RetrieveAndAddFiles();
 
             // Needed to import annotations into MakeSense
             if (!File.Exists("bin\\labels\\labels.txt")) { File.WriteAllText("bin\\labels\\labels.txt", "Enemy"); }
@@ -72,7 +82,6 @@ namespace Aimmy2
             SaveDictionary.LoadJSON(Dictionary.bindingSettings, "bin\\binding.cfg");
             SaveDictionary.LoadJSON(Dictionary.colorState, "bin\\colors.cfg");
             SaveDictionary.LoadJSON(Dictionary.filelocationState, "bin\\filelocations.cfg");
-            SaveDictionary.LoadJSON(Dictionary.repoList, "bin\\repoList.cfg", false);
 
             bindingManager = new InputBindingManager();
             bindingManager.SetupDefault("Aim Keybind", Dictionary.bindingSettings["Aim Keybind"]);
@@ -110,10 +119,7 @@ namespace Aimmy2
             LoadMenuMinimizers();
         }
 
-        private async void LoadStoreMenuAsync()
-        {
-            await LoadStoreMenu();
-        }
+        private async void LoadStoreMenuAsync() => await LoadStoreMenu();
 
         private void Window_Loaded(object sender, RoutedEventArgs e) => AboutSpecs.Content = $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
 
@@ -144,7 +150,6 @@ namespace Aimmy2
             SaveDictionary.WriteJSON(Dictionary.colorState, "bin\\colors.cfg");
             SaveDictionary.WriteJSON(Dictionary.filelocationState, "bin\\filelocations.cfg");
             SaveDictionary.WriteJSON(Dictionary.AntiRecoilSettings, "bin\\anti_recoil_configs\\Default.cfg");
-            SaveDictionary.WriteJSON(Dictionary.repoList, "bin\\repoList.cfg");
 
             FileManager.AIManager?.Dispose();
 
@@ -821,8 +826,6 @@ namespace Aimmy2
             uiManager.T_UITopMost = AddToggle(SettingsConfig, "UI TopMost");
             uiManager.B_SaveConfig = AddButton(SettingsConfig, "Save Config");
             uiManager.B_SaveConfig.Reader.Click += (s, e) => new ConfigSaver().ShowDialog();
-            uiManager.B_RepoManager = AddButton(SettingsConfig, "Repository Manager");
-            uiManager.B_RepoManager.Reader.Click += (s, e) => new RepoManager().Show();
 
             AddSeparator(SettingsConfig);
 
@@ -867,60 +870,44 @@ namespace Aimmy2
         {
             try
             {
-                var list = await FileManager.RetrieveAndAddFiles();
+                Task models = FileManager.RetrieveAndAddFiles("https://api.github.com/repos/Babyhamsta/Aimmy/contents/models", "bin\\models", AvailableModels);
+                Task configs = FileManager.RetrieveAndAddFiles("https://api.github.com/repos/Babyhamsta/Aimmy/contents/configs", "bin\\configs", AvailableConfigs);
 
-                if (list.Count == 0)
-                {
-                    LackOfConfigsText.Visibility = Visibility.Visible;
-                    LackOfModelsText.Visibility = Visibility.Visible;
-                    return;
-                }
-
-                DownloadGateway(list);
+                await Task.WhenAll(models, configs);
             }
             catch (Exception e)
             {
                 new NoticeBar(e.Message, 10000).Show();
-
-                LackOfConfigsText.Visibility = Visibility.Visible;
-                LackOfModelsText.Visibility = Visibility.Visible;
-
                 return;
             }
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                DownloadGateway(ModelStoreScroller, AvailableModels, "models");
+                DownloadGateway(ConfigStoreScroller, AvailableConfigs, "configs");
+            });
         }
 
-        private void DownloadGateway(Dictionary<string, GitHubFile> entries)
+        private void DownloadGateway(StackPanel Scroller, HashSet<string> entries, string folder)
         {
-            ModelStoreScroller.Children.Clear();
-            ConfigStoreScroller.Children.Clear();
-
-            var modelSHA = GetLocalFileShas("bin\\models");
-            var configSHA = GetLocalFileShas("bin\\configs");
-
-            foreach (var entry in entries)
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                if (entry.Value == null)
+                Scroller.Children.Clear();
+
+                if (entries.Count > 0)
                 {
-                    continue;
+                    foreach (var entry in entries)
+                    {
+                        ADownloadGateway gateway = new(entry, folder);
+                        Scroller.Children.Add(gateway);
+                    }
                 }
-
-                GitHubFile file = entry.Value;
-
-                if (modelSHA.ContainsValue(file.sha ?? "") || configSHA.ContainsValue(file.sha ?? ""))
+                else
                 {
-                    continue;
+                    LackOfConfigsText.Visibility = Visibility.Visible;
+                    LackOfModelsText.Visibility = Visibility.Visible;
                 }
-
-                string RepoLink = entry.Value.download_url!;
-
-                Application.Current.Dispatcher.BeginInvoke(() =>
-                {
-                    StackPanel targetPanel = file.name.Contains(".onnx") ? ModelStoreScroller : ConfigStoreScroller;
-                    ADownloadGateway gateway = new ADownloadGateway(RepoLink, file.name, file.name.Contains(".onnx") ? "models" : "configs");
-
-                    targetPanel.Children.Add(gateway);
-                });
-            }
+            });
         }
 
         #endregion Menu Loading
@@ -1139,7 +1126,7 @@ namespace Aimmy2
         private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
         {
             UpdateManager updateManager = new UpdateManager();
-            await updateManager.CheckForUpdate("v2.1.5");
+            await updateManager.CheckForUpdate("v2.2.0");
             updateManager.Dispose();
         }
 

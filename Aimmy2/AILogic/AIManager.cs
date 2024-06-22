@@ -511,8 +511,8 @@ namespace Aimmy2.AILogic
                             {
                                 var labelPath = Path.Combine("bin", "labels", $"{uuid}.txt");
 
-                                float x = (DoLabel.Rectangle.X + DoLabel.Rectangle.Width / 2) / frame.Width;
-                                float y = (DoLabel.Rectangle.Y + DoLabel.Rectangle.Height / 2) / frame.Height;
+                                float x = (DoLabel!.Rectangle.X + DoLabel.Rectangle.Width / 2) / frame.Width;
+                                float y = (DoLabel!.Rectangle.Y + DoLabel.Rectangle.Height / 2) / frame.Height;
                                 float width = DoLabel.Rectangle.Width / frame.Width;
                                 float height = DoLabel.Rectangle.Height / frame.Height;
 
