@@ -73,40 +73,39 @@ namespace Other
         private async void ModelListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ModelListBox.SelectedItem == null) return;
+
             string selectedModel = ModelListBox.SelectedItem.ToString()!;
 
             string modelPath = Path.Combine("bin/models", selectedModel);
 
-            // Initialize the model (if it isn't already selected)
-            if (Dictionary.lastLoadedModel != selectedModel && !CurrentlyLoadingModel)
+            // Check if the model is already selected or currently loading
+            if (Dictionary.lastLoadedModel == selectedModel || CurrentlyLoadingModel) return;
+
+            CurrentlyLoadingModel = true;
+            Dictionary.lastLoadedModel = selectedModel;
+
+            // Store original values and disable them temporarily
+            var toggleKeys = new[] { "Aim Assist", "Constant AI Tracking", "Auto Trigger", "Show Detected Player", "Show AI Confidence", "Show Tracers" };
+            var originalToggleStates = toggleKeys.ToDictionary(key => key, key => Dictionary.toggleState[key]);
+            foreach (var key in toggleKeys)
             {
-                CurrentlyLoadingModel = true;
-                Dictionary.lastLoadedModel = selectedModel;
+                Dictionary.toggleState[key] = false;
+            }
 
-                // Store original values
-                var originalToggleStates = new Dictionary<string, bool>(6);
-                foreach (var key in new[] { "Aim Assist", "Constant AI Tracking", "Auto Trigger", "Show Detected Player", "Show AI Confidence", "Show Tracers" })
-                {
-                    originalToggleStates[key] = Dictionary.toggleState[key];
-                    Dictionary.toggleState[key] = false;
-                }
+            // Let the AI finish up
+            await Task.Delay(150);
 
-                // Let the AI finish up
-                await Task.Delay(150);
+            // Reload AIManager with new model
+            AIManager?.Dispose();
+            AIManager = new AIManager(modelPath);
 
-                // Reload AIManager with new model
-                AIManager?.Dispose();
-                AIManager = new AIManager(modelPath);
-
-                // Restore original values
-                foreach (var keyValuePair in originalToggleStates)
-                {
-                    Dictionary.toggleState[keyValuePair.Key] = keyValuePair.Value;
-                }
+            // Restore original values
+            foreach (var keyValuePair in originalToggleStates)
+            {
+                Dictionary.toggleState[keyValuePair.Key] = keyValuePair.Value;
             }
 
             string content = "Loaded Model: " + selectedModel;
-
             SelectedModelNotifier.Content = content;
             new NoticeBar(content, 2000).Show();
         }
@@ -172,16 +171,7 @@ namespace Other
                     if (ModelListBox.Items.Count > 0)
                     {
                         string? lastLoadedModel = Dictionary.lastLoadedModel;
-                        if (lastLoadedModel == "N/A" || !ModelListBox.Items.Contains(lastLoadedModel))
-                        {
-                            ModelListBox.SelectedIndex = 0;
-                            lastLoadedModel = ModelListBox.Items[0].ToString();
-                        }
-                        else
-                        {
-                            ModelListBox.SelectedItem = lastLoadedModel;
-                        }
-
+                        if (lastLoadedModel != "N/A" && !ModelListBox.Items.Contains(lastLoadedModel)) { ModelListBox.SelectedItem = lastLoadedModel; }
                         SelectedModelNotifier.Content = $"Loaded Model: {lastLoadedModel}";
                     }
                 });
@@ -205,15 +195,7 @@ namespace Other
                     if (ConfigListBox.Items.Count > 0)
                     {
                         string? lastLoadedConfig = Dictionary.lastLoadedConfig;
-                        if (lastLoadedConfig != "N/A" && !ConfigListBox.Items.Contains(lastLoadedConfig))
-                        {
-                            ConfigListBox.SelectedIndex = 0;
-                            lastLoadedConfig = ConfigListBox.Items[0].ToString();
-                        }
-                        else
-                        {
-                            ConfigListBox.SelectedItem = lastLoadedConfig;
-                        }
+                        if (lastLoadedConfig != "N/A" && !ConfigListBox.Items.Contains(lastLoadedConfig)) { ConfigListBox.SelectedItem = lastLoadedConfig; }
 
                         SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;
                     }

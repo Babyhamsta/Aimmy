@@ -153,6 +153,10 @@ namespace Aimmy2.AILogic
 
         #region AI
 
+        private static bool ShouldPredict() => Dictionary.toggleState["Show Detected Player"] || Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || InputBindingManager.IsHoldingBinding("Second Aim Keybind");
+
+        private static bool ShouldProcess() => Dictionary.toggleState["Aim Assist"] || Dictionary.toggleState["Show Detected Player"] || Dictionary.toggleState["Auto Trigger"];
+
         private async void AiLoop()
         {
             Stopwatch stopwatch = new();
@@ -165,129 +169,189 @@ namespace Aimmy2.AILogic
             {
                 stopwatch.Restart();
 
-                if (Dictionary.dropdownState["Detection Area Type"] == "Closest to Mouse" && Dictionary.toggleState["FOV"])
-                {
-                    var mousePosition = WinAPICaller.GetCursorPosition();
-                    await Application.Current.Dispatcher.BeginInvoke(() => Dictionary.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(Convert.ToInt16(mousePosition.X / WinAPICaller.scalingFactorX) - 320, Convert.ToInt16(mousePosition.Y / WinAPICaller.scalingFactorY) - 320, 0, 0));
-                }
+                UpdateFOV(); // Organization/Simplification of AILoop inspired/helped by @.harlans or @apraxo on github.
 
-                if (Dictionary.toggleState["Aim Assist"] || Dictionary.toggleState["Show Detected Player"] || Dictionary.toggleState["Auto Trigger"])
+                if (ShouldProcess())
                 {
-                    if (Dictionary.toggleState["Show Detected Player"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Second Aim Keybind"))
+                    if (ShouldPredict())
                     {
                         var closestPrediction = await GetClosestPrediction();
 
                         if (closestPrediction == null)
                         {
-                            if (Dictionary.toggleState["Show Detected Player"] && Dictionary.DetectedPlayerOverlay != null)
-                            {
-                                DisableOverlay(DetectedPlayerOverlay!);
-                            }
+                            DisableOverlay(DetectedPlayerOverlay!);
+
                             continue;
                         }
 
-                        if (Dictionary.toggleState["Auto Trigger"] && (InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"]))
-                        {
-                            await MouseManager.DoTriggerClick();
-                            if (!Dictionary.toggleState["Aim Assist"] && !Dictionary.toggleState["Show Detected Player"]) continue;
-                        }
+                        await AutoTrigger();
 
-                        AIConf = closestPrediction.Confidence;
+                        CalculateCoordinates(DetectedPlayerOverlay, closestPrediction, scaleX, scaleY);
 
-                        if (Dictionary.toggleState["Show Detected Player"] && Dictionary.DetectedPlayerOverlay != null)
-                        {
-                            UpdateOverlay(DetectedPlayerOverlay!);
-                            if (!Dictionary.toggleState["Aim Assist"]) continue;
-                        }
+                        HandleAim(closestPrediction);
 
-                        double YOffset = Dictionary.sliderSettings["Y Offset (Up/Down)"];
-                        double XOffset = Dictionary.sliderSettings["X Offset (Left/Right)"];
-
-                        double YOffsetPercentage = Dictionary.sliderSettings["Y Offset (%)"];
-                        double XOffsetPercentage = Dictionary.sliderSettings["X Offset (%)"];
-
-                        if (Dictionary.toggleState["X Axis Percentage Adjustment"])
-                        {
-                            detectedX = (int)((closestPrediction.Rectangle.X + (closestPrediction.Rectangle.Width * (XOffsetPercentage / 100))) * scaleX);
-                        }
-                        else
-                        {
-                            detectedX = (int)((closestPrediction.Rectangle.X + closestPrediction.Rectangle.Width / 2) * scaleX + XOffset);
-                        }
-                        if (Dictionary.toggleState["Y Axis Percentage Adjustment"])
-                        {
-                            detectedY = (int)(((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height) - (closestPrediction.Rectangle.Height * (YOffsetPercentage / 100))) * scaleY + YOffset);
-                        }
-                        else
-                        {
-                            detectedY = CalculateDetectedY(scaleY, YOffset, closestPrediction);
-                        }
-
-                        if (Dictionary.dropdownState["Prediction Method"] == "Shall0e's Prediction")
-                        {
-                            UpdateShalloePrediction();
-                        }
-
-                        if (Dictionary.toggleState["Aim Assist"] && (Dictionary.toggleState["Constant AI Tracking"] || InputBindingManager.IsHoldingBinding("Aim Keybind") || InputBindingManager.IsHoldingBinding("Second Aim Keybind")))
-                        {
-                            if (Dictionary.toggleState["Predictions"])
-                            {
-                                HandlePredictions(kalmanPrediction, closestPrediction, detectedX, detectedY);
-                            }
-                            else
-                            {
-                                MouseManager.MoveCrosshair(detectedX, detectedY);
-                            }
-                        }
                         totalTime += stopwatch.ElapsedMilliseconds;
                         iterationCount++;
                     }
 
                     stopwatch.Stop();
-
-                    //if (iterationCount == 1000)
-                    //{
-                    //    double averageTime = totalTime / 1000.0;
-                    //    Debug.WriteLine($"Average loop iteration time: {averageTime} ms");
-                    //    //MessageBox.Show($"Average loop iteration time: {averageTime} ms (per 1000 loops)");
-                    //}
                 }
 
                 await Task.Delay(1); // Add a small delay to avoid high CPU usage
             }
         }
 
-        private static int CalculateDetectedY(float scaleY, double YOffset, Prediction closestPrediction)
+        #region AI Loop Functions
+
+        private async Task AutoTrigger()
         {
-            switch (Dictionary.dropdownState["Aiming Boundaries Alignment"])
+            if (Dictionary.toggleState["Auto Trigger"] && (InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"]))
             {
-                case "Center":
-                    return (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height / 2) * scaleY + YOffset);
-
-                case "Top":
-                    return (int)(closestPrediction.Rectangle.Y * scaleY + YOffset);
-
-                case "Bottom":
-                    return (int)((closestPrediction.Rectangle.Y + closestPrediction.Rectangle.Height) * scaleY + YOffset);
-
-                default:
-                    return 0;
+                await MouseManager.DoTriggerClick();
+                if (!Dictionary.toggleState["Aim Assist"] && !Dictionary.toggleState["Show Detected Player"]) return;
             }
         }
 
-        private void UpdateShalloePrediction()
+        private async void UpdateFOV()
         {
-            ShalloePredictionV2.xValues.Add(detectedX - PrevX);
-            ShalloePredictionV2.yValues.Add(detectedY - PrevY);
-
-            if (ShalloePredictionV2.xValues.Count > 5)
+            if (Dictionary.dropdownState["Detection Area Type"] == "Closest to Mouse" && Dictionary.toggleState["FOV"])
             {
-                ShalloePredictionV2.xValues.RemoveAt(0);
+                var mousePosition = WinAPICaller.GetCursorPosition();
+                await Application.Current.Dispatcher.BeginInvoke(() => Dictionary.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(Convert.ToInt16(mousePosition.X / WinAPICaller.scalingFactorX) - 320, Convert.ToInt16(mousePosition.Y / WinAPICaller.scalingFactorY) - 320, 0, 0));
+            }
+        }
+
+        private static void DisableOverlay(DetectedPlayerWindow DetectedPlayerOverlay)
+        {
+            if (Dictionary.toggleState["Show Detected Player"] && Dictionary.DetectedPlayerOverlay != null)
+            {
+                Application.Current.Dispatcher.Invoke(new Action(() =>
+                {
+                    if (Dictionary.toggleState["Show AI Confidence"])
+                    {
+                        DetectedPlayerOverlay!.DetectedPlayerConfidence.Opacity = 0;
+                    }
+
+                    if (Dictionary.toggleState["Show Tracers"])
+                    {
+                        DetectedPlayerOverlay!.DetectedTracers.Opacity = 0;
+                    }
+
+                    DetectedPlayerOverlay!.DetectedPlayerFocus.Opacity = 0;
+                }));
+            }
+        }
+
+        private void UpdateOverlay(DetectedPlayerWindow DetectedPlayerOverlay)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var scalingFactorX = WinAPICaller.scalingFactorX;
+                var scalingFactorY = WinAPICaller.scalingFactorY;
+                var centerX = Convert.ToInt16(LastDetectionBox.X / scalingFactorX) + (LastDetectionBox.Width / 2.0);
+                var centerY = Convert.ToInt16(LastDetectionBox.Y / scalingFactorY);
+
+                if (Dictionary.toggleState["Show AI Confidence"])
+                {
+                    DetectedPlayerOverlay.DetectedPlayerConfidence.Opacity = 1;
+                    DetectedPlayerOverlay.DetectedPlayerConfidence.Content = $"{Math.Round((AIConf * 100), 2)}%";
+
+                    var labelEstimatedHalfWidth = DetectedPlayerOverlay.DetectedPlayerConfidence.ActualWidth / 2.0;
+                    DetectedPlayerOverlay.DetectedPlayerConfidence.Margin = new Thickness(centerX - labelEstimatedHalfWidth, centerY - DetectedPlayerOverlay.DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
+                }
+
+                var showTracers = Dictionary.toggleState["Show Tracers"];
+                DetectedPlayerOverlay.DetectedTracers.Opacity = showTracers ? 1 : 0;
+                if (showTracers)
+                {
+                    DetectedPlayerOverlay.DetectedTracers.X2 = centerX;
+                    DetectedPlayerOverlay.DetectedTracers.Y2 = centerY + LastDetectionBox.Height;
+                }
+
+                DetectedPlayerOverlay.Opacity = Dictionary.sliderSettings["Opacity"];
+
+                DetectedPlayerOverlay.DetectedPlayerFocus.Opacity = 1;
+                DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(centerX - (LastDetectionBox.Width / 2.0), centerY, 0, 0);
+                DetectedPlayerOverlay.DetectedPlayerFocus.Width = LastDetectionBox.Width;
+                DetectedPlayerOverlay.DetectedPlayerFocus.Height = LastDetectionBox.Height;
+            });
+        }
+
+        private void CalculateCoordinates(DetectedPlayerWindow DetectedPlayerOverlay, Prediction closestPrediction, float scaleX, float scaleY)
+        {
+            AIConf = closestPrediction.Confidence;
+
+            if (Dictionary.toggleState["Show Detected Player"] && Dictionary.DetectedPlayerOverlay != null)
+            {
+                UpdateOverlay(DetectedPlayerOverlay!);
+                if (!Dictionary.toggleState["Aim Assist"]) return;
             }
 
-            if (ShalloePredictionV2.yValues.Count > 5)
+            double YOffset = Dictionary.sliderSettings["Y Offset (Up/Down)"];
+            double XOffset = Dictionary.sliderSettings["X Offset (Left/Right)"];
+
+            double YOffsetPercentage = Dictionary.sliderSettings["Y Offset (%)"];
+            double XOffsetPercentage = Dictionary.sliderSettings["X Offset (%)"];
+
+            var rect = closestPrediction.Rectangle;
+
+            if (Dictionary.toggleState["X Axis Percentage Adjustment"])
             {
-                ShalloePredictionV2.yValues.RemoveAt(0);
+                detectedX = (int)((rect.X + (rect.Width * (XOffsetPercentage / 100))) * scaleX);
+            }
+            else
+            {
+                detectedX = (int)((rect.X + rect.Width / 2) * scaleX + XOffset);
+            }
+
+            if (Dictionary.toggleState["Y Axis Percentage Adjustment"])
+            {
+                detectedY = (int)((rect.Y + rect.Height - (rect.Height * (YOffsetPercentage / 100))) * scaleY + YOffset);
+            }
+            else
+            {
+                detectedY = CalculateDetectedY(scaleY, YOffset, closestPrediction);
+            }
+        }
+
+        private static int CalculateDetectedY(float scaleY, double YOffset, Prediction closestPrediction)
+        {
+            var rect = closestPrediction.Rectangle;
+            float yBase = rect.Y;
+            float yAdjustment = 0;
+
+            switch (Dictionary.dropdownState["Aiming Boundaries Alignment"])
+            {
+                case "Center":
+                    yAdjustment = rect.Height / 2;
+                    break;
+
+                case "Top":
+                    // yBase is already at the top
+                    break;
+
+                case "Bottom":
+                    yAdjustment = rect.Height;
+                    break;
+            }
+
+            return (int)((yBase + yAdjustment) * scaleY + YOffset);
+        }
+
+        private void HandleAim(Prediction closestPrediction)
+        {
+            if (Dictionary.toggleState["Aim Assist"] && (Dictionary.toggleState["Constant AI Tracking"]
+                || Dictionary.toggleState["Aim Assist"] && InputBindingManager.IsHoldingBinding("Aim Keybind")
+                || Dictionary.toggleState["Aim Assist"] && InputBindingManager.IsHoldingBinding("Second Aim Keybind")))
+            {
+                if (Dictionary.toggleState["Predictions"])
+                {
+                    HandlePredictions(kalmanPrediction, closestPrediction, detectedX, detectedY);
+                }
+                else
+                {
+                    MouseManager.MoveCrosshair(detectedX, detectedY);
+                }
             }
         }
 
@@ -311,6 +375,12 @@ namespace Aimmy2.AILogic
                     break;
 
                 case "Shall0e's Prediction":
+                    ShalloePredictionV2.xValues.Add(detectedX - PrevX);
+                    ShalloePredictionV2.yValues.Add(detectedY - PrevY);
+
+                    ShalloePredictionV2.xValues = ShalloePredictionV2.xValues.TakeLast(5).ToList();
+                    ShalloePredictionV2.yValues = ShalloePredictionV2.yValues.TakeLast(5).ToList();
+
                     MouseManager.MoveCrosshair(ShalloePredictionV2.GetSPX(), detectedY);
 
                     PrevX = detectedX;
@@ -331,60 +401,6 @@ namespace Aimmy2.AILogic
                     MouseManager.MoveCrosshair(wtfpredictedPosition.X, detectedY);
                     break;
             }
-        }
-
-        private static void DisableOverlay(DetectedPlayerWindow DetectedPlayerOverlay)
-        {
-            Application.Current.Dispatcher.Invoke(new Action(() =>
-            {
-                if (Dictionary.toggleState["Show AI Confidence"])
-                {
-                    DetectedPlayerOverlay!.DetectedPlayerConfidence.Opacity = 0;
-                }
-
-                if (Dictionary.toggleState["Show Tracers"])
-                {
-                    DetectedPlayerOverlay!.DetectedTracers.Opacity = 0;
-                }
-
-                DetectedPlayerOverlay!.DetectedPlayerFocus.Opacity = 0;
-            }));
-        }
-
-        private void UpdateOverlay(DetectedPlayerWindow DetectedPlayerOverlay)
-        {
-            Application.Current.Dispatcher.Invoke(new Action(() =>
-            {
-                if (Dictionary.toggleState["Show AI Confidence"])
-                {
-                    DetectedPlayerOverlay.DetectedPlayerConfidence.Opacity = 1;
-                    DetectedPlayerOverlay.DetectedPlayerConfidence.Content = $"{Math.Round((AIConf * 100), 2)}%";
-
-                    double centerX = Convert.ToInt16(LastDetectionBox.X / WinAPICaller.scalingFactorX) + (LastDetectionBox.Width / 2.0);
-                    double labelEstimatedHalfWidth = DetectedPlayerOverlay.DetectedPlayerConfidence.ActualWidth / 2.0;
-                    DetectedPlayerOverlay.DetectedPlayerConfidence.Margin = new Thickness(centerX - labelEstimatedHalfWidth, Convert.ToInt16(LastDetectionBox.Y / WinAPICaller.scalingFactorY) - DetectedPlayerOverlay.DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
-                }
-
-                if (Dictionary.toggleState["Show Tracers"])
-                {
-                    DetectedPlayerOverlay.DetectedTracers.Opacity = 1;
-                    DetectedPlayerOverlay.DetectedTracers.X2 = Convert.ToInt16(LastDetectionBox.X / WinAPICaller.scalingFactorX) + (LastDetectionBox.Width / 2);
-                    DetectedPlayerOverlay.DetectedTracers.Y2 = Convert.ToInt16(LastDetectionBox.Y / WinAPICaller.scalingFactorY) + LastDetectionBox.Height;
-                }
-                else if (!Dictionary.toggleState["Show Tracers"])
-                {
-                    DetectedPlayerOverlay.DetectedTracers.Opacity = 0;
-                }
-
-                DetectedPlayerOverlay.Opacity = Dictionary.sliderSettings["Opacity"];
-
-                DetectedPlayerOverlay.DetectedPlayerFocus.Opacity = 1;
-                DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(Convert.ToInt16(LastDetectionBox.X / WinAPICaller.scalingFactorX),
-                    Convert.ToInt16(LastDetectionBox.Y / WinAPICaller.scalingFactorY),
-                    0, 0);
-                DetectedPlayerOverlay.DetectedPlayerFocus.Width = LastDetectionBox.Width;
-                DetectedPlayerOverlay.DetectedPlayerFocus.Height = LastDetectionBox.Height;
-            }));
         }
 
         private async Task<Prediction?> GetClosestPrediction(bool useMousePosition = true)
@@ -487,6 +503,8 @@ namespace Aimmy2.AILogic
 
             return (KDpoints, KDpredictions);
         }
+
+        #endregion AI Loop Functions
 
         #endregion AI
 
