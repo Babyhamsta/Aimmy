@@ -1,0 +1,174 @@
+﻿<Window x:Class="Aimmy2.Welcome"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
+        xmlns:local="clr-namespace:Aimmy2"
+        mc:Ignorable="d"
+        Title="Welcome"
+        Height="444"
+        MinHeight="444"
+        Width="670"
+        MinWidth="670"
+        WindowStyle="None"
+        Topmost="True"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True"
+        Background="Transparent"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Loaded="Window_Loaded">
+    <Grid>
+        <Border x:Name="MainBorder"
+                CornerRadius="5,5,5,5"
+                BorderBrush="Black"
+                BorderThickness="1,1,1,1"
+                MouseMove="Main_Background_Gradient">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0.5,1"
+                                     StartPoint="0,0">
+                    <LinearGradientBrush.RelativeTransform>
+                        <TransformGroup>
+                            <ScaleTransform CenterY="0.5"
+                                            CenterX="0.5" />
+                            <SkewTransform CenterX="0.5"
+                                           CenterY="0.5" />
+                            <RotateTransform x:Name="RotaryGradient"
+                                             Angle="0"
+                                             CenterX="0.5"
+                                             CenterY="0.5" />
+                            <TranslateTransform />
+                        </TransformGroup>
+                    </LinearGradientBrush.RelativeTransform>
+                    <GradientStop Color="Black"
+                                  Offset="0.27" />
+                    <GradientStop Color="#FF120338"
+                                  Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid>
+                <Grid x:Name="Topbar"
+                      VerticalAlignment="Top"
+                      Height="50">
+                    <Path x:Name="AimmyLogo"
+                          Fill="White"
+                          StrokeThickness="1.33333"
+                          Stretch="Fill"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
+                          Width="20"
+                          Height="10"
+                          Margin="15,0,0,0">
+                        <Path.Data>
+                            <PathGeometry Figures="M 18.2472,490.72756 0.18686636,472.66723 153.0173,318.84293 305.84774,165.01862 l 17.74245,17.70593 17.74244,17.70592 17.0189,-16.98112 c 9.36039,-9.33961 17.60957,-16.98112 18.33151,-16.98112 0.72194,0 69.86022,68.54563 153.64061,152.32363 l 152.32798,152.32362 -18.32581,18.45368 -18.3258,18.45368 -152.3021,-153.11064 -152.3021,-153.11063 -20.36457,20.6423 C 309.83073,233.79713 241.18587,302.86906 168.4871,375.93703 L 36.307534,508.7879 Z"
+                                          FillRule="NonZero" />
+                        </Path.Data>
+                    </Path>
+                    <Label Content="Welcome!"
+                           HorizontalAlignment="Left"
+                           Margin="45,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="#DDFFFFFF"
+                           Padding="0,0,0,0"
+                           FontSize="14"
+                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                    <Button x:Name="Exit"
+                            Content="&#xE8BB;"
+                            HorizontalAlignment="Right"
+                            Background="{x:Null}"
+                            BorderBrush="{x:Null}"
+                            Foreground="White"
+                            FontFamily="Segoe MDL2 Assets"
+                            Padding="15,0,15,0"
+                            materialDesign:ButtonAssist.CornerRadius="0,5,5,0"
+                            BorderThickness="0,0,0,0"
+                            FontSize="10"
+                            VerticalAlignment="Center"
+                            Click="Exit_Click" />
+                    <Button x:Name="Minimize"
+                            Content="&#xE921;"
+                            HorizontalAlignment="Right"
+                            Background="{x:Null}"
+                            BorderBrush="{x:Null}"
+                            Foreground="White"
+                            FontFamily="Segoe MDL2 Assets"
+                            Padding="15,0,15,0"
+                            materialDesign:ButtonAssist.CornerRadius="5,0,0,5"
+                            BorderThickness="0,0,0,0"
+                            FontSize="10"
+                            VerticalAlignment="Center"
+                            Click="Minimize_Click"
+                            Margin="0,0,40,0" />
+                </Grid>
+                <Grid Margin="0,50,0,0">
+                    <Label Content="Would you like to support us?"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Top"
+                           Foreground="#DDFFFFFF"
+                           Padding="0,0,0,0"
+                           FontSize="20"
+                           FontFamily="{StaticResource Atkinson Hyperlegible}"
+                           Margin="10,10,0,0"
+                           FontWeight="Bold" />
+                    <TextBlock HorizontalAlignment="Left"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Top"
+                               Margin="10,45,0,0"
+                               FontFamily="{StaticResource Atkinson Hyperlegible}"
+                               FontSize="15"
+                               Foreground="White"><Run Text="Aimmy is a product that is distributed to thousands of people like you at no cost. Despite the expenses we face, we believe in avoiding as many inconveniences to the end user as possible, and thus, all forms of monetization are currently optional (though subject to change)." /><LineBreak /><Run /><LineBreak /><Run Text="With this in mind, note that most developers usually charge several dollars a month, or serve dozens of ads for a product like Aimmy." /><LineBreak /><Run /><LineBreak /><Run Text="If you can spare some time/money to support us, please do! By supporting us, you get to help keep Aimmy ad/payment free for as long as possible!" /></TextBlock>
+                    <Ant:Button x:Name="KeyButton"
+                                BorderBrush="#FFD3ADF7"
+                                Background="#FF722ED1"
+                                EffectBrush="#FFD3ADF7"
+                                Content="Yes! [by doing a 1 Checkpoint Key System]"
+                                HorizontalAlignment="Left"
+                                Height="24"
+                                VerticalAlignment="Top"
+                                Padding="0,0,0,0"
+                                FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                BorderThickness="0,0,0,0"
+                                FontSize="12"
+                                Foreground="White"
+                                Margin="10,224,0,0"
+                                Width="239"
+                                Click="KeyButton_Click" />
+                    <Ant:Button x:Name="DonateButton"
+                                BorderBrush="#FFD3ADF7"
+                                Background="#FF531DAB"
+                                EffectBrush="#FFD3ADF7"
+                                Content="Yes! [by donating]"
+                                HorizontalAlignment="Left"
+                                Height="24"
+                                VerticalAlignment="Top"
+                                Padding="0,0,0,0"
+                                FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                BorderThickness="0,0,0,0"
+                                FontSize="12"
+                                Foreground="White"
+                                Margin="10,253,0,0"
+                                Width="114"
+                                Click="DonateButton_Click" />
+                    <Ant:Button x:Name="NoButton"
+                                BorderBrush="#FFD3ADF7"
+                                Background="#00722ED1"
+                                EffectBrush="#FFD3ADF7"
+                                Content="No (8)"
+                                HorizontalAlignment="Left"
+                                Height="24"
+                                VerticalAlignment="Top"
+                                Padding="10,0,0,0"
+                                FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                BorderThickness="0,0,0,0"
+                                FontSize="12"
+                                Foreground="#3FFFFFFF"
+                                Margin="10,282,0,0"
+                                Width="54"
+                                HorizontalContentAlignment="Left" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

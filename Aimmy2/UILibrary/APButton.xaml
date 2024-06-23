@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="Aimmy2.UILibrary.APButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
+             xmlns:local="clr-namespace:Aimmy2.UILibrary"
+             mc:Ignorable="d"
+             d:DesignWidth="282.5"
+             d:DesignHeight="40">
+    <Grid>
+        <Border Height="40"
+                Background="#3F3C3C3C"
+                CornerRadius="0"
+                BorderThickness="1,0,1,0"
+                BorderBrush="#3FFFFFFF">
+            <Grid>
+                <Label x:Name="ButtonTitle"
+                       Padding="10,10,10,10"
+                       FontFamily="{StaticResource Atkinson Hyperlegible}"
+                       Content="Save Config"
+                       Foreground="#DDFFFFFF"
+                       VerticalContentAlignment="Center"
+                       FontSize="13"
+                       Margin="0,0,38,0" />
+
+                <Label Padding="10,10,10,10"
+                       FontFamily="Segoe MDL2 Assets"
+                       Content="&#xE8B0;"
+                       Foreground="#DDFFFFFF"
+                       VerticalContentAlignment="Center"
+                       FontSize="13"
+                       HorizontalAlignment="Right"
+                       HorizontalContentAlignment="Right" />
+
+                <Button x:Name="Reader"
+                        Background="{x:Null}"
+                        BorderBrush="{x:Null}"
+                        Padding="0,0,0,0"
+                        Height="40"></Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
