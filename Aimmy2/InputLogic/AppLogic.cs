@@ -1,4 +1,4 @@
-namespace YourApplicationNamespace
+namespace InputLogic
 {
     internal class Program
     {
