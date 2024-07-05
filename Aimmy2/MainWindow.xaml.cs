@@ -21,7 +21,9 @@ using Aimmy2.InputLogic;
 using UILibrary;
 using Visuality;
 using Aimmy2.AILogic;
+using Aimmy2.Extensions;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 
 namespace Aimmy2
@@ -284,6 +286,15 @@ namespace Aimmy2
 
         private void LoadDropdownStates()
         {
+            // Trigger check
+            uiManager.T_TriggerCheck!.DropdownBox.SelectedIndex = Dictionary.dropdownState["Trigger Check"] switch
+            {
+                "None" => 0,
+                "Intersecting Center" => 1,
+                "Head Intersecting Center" => 2,
+                _ => 0 // Default case if none of the above matches
+            };
+
             // Prediction Method Dropdown
             uiManager.D_PredictionMethod!.DropdownBox.SelectedIndex = Dictionary.dropdownState["Prediction Method"] switch
             {
@@ -319,7 +330,7 @@ namespace Aimmy2
             };
         }
 
-        private AToggle AddToggle(StackPanel panel, string title)
+        private AToggle AddToggle(StackPanel panel, string title, Action<AToggle>? cfg = null)
         {
             var toggle = new AToggle(title);
             toggleInstances[title] = toggle;
@@ -337,6 +348,8 @@ namespace Aimmy2
             };
 
             Application.Current.Dispatcher.Invoke(() => panel.Children.Add(toggle));
+            if (cfg != null)
+                toggle.InitWith(cfg);
             return toggle;
         }
 
@@ -387,7 +400,7 @@ namespace Aimmy2
             }
         }
 
-        private AKeyChanger AddKeyChanger(StackPanel panel, string title, string keybind)
+        private AKeyChanger AddKeyChanger(StackPanel panel, string title, string keybind, Action<AKeyChanger>? cfg = null)
         {
             var keyChanger = new AKeyChanger(title, keybind);
             Application.Current.Dispatcher.Invoke(() => panel.Children.Add(keyChanger));
@@ -419,6 +432,11 @@ namespace Aimmy2
 
                 bindingManager.OnBindingSet += bindingSetHandler;
             };
+
+            if (cfg != null)
+            {
+                keyChanger.InitWith(cfg);
+            }
 
             return keyChanger;
         }
@@ -559,21 +577,25 @@ namespace Aimmy2
             return slider;
         }
 
-        private ADropdown AddDropdown(StackPanel panel, string title)
+        private ADropdown AddDropdown(StackPanel panel, string title, Action<ADropdown>? cfg = null)
         {
             var dropdown = new ADropdown(title, title);
             Application.Current.Dispatcher.Invoke(() => panel.Children.Add(dropdown));
+            if(cfg != null) 
+                dropdown.InitWith(cfg);
             return dropdown;
         }
 
-        private AFileLocator AddFileLocator(StackPanel panel, string title, string filter = "All files (*.*)|*.*", string DLExtension = "")
+        private AFileLocator AddFileLocator(StackPanel panel, string title, string filter = "All files (*.*)|*.*", string DLExtension = "", Action<AFileLocator>? cfg = null)
         {
             var afilelocator = new AFileLocator(title, title, filter, DLExtension);
             Application.Current.Dispatcher.Invoke(() => panel.Children.Add(afilelocator));
+            if (cfg != null)
+                afilelocator.InitWith(cfg);
             return afilelocator;
         }
 
-        private ComboBoxItem AddDropdownItem(ADropdown dropdown, string title)
+        private ComboBoxItem AddDropdownItem(ADropdown dropdown, string title, Action<ComboBoxItem>? cfg = null)
         {
             var dropdownitem = new ComboBoxItem();
             dropdownitem.Content = title;
@@ -587,21 +609,33 @@ namespace Aimmy2
                 else throw new NullReferenceException("dropdown.DropdownTitle.Content.ToString() is null");
             };
 
+            if(cfg != null)
+                dropdownitem.InitWith(cfg);
+
             Application.Current.Dispatcher.Invoke(() => dropdown.DropdownBox.Items.Add(dropdownitem));
             return dropdownitem;
         }
 
-        private ATitle AddTitle(StackPanel panel, string title, bool CanMinimize = false)
+        private ATitle AddTitle(StackPanel panel, string title, bool CanMinimize = false, Action<ATitle>? cfg = null)
         {
             var atitle = new ATitle(title, CanMinimize);
             Application.Current.Dispatcher.Invoke(() => panel.Children.Add(atitle));
+            if (cfg != null)
+                atitle.InitWith(cfg);
             return atitle;
         }
 
-        private APButton AddButton(StackPanel panel, string title)
+        private APButton AddButton(StackPanel panel, string title, Action<APButton>? cfg = null)
         {
             var button = new APButton(title);
-            Application.Current.Dispatcher.Invoke(() => panel.Children.Add(button));
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                panel.Children.Add(button);
+                if (cfg != null)
+                {
+                    button.InitWith(cfg);
+                }
+            });
             return button;
         }
 
@@ -713,9 +747,31 @@ namespace Aimmy2
             #region Trigger Bot
 
             uiManager.AT_TriggerBot = AddTitle(TriggerBot, "Auto Trigger", true);
+            uiManager.T_AutoTrigger = AddToggle(TriggerBot, "Auto Trigger", t =>
+            {
+                //var ignored = new List<UIElement>{ TriggerBot, uiManager.AT_TriggerBot, uiManager.T_AutoTrigger }.Concat(uiManager.T_AutoTrigger.FindChildren<UIElement>()).Distinct().ToArray();
+                //t.Activated += (sender, args) => Array.ForEach(TriggerBot.FindChildren<UIElement>(el => el != sender && !ignored.Contains(el)), el => el.IsEnabled = true);
+                //t.Deactivated += (sender, args) => Array.ForEach(TriggerBot.FindChildren<UIElement>(el => el != sender && !ignored.Contains(el)), el => el.IsEnabled = false);
+            });
+
             uiManager.T_TriggerSendKey = AddKeyChanger(TriggerBot, "Trigger Additional Send", Dictionary.bindingSettings["Trigger Additional Send"]);
-            uiManager.T_AutoTrigger = AddToggle(TriggerBot, "Auto Trigger");
-            uiManager.T_TriggerCenterCheck = AddToggle(TriggerBot, "Trigger Center Check");
+            uiManager.T_TriggerCheck = AddDropdown(TriggerBot, "Trigger Check");
+            AddDropdownItem(uiManager.T_TriggerCheck, "None");
+            AddDropdownItem(uiManager.T_TriggerCheck, "Intersecting Center");
+            AddDropdownItem(uiManager.T_TriggerCheck, "Head Intersecting Center");
+            uiManager.T_HeadAreaBtn = AddButton(TriggerBot, "Configure Head Area", b =>
+            {
+                b.Visibility = Dictionary.dropdownState["Trigger Check"] == "Head Intersecting Center" ? Visibility.Visible : Visibility.Collapsed;
+                b.ToolTip = "Specify the area of the Head when this interaction center the trigger will be executed";
+            });
+            uiManager.T_HeadAreaBtn.Reader.Click += (s, e) => new EditHeadArea().Show();
+
+            uiManager.T_TriggerCheck.DropdownBox.SelectionChanged += (sender, args) =>
+            {
+                var argsAddedItem = args.AddedItems[0] as ComboBoxItem;
+                uiManager.T_HeadAreaBtn.Visibility = argsAddedItem?.Content.ToString() == "Head Intersecting Center" ? Visibility.Visible : Visibility.Collapsed;
+            };
+
             uiManager.T_TriggerKey = AddKeyChanger(TriggerBot, "Trigger Key", Dictionary.bindingSettings["Trigger Key"]);
             uiManager.S_AutoTriggerDelay = AddSlider(TriggerBot, "Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 1);
             AddSeparator(TriggerBot);
@@ -926,12 +982,26 @@ namespace Aimmy2
         private void LoadCreditsMenu()
         {
             AddTitle(CreditsPanel, "Developers");
-            AddCredit(CreditsPanel, "Florian Gilde", "www.gilde.org");
+            AddCredit(CreditsPanel, "Babyhamsta", "AI Logic");
+            AddCredit(CreditsPanel, "MarsQQ", "Design");
+            AddCredit(CreditsPanel, "Taylor", "Optimization, Cleanup");
             AddSeparator(CreditsPanel);
 
-            //AddTitle(CreditsPanel, "Log");
-            //AddSeparator(CreditsPanel);
-            
+            AddTitle(CreditsPanel, "Contributors");
+            AddCredit(CreditsPanel, "Shall0e", "Prediction Method");
+            AddCredit(CreditsPanel, "wisethef0x", "EMA Prediction Method");
+            AddCredit(CreditsPanel, "whoswhip", "Bug fixes & EMA");
+            AddCredit(CreditsPanel, "HakaCat", "Idea for Auto Labelling Data");
+            AddCredit(CreditsPanel, "Themida", "LGHub check");
+            AddCredit(CreditsPanel, "Ninja", "MarsQQ's emotional support");
+            AddSeparator(CreditsPanel);
+
+            AddTitle(CreditsPanel, "Model Creators");
+            AddCredit(CreditsPanel, "Babyhamsta", "UniversalV4, Phantom Forces");
+            AddCredit(CreditsPanel, "Natdog400", "AIO V2, V7");
+            AddCredit(CreditsPanel, "Themida", "Arsenal, Strucid, Bad Business, Blade Ball, etc.");
+            AddCredit(CreditsPanel, "Hogthewog", "Da Hood, FN, etc.");
+            AddSeparator(CreditsPanel);
         }
 
         public async Task LoadStoreMenu()

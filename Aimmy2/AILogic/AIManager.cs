@@ -229,13 +229,17 @@ namespace Aimmy2.AILogic
             return string.IsNullOrEmpty(triggerKey) || triggerKey == "None" || InputBindingManager.IsHoldingBinding("Trigger Key");
         }
 
-        private async Task AutoTrigger(Prediction? prediction)
+        private async Task AutoTrigger(Prediction prediction)
         {
-            if (Dictionary.toggleState["Auto Trigger"] && (InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"] || Dictionary.toggleState["Trigger Center Check"]))
+            Console.WriteLine(Dictionary.dropdownState["Trigger Check"]);
+            if (Dictionary.toggleState["Auto Trigger"] && (InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"] || Dictionary.dropdownState["Trigger Check"] != "None"))
             {
                 if(TriggerKeyUnsetOrHold())
                 {
-                    if (!Dictionary.toggleState["Trigger Center Check"] || prediction?.IsUpperMiddleIntersectingCenter == true)
+                    if (Dictionary.dropdownState["Trigger Check"] == "None" 
+                        || (Dictionary.dropdownState["Trigger Check"] == "Head Intersecting Center" && prediction.IsUpperMiddleIntersectingCenter)
+                        || (Dictionary.dropdownState["Trigger Check"] == "Intersecting Center" && prediction.InteractsWithCenterOfFov)
+                        )
                     {
                         var addtionalSendKey = Dictionary.bindingSettings["Trigger Additional Send"];
                         if (!string.IsNullOrEmpty(addtionalSendKey) && addtionalSendKey != "None")
@@ -495,7 +499,7 @@ namespace Aimmy2.AILogic
 
 
                 // Check if the upper middle part of the object intersects the center of the FOV
-                var defaultRelativeRect = new RelativeRect(0.5f, 0.29f, 0.28f, 0.28f, 0.05f, 0.67f); // Default values
+                var defaultRelativeRect = new RelativeRect(0.5f, 0.29f, 0.28f, 0.05f); // Default values
                 nearest[0].Item2.IsUpperMiddleIntersectingCenter = IsUpperMiddleIntersectingCenter(predictionRect, defaultRelativeRect);
 
 
@@ -531,6 +535,26 @@ namespace Aimmy2.AILogic
             return relativeRectF.Left <= centerX && relativeRectF.Right >= centerX &&
                    relativeRectF.Top <= centerY && relativeRectF.Bottom >= centerY;
         }
+
+        //private bool IsUpperMiddleIntersectingCenter(RectangleF rect, RelativeRect relativeRect)
+        //{
+        //    float centerX = IMAGE_SIZE / 2.0f;
+        //    float centerY = IMAGE_SIZE / 2.0f;
+
+        //    // Calculate the size and position of the relative rectangle
+        //    float relativeWidth = rect.Width * relativeRect.WidthPercentage;
+        //    float relativeHeight = rect.Height * relativeRect.HeightPercentage;
+        //    float leftMargin = rect.Width * relativeRect.LeftMarginPercentage;
+        //    float topMargin = rect.Height * relativeRect.TopMarginPercentage;
+
+        //    float relativeX = rect.X + leftMargin;
+        //    float relativeY = rect.Y + topMargin;
+
+        //    RectangleF relativeRectF = new RectangleF(relativeX, relativeY, relativeWidth, relativeHeight);
+
+        //    return relativeRectF.Left <= centerX && relativeRectF.Right >= centerX &&
+        //           relativeRectF.Top <= centerY && relativeRectF.Bottom >= centerY;
+        //}
 
         private bool IsIntersectingCenter(RectangleF rect)
         {
@@ -726,23 +750,39 @@ namespace Aimmy2.AILogic
             public float CenterYTranslated { get; set; }
         }
 
+        //public struct RelativeRect
+        //{
+        //    public float WidthPercentage { get; set; }
+        //    public float HeightPercentage { get; set; }
+        //    public float LeftMarginPercentage { get; set; }
+        //    public float RightMarginPercentage { get; set; }
+        //    public float TopMarginPercentage { get; set; }
+        //    public float BottomMarginPercentage { get; set; }
+
+        //    public RelativeRect(float widthPercentage, float heightPercentage, float leftMarginPercentage, float rightMarginPercentage, float topMarginPercentage, float bottomMarginPercentage)
+        //    {
+        //        WidthPercentage = widthPercentage;
+        //        HeightPercentage = heightPercentage;
+        //        LeftMarginPercentage = leftMarginPercentage;
+        //        RightMarginPercentage = rightMarginPercentage;
+        //        TopMarginPercentage = topMarginPercentage;
+        //        BottomMarginPercentage = bottomMarginPercentage;
+        //    }
+        //}
+
         public struct RelativeRect
         {
             public float WidthPercentage { get; set; }
             public float HeightPercentage { get; set; }
             public float LeftMarginPercentage { get; set; }
-            public float RightMarginPercentage { get; set; }
             public float TopMarginPercentage { get; set; }
-            public float BottomMarginPercentage { get; set; }
 
-            public RelativeRect(float widthPercentage, float heightPercentage, float leftMarginPercentage, float rightMarginPercentage, float topMarginPercentage, float bottomMarginPercentage)
+            public RelativeRect(float widthPercentage, float heightPercentage, float leftMarginPercentage, float topMarginPercentage)
             {
                 WidthPercentage = widthPercentage;
                 HeightPercentage = heightPercentage;
                 LeftMarginPercentage = leftMarginPercentage;
-                RightMarginPercentage = rightMarginPercentage;
                 TopMarginPercentage = topMarginPercentage;
-                BottomMarginPercentage = bottomMarginPercentage;
             }
         }
     }

@@ -30,7 +30,7 @@
     <UseWindowsForms>false</UseWindowsForms>
     <Platforms>AnyCPU;x64</Platforms>	  <Product></Product>
 	  <Title></Title>
-	  <AssemblyName>AI-M</AssemblyName>
+	  <AssemblyName>TotallyNotAimmyV2</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>

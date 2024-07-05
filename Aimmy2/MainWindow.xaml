@@ -76,7 +76,7 @@
                                           FillRule="NonZero" />
                         </Path.Data>
                     </Path>
-                    <Label Content="AI-M"
+                    <Label Content="Aimmy"
                            HorizontalAlignment="Left"
                            Margin="45,0,0,0"
                            VerticalAlignment="Center"
@@ -522,7 +522,7 @@
                                   Width="193"
                                   Height="12">
                                 <Label Foreground="White"
-                                       Content="AI-M because everybody is is cheating "
+                                       Content="Aimmy is free, and will never be for sale."
                                        FontFamily="{StaticResource Atkinson Hyperlegible}"
                                        VerticalContentAlignment="Center"
                                        Padding="5,0,0,0"
@@ -555,7 +555,7 @@
                             </Path>
                             <Label x:Name="AboutName"
                                    Foreground="White"
-                                   Content="AI-M "
+                                   Content="Aimmy - Universal Second Eye"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
                                    VerticalContentAlignment="Center"
                                    Padding="0,0,0,0"
@@ -584,7 +584,7 @@
                                    VerticalAlignment="Top"
                                    RenderTransformOrigin="0.602,0.353"
                                    FontSize="12" />
-                            <!--<Ant:Button x:Name="CheckForUpdates"
+                            <Ant:Button x:Name="CheckForUpdates"
                                         Background="#3FFFFFFF"
                                         BorderBrush="#FFD3ADF7"
                                         Padding="0,0,0,0"
@@ -601,7 +601,7 @@
                                         HorizontalAlignment="Center"
                                         FontFamily="{StaticResource Atkinson Hyperlegible}"
                                         EffectBrush="#FFD3ADF7"
-                                        Click="CheckForUpdates_Click" />-->
+                                        Click="CheckForUpdates_Click" />
                         </StackPanel>
                         <StackPanel x:Name="CreditsPanel"
                                     Margin="10,196,10,0" />

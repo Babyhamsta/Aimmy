@@ -60,7 +60,6 @@ namespace Aimmy2.Class
             { "Enable Model Switch Keybind", true },
             { "Enable Gun Switching Keybind", false },
             { "Auto Trigger", true },
-            { "Trigger Center Check", true },
             { "Anti Recoil", false },
             { "FOV", false },
             { "Dynamic FOV", false },
@@ -92,6 +91,7 @@ namespace Aimmy2.Class
 
         public static Dictionary<string, dynamic> dropdownState = new()
         {
+            { "Trigger Check", "Head Intersecting Center" },
             { "Prediction Method", "Kalman Filter" },
             { "Detection Area Type", "Closest to Center Screen" },
             { "Aiming Boundaries Alignment", "Center" },

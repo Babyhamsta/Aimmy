@@ -39,8 +39,9 @@ namespace Class
         // Triggerbot
         public ATitle? AT_TriggerBot { get; set; }
 
+        public APButton? T_HeadAreaBtn { get; set; }
         public AToggle? T_AutoTrigger { get; set; }
-        public AToggle? T_TriggerCenterCheck { get; set; }
+        public ADropdown? T_TriggerCheck { get; set; }
         public AKeyChanger? T_TriggerKey { get; set; }
         public AKeyChanger? T_TriggerSendKey { get; set; }
         public ASlider? S_AutoTriggerDelay { get; set; }
