@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Visuality"
         xmlns:controls="clr-namespace:AntWpf.Controls;assembly=AntWpf"
         xmlns:converter="clr-namespace:Aimmy2.Converter"
+        xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
         mc:Ignorable="d"
         Title="Edit Head Area"
         Height="600"
@@ -42,10 +43,19 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Grid>
-                <Grid x:Name="Topbar" VerticalAlignment="Top" Height="50">
-                    <Label Content="&#xEE57;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
-                    <Label Content="Edit Head Area" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                    <Button x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
+                <Grid x:Name="Topbar" VerticalAlignment="Top" Height="70">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Label Content="&#xEE57;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
+                        <Label Content="Edit Head Area" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                        <Button x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
+                    </Grid>
+                    <Grid Grid.Row="1">
+                        <Label Margin="10 0 0 0" Foreground="White" Content="The Red rectangle represents the detected enemy and the green rectangle represents the region for the trigger"></Label>
+                    </Grid>
                 </Grid>
                 <Grid x:Name="MainArea" Margin="10,50,10,10" MouseMove="MainArea_MouseMove" MouseUp="MainArea_MouseUp">
                     <Grid.RowDefinitions>
@@ -99,16 +109,51 @@
                         </Canvas>
                     </Border>
                     <!-- Sliders to Adjust Properties -->
-                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Vertical" Margin="10">
-                        <TextBlock Foreground="White" Text="Width Percentage"/>
-                        <Slider Minimum="0.1" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.WidthPercentage, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-                        <TextBlock Foreground="White" Text="Height Percentage"/>
-                        <Slider Minimum="0.1" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.HeightPercentage, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-                        <TextBlock Foreground="White" Text="Left Margin Percentage"/>
-                        <Slider Minimum="0.0" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.LeftMarginPercentage, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-                        <TextBlock Foreground="White" Text="Top Margin Percentage"/>
-                        <Slider Minimum="0.0" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.TopMarginPercentage, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Vertical" Margin="20 55 20 55">
+                        <TextBlock Foreground="White" Name="WidthText" Text="Width"/>
+                        <Slider Minimum="0.01" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.WidthPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+                        <TextBlock Foreground="White" Name="HeightText" Text="Height"/>
+                        <Slider Minimum="0.01" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.HeightPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+                        <TextBlock Foreground="White" Name="LeftText" Text="Left"/>
+                        <Slider Minimum="0.0" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.LeftMarginPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+                        <TextBlock Foreground="White" Name="TopText" Text="Top"/>
+                        <Slider Minimum="0.0" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.TopMarginPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+                        <controls:Button x:Name="ResetButton"
+                                         Grid.Row="1"
+                                         Grid.Column="1"
+                                         BorderBrush="#FFD3ADF7"
+                                         Background="#FF722ED1"
+                                         EffectBrush="#FFD3ADF7"
+                                         Content="Reset"
+                                         HorizontalAlignment="Center"
+                                         Height="24"
+                                         Width="70"
+                                         Margin="0 20 0 0"
+                                         Padding="0,0,0,0"
+                                         FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                         BorderThickness="0,0,0,0"
+                                         FontSize="12"
+                                         Foreground="White"
+                                         Click="Reset_Click" />
                     </StackPanel>
+                    <controls:Button x:Name="CancelButton"
+                                     Grid.Row="1"
+                                     Grid.Column="1"
+                                     BorderBrush="#FFD3ADF7"
+                                     Background="#FF722ED1"
+                                     EffectBrush="#FFD3ADF7"
+                                     Content="Cancel"
+                                     HorizontalAlignment="Right"
+                                     Margin="0 0 80 0"
+                                     Height="24"
+                                     Width="70"
+                                     VerticalAlignment="Bottom"
+                                     Padding="0,0,0,0"
+                                     FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                     BorderThickness="0,0,0,0"
+                                     FontSize="12"
+                                     Foreground="White"
+                                     Click="Exit_Click" />
                     <controls:Button x:Name="SaveButton"
                                 Grid.Row="1"
                                 Grid.Column="1"

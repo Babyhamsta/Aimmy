@@ -139,4 +139,8 @@
 	  </None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Types\" />
+	</ItemGroup>
+
 </Project>

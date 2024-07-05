@@ -3,7 +3,9 @@ using Class;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using Aimmy2.Types;
 using Color = System.Windows.Media.Color;
+using System.Windows.Controls;
 
 namespace Visuality
 {
@@ -57,6 +59,38 @@ namespace Visuality
         {
             e.Cancel = true;
             Hide();
+        }
+
+        public RelativeRect? HeadRelativeArea { get; set; }
+
+        private void UpdateHeadArea()
+        {
+            if (HeadRelativeArea == null)
+            {
+                HeadAreaBorder.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            double parentWidth = DetectedPlayerFocus.ActualWidth;
+            double parentHeight = DetectedPlayerFocus.ActualHeight;
+
+            double headAreaWidth = parentWidth * HeadRelativeArea.Value.WidthPercentage;
+            double headAreaHeight = parentHeight * HeadRelativeArea.Value.HeightPercentage;
+            double headAreaLeft = parentWidth * HeadRelativeArea.Value.LeftMarginPercentage;
+            double headAreaTop = parentHeight * HeadRelativeArea.Value.TopMarginPercentage;
+
+            HeadAreaBorder.Width = headAreaWidth;
+            HeadAreaBorder.Height = headAreaHeight;
+            Canvas.SetLeft(HeadAreaBorder, headAreaLeft);
+            Canvas.SetTop(HeadAreaBorder, headAreaTop);
+
+            HeadAreaBorder.Visibility = Visibility.Visible;
+        }
+
+        public void SetHeadRelativeArea(RelativeRect? relativeRect)
+        {
+            HeadRelativeArea = relativeRect;
+            UpdateHeadArea();
         }
     }
 }

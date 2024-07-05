@@ -65,6 +65,7 @@ namespace Aimmy2.Class
             { "Dynamic FOV", false },
             { "Masking", false },
             { "Show Detected Player", false },
+            { "Show Trigger Head Area", false },
             { "Show AI Confidence", false },
             { "Show Tracers", false },
             { "Collect Data While Playing", false },
@@ -92,6 +93,7 @@ namespace Aimmy2.Class
         public static Dictionary<string, dynamic> dropdownState = new()
         {
             { "Trigger Check", "Head Intersecting Center" },
+            { "Head Area", "" },
             { "Prediction Method", "Kalman Filter" },
             { "Detection Area Type", "Closest to Center Screen" },
             { "Aiming Boundaries Alignment", "Center" },

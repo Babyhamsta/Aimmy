@@ -9,8 +9,10 @@ using Supercluster.KDTree;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Windows;
+using Aimmy2.Types;
 using Visuality;
 
 namespace Aimmy2.AILogic
@@ -64,6 +66,8 @@ namespace Aimmy2.AILogic
         private static int targetX, targetY;
 
         private Graphics? _graphics;
+
+        internal RelativeRect HeadRelativeRect = RelativeRect.Default;
 
         #endregion Variables
 
@@ -216,6 +220,10 @@ namespace Aimmy2.AILogic
                         stopwatch.Stop();
                     }
                 }
+                else
+                {
+                    DisableOverlay(DetectedPlayerOverlay!);
+                }
 
                 await Task.Delay(1); // Add a small delay to avoid high CPU usage
             }
@@ -231,7 +239,6 @@ namespace Aimmy2.AILogic
 
         private async Task AutoTrigger(Prediction prediction)
         {
-            Console.WriteLine(Dictionary.dropdownState["Trigger Check"]);
             if (Dictionary.toggleState["Auto Trigger"] && (InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"] || Dictionary.dropdownState["Trigger Check"] != "None"))
             {
                 if(TriggerKeyUnsetOrHold())
@@ -316,8 +323,13 @@ namespace Aimmy2.AILogic
                 DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(centerX - (LastDetectionBox.Width / 2.0), centerY, 0, 0);
                 DetectedPlayerOverlay.DetectedPlayerFocus.Width = LastDetectionBox.Width;
                 DetectedPlayerOverlay.DetectedPlayerFocus.Height = LastDetectionBox.Height;
+
+                DetectedPlayerOverlay.SetHeadRelativeArea(Dictionary.toggleState["Show Trigger Head Area"] ? HeadRelativeRect : null);
             });
         }
+
+
+
 
         private void CalculateCoordinates(DetectedPlayerWindow DetectedPlayerOverlay, Prediction closestPrediction, float scaleX, float scaleY)
         {
@@ -499,8 +511,7 @@ namespace Aimmy2.AILogic
 
 
                 // Check if the upper middle part of the object intersects the center of the FOV
-                var defaultRelativeRect = new RelativeRect(0.5f, 0.29f, 0.28f, 0.05f); // Default values
-                nearest[0].Item2.IsUpperMiddleIntersectingCenter = IsUpperMiddleIntersectingCenter(predictionRect, defaultRelativeRect);
+                nearest[0].Item2.IsUpperMiddleIntersectingCenter = IsUpperMiddleIntersectingCenter(predictionRect, HeadRelativeRect);
 
 
                 // Moved SaveFrameAsync over here to get accurate Prediction Labelling
@@ -536,25 +547,6 @@ namespace Aimmy2.AILogic
                    relativeRectF.Top <= centerY && relativeRectF.Bottom >= centerY;
         }
 
-        //private bool IsUpperMiddleIntersectingCenter(RectangleF rect, RelativeRect relativeRect)
-        //{
-        //    float centerX = IMAGE_SIZE / 2.0f;
-        //    float centerY = IMAGE_SIZE / 2.0f;
-
-        //    // Calculate the size and position of the relative rectangle
-        //    float relativeWidth = rect.Width * relativeRect.WidthPercentage;
-        //    float relativeHeight = rect.Height * relativeRect.HeightPercentage;
-        //    float leftMargin = rect.Width * relativeRect.LeftMarginPercentage;
-        //    float topMargin = rect.Height * relativeRect.TopMarginPercentage;
-
-        //    float relativeX = rect.X + leftMargin;
-        //    float relativeY = rect.Y + topMargin;
-
-        //    RectangleF relativeRectF = new RectangleF(relativeX, relativeY, relativeWidth, relativeHeight);
-
-        //    return relativeRectF.Left <= centerX && relativeRectF.Right >= centerX &&
-        //           relativeRectF.Top <= centerY && relativeRectF.Bottom >= centerY;
-        //}
 
         private bool IsIntersectingCenter(RectangleF rect)
         {
@@ -750,40 +742,5 @@ namespace Aimmy2.AILogic
             public float CenterYTranslated { get; set; }
         }
 
-        //public struct RelativeRect
-        //{
-        //    public float WidthPercentage { get; set; }
-        //    public float HeightPercentage { get; set; }
-        //    public float LeftMarginPercentage { get; set; }
-        //    public float RightMarginPercentage { get; set; }
-        //    public float TopMarginPercentage { get; set; }
-        //    public float BottomMarginPercentage { get; set; }
-
-        //    public RelativeRect(float widthPercentage, float heightPercentage, float leftMarginPercentage, float rightMarginPercentage, float topMarginPercentage, float bottomMarginPercentage)
-        //    {
-        //        WidthPercentage = widthPercentage;
-        //        HeightPercentage = heightPercentage;
-        //        LeftMarginPercentage = leftMarginPercentage;
-        //        RightMarginPercentage = rightMarginPercentage;
-        //        TopMarginPercentage = topMarginPercentage;
-        //        BottomMarginPercentage = bottomMarginPercentage;
-        //    }
-        //}
-
-        public struct RelativeRect
-        {
-            public float WidthPercentage { get; set; }
-            public float HeightPercentage { get; set; }
-            public float LeftMarginPercentage { get; set; }
-            public float TopMarginPercentage { get; set; }
-
-            public RelativeRect(float widthPercentage, float heightPercentage, float leftMarginPercentage, float topMarginPercentage)
-            {
-                WidthPercentage = widthPercentage;
-                HeightPercentage = heightPercentage;
-                LeftMarginPercentage = leftMarginPercentage;
-                TopMarginPercentage = topMarginPercentage;
-            }
-        }
     }
 }

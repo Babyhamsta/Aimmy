@@ -24,6 +24,7 @@ using Aimmy2.AILogic;
 using Aimmy2.Extensions;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using Aimmy2.Types;
 
 
 namespace Aimmy2
@@ -88,6 +89,8 @@ namespace Aimmy2
 
             bindingManager = new InputBindingManager();
             bindingManager.SetupDefault("Aim Keybind", Dictionary.bindingSettings["Aim Keybind"]);
+            bindingManager.SetupDefault("Trigger Key", Dictionary.bindingSettings["Trigger Key"]);
+
             bindingManager.SetupDefault("Active ToogleKey", Dictionary.bindingSettings["Active ToogleKey"]);
             bindingManager.SetupDefault("Second Aim Keybind", Dictionary.bindingSettings["Second Aim Keybind"]);
             bindingManager.SetupDefault("Dynamic FOV Keybind", Dictionary.bindingSettings["Dynamic FOV Keybind"]);
@@ -164,6 +167,11 @@ namespace Aimmy2
         public void SetActive(bool active)
         {
             Dictionary.toggleState["Global Active"] = active;
+            if (FileManager.AIManager != null)
+            {
+                FileManager.AIManager.HeadRelativeRect = RelativeRect.ParseOrDefault(Dictionary.dropdownState["Head Area"]);
+            }
+
             LastGradientStop.Color = active ? Colors.Green : Color.FromArgb(255, 18, 3, 56); 
         }
 
@@ -764,7 +772,7 @@ namespace Aimmy2
                 b.Visibility = Dictionary.dropdownState["Trigger Check"] == "Head Intersecting Center" ? Visibility.Visible : Visibility.Collapsed;
                 b.ToolTip = "Specify the area of the Head when this interaction center the trigger will be executed";
             });
-            uiManager.T_HeadAreaBtn.Reader.Click += (s, e) => new EditHeadArea().Show();
+            uiManager.T_HeadAreaBtn.Reader.Click += (s, e) => new EditHeadArea(Dictionary.dropdownState["Head Area"]?.ToString()).Show();
 
             uiManager.T_TriggerCheck.DropdownBox.SelectionChanged += (sender, args) =>
             {
@@ -883,6 +891,7 @@ namespace Aimmy2
 
             uiManager.AT_DetectedPlayer = AddTitle(ESPConfig, "ESP Config", true);
             uiManager.T_ShowDetectedPlayer = AddToggle(ESPConfig, "Show Detected Player");
+            uiManager.T_ShowHeadArea = AddToggle(ESPConfig, "Show Trigger Head Area");
             uiManager.T_ShowAIConfidence = AddToggle(ESPConfig, "Show AI Confidence");
             uiManager.T_ShowTracers = AddToggle(ESPConfig, "Show Tracers");
             uiManager.CC_DetectedPlayerColor = AddColorChanger(ESPConfig, "Detected Player Color");

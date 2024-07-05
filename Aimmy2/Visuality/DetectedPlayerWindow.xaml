@@ -15,7 +15,7 @@
         Closing="Window_Closing"
         ResizeMode="NoResize"
         IsTabStop="False">
-    <Grid>
+    <Canvas>
         <Label x:Name="DetectedPlayerConfidence"
                HorizontalAlignment="Left"
                VerticalAlignment="Top"
@@ -34,7 +34,16 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Visibility="Visible"
-                Opacity="0" />
+                Opacity="0">
+            <Canvas>
+                <!-- Green Head Area Border -->
+                <Border x:Name="HeadAreaBorder"
+                        BorderBrush="Green"
+                        BorderThickness="2"
+                        Background="Transparent"
+                        Visibility="Collapsed"/>
+            </Canvas>
+        </Border>
         <Line x:Name="DetectedTracers"
               X1="0"
               Y1="0"
@@ -43,5 +52,5 @@
               Stroke="Red"
               Opacity="0">
         </Line>
-    </Grid>
+    </Canvas>
 </Window>

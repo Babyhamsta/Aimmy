@@ -87,6 +87,7 @@ namespace Class
         public ATitle? AT_DetectedPlayer { get; set; }
 
         public AToggle? T_ShowDetectedPlayer { get; set; }
+        public AToggle? T_ShowHeadArea { get; set; }
 
         public AToggle? T_ShowAIConfidence { get; set; }
         public AToggle? T_ShowTracers { get; set; }

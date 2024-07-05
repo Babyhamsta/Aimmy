@@ -1,8 +1,13 @@
 ﻿using Class;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using Aimmy2.Class;
+using Aimmy2.Models;
+using Aimmy2.Types;
+using static Aimmy2.AILogic.AIManager;
+using Other;
 
 namespace Visuality
 {
@@ -17,7 +22,7 @@ namespace Visuality
         private bool isResizing;
         private Point clickPosition;
 
-        private RelativeRectModel _relativeRect = new RelativeRectModel(0.5f, 0.33f, 0.25f, 0.25f);
+        private RelativeRectModel _relativeRect = new(Aimmy2.Types.RelativeRect.Default);
 
         public RelativeRectModel RelativeRect
         {
@@ -73,6 +78,17 @@ namespace Visuality
                 OnPropertyChanged(nameof(RectTop));
             }
         }
+
+        public EditHeadArea(RelativeRect relativeRect) : this(new RelativeRectModel(relativeRect))
+        {}
+        
+        public EditHeadArea(RelativeRectModel relativeRect) : this()
+        {
+            _relativeRect = relativeRect;
+        }
+
+        public EditHeadArea(string relativeRect): this(Aimmy2.Types.RelativeRect.ParseOrDefault(relativeRect))
+        {}
 
         public EditHeadArea()
         {
@@ -193,76 +209,30 @@ namespace Visuality
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            // Save logic here
-            Console.WriteLine("Saved");
+            Dictionary.dropdownState["Head Area"] = RelativeRect.ToString();
+            if (FileManager.AIManager != null)
+            {
+                FileManager.AIManager.HeadRelativeRect = RelativeRect.ToRelativeRect();
+            }
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Saved Head Area {RelativeRect}.", 2000).Show()));
+            Close();
         }
 
         private void Slider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if(TopText == null) return;
+            TopText.Text = $"Top: ({RelativeRect.TopMarginPercentage * 100:F2}) %";
+            LeftText.Text = $"Left: ({RelativeRect.LeftMarginPercentage * 100:F2} %)";
+            WidthText.Text = $"Width: ({RelativeRect.WidthPercentage * 100:F2} %)";
+            HeightText.Text = $"Height: ({RelativeRect.HeightPercentage * 100:F2} %)";
             if (isDragging || isResizing) return;
             UpdateGreenRectangle();
         }
-    }
 
-    public class RelativeRectModel : INotifyPropertyChanged
-    {
-        private float _widthPercentage;
-        private float _heightPercentage;
-        private float _leftMarginPercentage;
-        private float _topMarginPercentage;
-
-        public RelativeRectModel(float widthPercentage, float heightPercentage, float leftMarginPercentage, float topMarginPercentage)
+        private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            WidthPercentage = widthPercentage;
-            HeightPercentage = heightPercentage;
-            LeftMarginPercentage = leftMarginPercentage;
-            TopMarginPercentage = topMarginPercentage;
-        }
-
-        public float WidthPercentage
-        {
-            get { return _widthPercentage; }
-            set
-            {
-                _widthPercentage = value;
-                OnPropertyChanged(nameof(WidthPercentage));
-            }
-        }
-
-        public float HeightPercentage
-        {
-            get { return _heightPercentage; }
-            set
-            {
-                _heightPercentage = value;
-                OnPropertyChanged(nameof(HeightPercentage));
-            }
-        }
-
-        public float LeftMarginPercentage
-        {
-            get { return _leftMarginPercentage; }
-            set
-            {
-                _leftMarginPercentage = value;
-                OnPropertyChanged(nameof(LeftMarginPercentage));
-            }
-        }
-
-        public float TopMarginPercentage
-        {
-            get { return _topMarginPercentage; }
-            set
-            {
-                _topMarginPercentage = value;
-                OnPropertyChanged(nameof(TopMarginPercentage));
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            RelativeRect = new RelativeRectModel(Aimmy2.Types.RelativeRect.Default);
         }
     }
+
 }
