@@ -14,7 +14,7 @@ Aimmy also provides an easy to use user-interface, a wide set of features and cu
 
 Aimmy is 100% free to use. This means no ads, no key system, and no paywalled features. Aimmy is not, and will never be for sale for the end user, and is considered a source-available product, **not open source** as we actively discourage other developers from making commercial forks of Aimmy.
 
-Please do not confuse Aimmy as an open-source project, we are not one.
+Please do not confuse Aimmy as an open-source project, we are not, and we have never been one.
 
 Want to connect with us? Join our Discord Server: https://discord.gg/aimmy
 
