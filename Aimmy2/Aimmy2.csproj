@@ -107,6 +107,9 @@
 	  <Compile Update="UILibrary\AFileLocator.xaml.cs">
 	    <SubType>Code</SubType>
 	  </Compile>
+	  <Compile Update="UILibrary\AProcessPicker.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
 	  <Compile Update="UILibrary\ASpacer.xaml.cs">
 	    <SubType>Code</SubType>
 	  </Compile>

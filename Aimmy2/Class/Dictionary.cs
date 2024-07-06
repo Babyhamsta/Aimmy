@@ -92,6 +92,7 @@ namespace Aimmy2.Class
 
         public static Dictionary<string, dynamic> dropdownState = new()
         {
+            { "Gamepad Process", "" },
             { "Trigger Check", "Head Intersecting Center" },
             { "Head Area", "" },
             { "Prediction Method", "Kalman Filter" },

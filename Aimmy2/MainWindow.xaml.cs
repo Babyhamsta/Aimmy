@@ -25,6 +25,8 @@ using Aimmy2.Extensions;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using Aimmy2.Types;
+using System.Windows.Markup;
+using Aimmy2.Models;
 
 
 namespace Aimmy2
@@ -104,6 +106,7 @@ namespace Aimmy2
 
             LoadAimMenu();
             LoadSettingsMenu();
+            LoadGamepadSettingsMenu();
             LoadCreditsMenu();
             LoadStoreMenuAsync();
             LoadGlobalUI();
@@ -647,6 +650,18 @@ namespace Aimmy2
             return button;
         }
 
+        private T Add<T>(IAddChild panel, Action<T>? cfg = null) where T : UIElement, new()
+        {
+            var element = new T();
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                panel.AddChild(element);
+            });
+            if (cfg != null)
+                element.InitWith(cfg);
+            return element;
+        }
+
         private void AddCredit(StackPanel panel, string name, string role) => Application.Current.Dispatcher.Invoke(() => panel.Children.Add(new ACredit(name, role)));
 
         private void AddSeparator(StackPanel panel)
@@ -922,6 +937,24 @@ namespace Aimmy2
             ESPConfig.Visibility = GetVisibilityFor("ESPConfig");
 
             #endregion ESP Config
+        }
+
+        private void LoadGamepadSettingsMenu()
+        {
+            AddTitle(GamepadSettingsConfig, "Gamepad Settings");
+            AddCredit(GamepadSettingsConfig, "Target Process", "In order to use the Gamepad to send actions or AIM you need to select the process where the commands should be send to");
+            Add<AProcessPicker>(GamepadSettingsConfig, picker =>
+            {
+                picker.SelectedProcessModel = new ProcessModel {Title = Dictionary.dropdownState["Gamepad Process"] };
+                picker.PropertyChanged += (sender, e) =>
+                {
+                    if (e.PropertyName == nameof(picker.SelectedProcessModel))
+                        Dictionary.dropdownState["Gamepad Process"] = picker.SelectedProcessModel.Title;
+                    
+                };
+            });
+            AddSeparator(GamepadSettingsConfig);
+
         }
 
         private void LoadSettingsMenu()

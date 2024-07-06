@@ -86,9 +86,9 @@
                            FontFamily="{StaticResource Atkinson Hyperlegible}" />
 
                     <StackPanel IsEnabled="{Binding IsModelLoaded}" Orientation="Horizontal" HorizontalAlignment="Center" Width="350" x:Name="TopCenterGrid">
-                      
+
                     </StackPanel>
-      
+
 
                     <Button x:Name="Exit"
                             Content="&#xE8BB;"
@@ -149,90 +149,105 @@
                             </Ellipse.Effect>
                         </Ellipse>
                     </Grid>
-                    <Ant:Button x:Name="Menu1B"
-                                Tag="AimMenu"
-                                VerticalAlignment="Top"
-                                Height="50"
-                                BorderThickness="0"
-                                EffectBrush="#FF722ED1"
-                                Foreground="#ffffff"
-                                BorderBrush="#00D9D9D9"
-                                Background="Transparent"
-                                FontFamily="Segoe MDL2 Assets"
-                                Content="&#xE726;"
-                                Padding="0,0,0,0"
-                                FontSize="20"
-                                HorizontalAlignment="Center"
-                                Width="50"
-                                Click="MenuSwitch" />
-                    <Ant:Button x:Name="Menu2B"
-                                Tag="ModelMenu"
-                                VerticalAlignment="Top"
-                                Height="50"
-                                BorderThickness="0"
-                                EffectBrush="#FF722ED1"
-                                Foreground="#ffffff"
-                                BorderBrush="#00D9D9D9"
-                                Background="Transparent"
-                                FontFamily="Segoe MDL2 Assets"
-                                Content="&#xE8E5;"
-                                Padding="0,0,0,0"
-                                FontSize="20"
-                                HorizontalAlignment="Center"
-                                Width="50"
-                                Margin="0,50,0,0"
-                                Click="MenuSwitch" />
-                    <Ant:Button x:Name="Menu3B"
-                                Tag="SettingsMenu"
-                                VerticalAlignment="Top"
-                                Height="50"
-                                BorderThickness="0"
-                                EffectBrush="#FF722ED1"
-                                Foreground="#ffffff"
-                                BorderBrush="#00D9D9D9"
-                                Background="Transparent"
-                                FontFamily="Segoe MDL2 Assets"
-                                Content="&#xE713;"
-                                Padding="0,0,0,0"
-                                FontSize="20"
-                                HorizontalAlignment="Center"
-                                Width="50"
-                                Margin="0,100,0,0"
-                                Click="MenuSwitch" />
-                    <Ant:Button x:Name="Menu5B"
-                                Tag="Logs"
-                                VerticalAlignment="Top"
-                                Height="50"
-                                BorderThickness="0"
-                                EffectBrush="#FF722ED1"
-                                Foreground="#ffffff"
-                                BorderBrush="#00D9D9D9"
-                                Background="Transparent"
-                                FontFamily="Segoe MDL2 Assets"
-                                Content="&#xE9D5;"
-                                Padding="0,0,0,0"
-                                FontSize="20"
-                                HorizontalAlignment="Center"
-                                Width="50"
-                                Margin="0,150,0,0"
-                                Click="MenuSwitch" />
-                    <Ant:Button x:Name="Menu4B"
-                                Tag="AboutMenu"
-                                VerticalAlignment="Top"
-                                Height="50"
-                                BorderThickness="0"
-                                EffectBrush="#FF722ED1"
-                                Foreground="#ffffff"
-                                BorderBrush="#00D9D9D9"
-                                Background="Transparent"
-                                FontFamily="Segoe MDL2 Assets"
-                                Content="&#xE77B;"
-                                Padding="0,0,0,0"
-                                FontSize="20"
-                                HorizontalAlignment="Center"
-                                Width="50"
-                                Margin="0,200,0,0"
-                                Click="MenuSwitch" />
+                    <StackPanel>
+                        <Ant:Button x:Name="Menu1B"
+                                    Tag="AimMenu"
+                                    VerticalAlignment="Top"
+                                    Height="50"
+                                    BorderThickness="0"
+                                    EffectBrush="#FF722ED1"
+                                    Foreground="#ffffff"
+                                    BorderBrush="#00D9D9D9"
+                                    Background="Transparent"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Content="&#xE726;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    HorizontalAlignment="Center"
+                                    Width="50"
+                                    Click="MenuSwitch" />
+                        <Ant:Button x:Name="Menu2B"
+                                    Tag="ModelMenu"
+                                    VerticalAlignment="Top"
+                                    Height="50"
+                                    BorderThickness="0"
+                                    EffectBrush="#FF722ED1"
+                                    Foreground="#ffffff"
+                                    BorderBrush="#00D9D9D9"
+                                    Background="Transparent"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Content="&#xE8E5;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    HorizontalAlignment="Center"
+                                    Width="50"
+                                    Click="MenuSwitch" />
+                        <Ant:Button x:Name="Menu3B"
+                                    Tag="SettingsMenu"
+                                    VerticalAlignment="Top"
+                                    Height="50"
+                                    BorderThickness="0"
+                                    EffectBrush="#FF722ED1"
+                                    Foreground="#ffffff"
+                                    BorderBrush="#00D9D9D9"
+                                    Background="Transparent"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Content="&#xE713;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    HorizontalAlignment="Center"
+                                    Width="50"
+                                    Click="MenuSwitch" />
+                        <Ant:Button 
+                                    Tag="GamepadSettings"
+                                    VerticalAlignment="Top"
+                                    Height="50"
+                                    BorderThickness="0"
+                                    EffectBrush="#FF722ED1"
+                                    Foreground="#ffffff"
+                                    BorderBrush="#00D9D9D9"
+                                    Background="Transparent"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Content="&#xE7FC;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    HorizontalAlignment="Center"
+                                    Width="50"
+                                    Click="MenuSwitch" />
+                        <Ant:Button x:Name="Menu5B"
+                                    Tag="Logs"
+                                    VerticalAlignment="Top"
+                                    Height="50"
+                                    BorderThickness="0"
+                                    EffectBrush="#FF722ED1"
+                                    Foreground="#ffffff"
+                                    BorderBrush="#00D9D9D9"
+                                    Background="Transparent"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Content="&#xE9D5;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    HorizontalAlignment="Center"
+                                    Width="50"
+                                    Click="MenuSwitch" />
+                        <Ant:Button x:Name="Menu4B"
+                                    Tag="AboutMenu"
+                                    VerticalAlignment="Top"
+                                    Height="50"
+                                    BorderThickness="0"
+                                    EffectBrush="#FF722ED1"
+                                    Foreground="#ffffff"
+                                    BorderBrush="#00D9D9D9"
+                                    Background="Transparent"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Content="&#xE77B;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    HorizontalAlignment="Center"
+                                    Width="50"
+                                    Click="MenuSwitch" />
+                    </StackPanel>
+
                 </Grid>
                 <ScrollViewer x:Name="AimMenu"
                               IsEnabled="{Binding Path=IsModelLoaded}"
@@ -490,6 +505,20 @@
                     </Grid>
                 </ScrollViewer>
 
+                <ScrollViewer x:Name="GamepadSettings"
+                              Visibility="Collapsed"
+                              Margin="50,450,0,-400"
+                              VerticalScrollBarVisibility="Auto"
+                              PanningMode="VerticalOnly">
+                    <Grid>
+                        <StackPanel
+                                    Grid.Column="0"
+                                    Margin="10,0,5,0">
+                            <StackPanel x:Name="GamepadSettingsConfig" />
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+
                 <ScrollViewer x:Name="Logs"
                               Visibility="Collapsed"
                               Margin="50, 450, 0, -400"
@@ -507,7 +536,7 @@
                                  IsReadOnly="True"/>
                     </Grid>
                 </ScrollViewer>
-                
+
                 <ScrollViewer x:Name="AboutMenu"
                               Visibility="Collapsed"
                               Margin="50, 450, 0, -400"
