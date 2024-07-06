@@ -25,21 +25,8 @@
                 CornerRadius="5"
                 BorderBrush="Black"
                 BorderThickness="1"
+                Background="{StaticResource Background}"
                 MouseLeftButtonDown="Border_MouseLeftButtonDown">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0,0">
-                    <LinearGradientBrush.RelativeTransform>
-                        <TransformGroup>
-                            <ScaleTransform CenterY="0.5" CenterX="0.5" />
-                            <SkewTransform CenterX="0.5" CenterY="0.5" />
-                            <RotateTransform x:Name="RotaryGradient" Angle="0" CenterX="0.5" CenterY="0.5" />
-                            <TranslateTransform />
-                        </TransformGroup>
-                    </LinearGradientBrush.RelativeTransform>
-                    <GradientStop Color="Black" Offset="0.27" />
-                    <GradientStop Color="#FF120338" Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
             <Grid>
                 <Grid x:Name="Topbar" VerticalAlignment="Top" Height="70">
                     <Grid.RowDefinitions>
@@ -78,10 +65,9 @@
 
                     <controls:Button x:Name="CancelButton"
                                      Grid.Row="1"
-                                     Grid.Column="1"
-                                     BorderBrush="#FFD3ADF7"
-                                     Background="#FF722ED1"
-                                     EffectBrush="#FFD3ADF7"
+                                     BorderBrush="{StaticResource ButtonBorder}"
+                                     Background="{StaticResource ButtonBackground}"
+                                     EffectBrush="{StaticResource ButtonEffect}"
                                      Content="Cancel"
                                      HorizontalAlignment="Right"
                                      Margin="0 0 80 0"
@@ -98,9 +84,9 @@
                     <controls:Button x:Name="ApplyButton"
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                BorderBrush="#FFD3ADF7"
-                                Background="#FF722ED1"
-                                EffectBrush="#FFD3ADF7"
+                                BorderBrush="{StaticResource ButtonBorder}"
+                                Background="{StaticResource ButtonBackground}"
+                                EffectBrush="{StaticResource ButtonEffect}"
                                 Content="Ok"
                                 HorizontalAlignment="Right"
                                 IsEnabled="False"

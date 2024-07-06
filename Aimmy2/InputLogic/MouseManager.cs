@@ -189,10 +189,6 @@ namespace InputLogic
                     break;
             }
 
-            if (Dictionary.toggleState["Auto Trigger"])
-            {
-                Task.Run(DoTriggerClick);
-            }
         }
     }
 }

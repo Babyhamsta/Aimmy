@@ -14,7 +14,7 @@ namespace Visuality
         {
             InitializeComponent();
             LoadProcesses();
-            MainBorder.BindMouseGradientAngle(RotaryGradient, ShouldBindGradientMouse);
+            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
         private void LoadProcesses()
         {

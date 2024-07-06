@@ -23,27 +23,8 @@
                 BorderThickness="1"
                 VerticalAlignment="Bottom"
                 HorizontalAlignment="Center"
+                Background="{StaticResource Background}"
                 Margin="0,0,0,100">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1"
-                                     StartPoint="0.5,0">
-                    <LinearGradientBrush.RelativeTransform>
-                        <TransformGroup>
-                            <ScaleTransform CenterY="0.5"
-                                            CenterX="0.5" />
-                            <SkewTransform CenterX="0.5"
-                                           CenterY="0.5" />
-                            <RotateTransform Angle="-90"
-                                             CenterX="0.5"
-                                             CenterY="0.5" />
-                            <TranslateTransform />
-                        </TransformGroup>
-                    </LinearGradientBrush.RelativeTransform>
-                    <GradientStop Color="Black" />
-                    <GradientStop Color="#FF120338"
-                                  Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
             <Label x:Name="ContentText"
                    Content="This feature has not been implemented yet."
                    Foreground="#DDFFFFFF"

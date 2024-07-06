@@ -36,7 +36,7 @@
                         FontFamily="Segoe MDL2 Assets"
                         BorderThickness="0,0,0,0"
                         BorderBrush="{x:Null}"
-                        Background="#FF722ED1"
+                        Background="{StaticResource ButtonBackground}"
                         FontSize="10"
                         materialDesign:ButtonAssist.CornerRadius="5"
                         Foreground="White" />

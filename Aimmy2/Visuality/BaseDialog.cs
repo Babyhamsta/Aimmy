@@ -11,7 +11,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected bool ShouldBindGradientMouse => Dictionary.toggleState["Mouse Background Effect"];
+    protected Func<bool> ShouldBindGradientMouse = () => Dictionary.toggleState["Mouse Background Effect"];
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {

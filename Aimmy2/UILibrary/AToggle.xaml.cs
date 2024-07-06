@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Aimmy2.Types;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 
@@ -12,14 +13,33 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class AToggle : System.Windows.Controls.UserControl
     {
-        private static Color EnableColor = (Color)ColorConverter.ConvertFromString("#FF722ED1");
+        private static Color EnableColor => ApplicationConstants.AccentColor;
         private static Color DisableColor = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");
         private static TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(500);
 
         public event EventHandler<EventArgs> Activated;
         public event EventHandler<EventArgs> Deactivated;
+        public event EventHandler<EventArgs<bool>> Changed;
 
-        public bool Checked { get; set; }
+        public bool Checked
+        {
+            get => _checked;
+            set
+            {
+                if (_checked != value)
+                {
+                    _checked = value;
+                    if (value)
+                    {
+                        EnableSwitch();
+                    }
+                    else
+                    {
+                        DisableSwitch();
+                    }
+                }
+            }
+        }
 
         public string Text
         {
@@ -31,12 +51,21 @@ namespace Aimmy2.UILibrary
         public static readonly DependencyProperty TextProperty =
             DependencyProperty.Register("Text", typeof(string), typeof(AToggle), new PropertyMetadata("Aim only when Trigger is set"));
 
+        private bool _checked;
 
 
         public AToggle()
         {
             InitializeComponent();
             DataContext = this;
+            ApplicationConstants.StaticPropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(ApplicationConstants.AccentColor) && _checked)
+                {
+                    Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
+                    SetColorAnimation(currentColor, EnableColor, AnimationDuration);
+                }
+            };
         }
 
         public AToggle(string text) : this()
@@ -50,22 +79,43 @@ namespace Aimmy2.UILibrary
             SwitchMoving.Background.BeginAnimation(SolidColorBrush.ColorProperty, animation);
         }
 
+        public bool ToggleState()
+        {
+            if (Checked)
+            {
+                DisableSwitch();
+            }
+            else
+            {
+                EnableSwitch();
+            }
+
+            return Checked;
+        }
+
         public void EnableSwitch()
         {
-            Checked = true;
+            _checked = true;
             Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
             SetColorAnimation(currentColor, EnableColor, AnimationDuration);
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, -1, 0));
             Activated?.Invoke(this, EventArgs.Empty);
+            Changed?.Invoke(this, new EventArgs<bool>(true));
         }
 
         public void DisableSwitch()
         {
-            Checked = false;
+            _checked = false;
             Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
             SetColorAnimation(currentColor, DisableColor, AnimationDuration);
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, 16, 0));
             Deactivated?.Invoke(this, EventArgs.Empty);
+            Changed?.Invoke(this, new EventArgs<bool>(false));
+        }
+
+        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            ToggleState();
         }
     }
 }

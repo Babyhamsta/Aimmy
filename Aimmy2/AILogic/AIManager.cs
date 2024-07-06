@@ -140,7 +140,7 @@ namespace Aimmy2.AILogic
             {
                 if (Dictionary.toggleState["Global Active"])
                     w.SetActive(true);
-                w.OnPropertyChanged(nameof(w.IsModelLoaded));
+                w.CallPropertyChanged(nameof(w.IsModelLoaded));
             }));
             // Begin the loop
             _isAiLoopRunning = true;
@@ -239,7 +239,7 @@ namespace Aimmy2.AILogic
 
         private async Task AutoTrigger(Prediction prediction)
         {
-            if (Dictionary.toggleState["Auto Trigger"] && (InputBindingManager.IsHoldingBinding("Aim Keybind") || Dictionary.toggleState["Constant AI Tracking"] || Dictionary.dropdownState["Trigger Check"] != "None"))
+            if (Dictionary.toggleState["Auto Trigger"])
             {
                 if(TriggerKeyUnsetOrHold())
                 {
@@ -256,8 +256,6 @@ namespace Aimmy2.AILogic
                         await MouseManager.DoTriggerClick();
                     }
                 }
-
-                if (!Dictionary.toggleState["Aim Assist"] && !Dictionary.toggleState["Show Detected Player"]) return;
             }
         }
 

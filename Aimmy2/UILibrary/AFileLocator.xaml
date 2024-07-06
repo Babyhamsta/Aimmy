@@ -46,9 +46,9 @@
                          VerticalContentAlignment="Center" />
 
                 <Ant:Button x:Name="OpenFileB"
-                            BorderBrush="#FFD3ADF7"
-                            Background="#FF722ED1"
-                            EffectBrush="#FFD3ADF7"
+                            BorderBrush="{StaticResource ButtonBorder}"
+                            Background="{StaticResource ButtonBackground}"
+                            EffectBrush="{StaticResource ButtonEffect}"
                             Content="&#xE838;"
                             HorizontalAlignment="Right"
                             Height="30"

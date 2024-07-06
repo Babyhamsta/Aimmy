@@ -33,7 +33,7 @@ namespace Visuality
         public ConfigSaver()
         {
             InitializeComponent();
-            MainBorder.BindMouseGradientAngle(RotaryGradient, ShouldBindGradientMouse);
+            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
 
         private void WriteJSON()

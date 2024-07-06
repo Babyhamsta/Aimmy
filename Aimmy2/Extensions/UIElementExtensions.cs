@@ -66,14 +66,73 @@ public static class UIElementExtensions
     }
 
 
-    public static void BindMouseGradientAngle(this FrameworkElement sender, RotateTransform transform, bool condition = true)
+
+    public static void BindMouseGradientAngle(this Border sender, Func<bool>? condition = null)
     {
-        if (!condition)
+
+        LinearGradientBrush linearGradientBrush = null;
+
+        if (sender.Background is LinearGradientBrush originalBrush)
+        {
+            linearGradientBrush = originalBrush.Clone();
+            sender.Background = linearGradientBrush;
+        }
+
+        if (linearGradientBrush == null)
+        {
+            var resourceRotateTransform = sender.TryFindResource("RotaryGradient") as RotateTransform ??
+                                          App.Current.TryFindResource("RotaryGradient") as RotateTransform;
+            if (resourceRotateTransform != null)
+            {
+                var clonedRotateTransform = resourceRotateTransform.Clone();
+
+                linearGradientBrush = new LinearGradientBrush
+                {
+                    StartPoint = new Point(0, 0),
+                    EndPoint = new Point(0.5, 1),
+                    RelativeTransform = new TransformGroup
+                    {
+                        Children = new TransformCollection
+                        {
+                            new ScaleTransform { CenterX = 0.5, CenterY = 0.5 },
+                            new SkewTransform { CenterX = 0.5, CenterY = 0.5 },
+                            clonedRotateTransform,
+                            new TranslateTransform()
+                        }
+                    }
+                };
+                sender.Background = linearGradientBrush;
+            }
+        }
+
+        if (linearGradientBrush?.RelativeTransform is TransformGroup newTransformGroup)
+        {
+            foreach (var transform in newTransformGroup.Children)
+            {
+                if (transform is RotateTransform rotateTransform)
+                {
+                    sender.BindMouseGradientAngle(rotateTransform, condition);
+                    return;
+                }
+            }
+        }
+
+    }
+
+    public static void BindMouseGradientAngle(this FrameworkElement sender, RotateTransform? transform, Func<bool>? condition)
+    {
+        if (transform == null)
             return;
-        
+
         double currentGradientAngle = 0;
         sender.MouseMove += (s, e) =>
         {
+            if (condition != null && !condition.Invoke())
+            {
+                transform.Angle = 0;
+                return;
+            }
+
             var currentMousePos = WinAPICaller.GetCursorPosition();
             var translatedMousePos = sender.PointFromScreen(new Point(currentMousePos.X, currentMousePos.Y));
             double targetAngle = Math.Atan2(translatedMousePos.Y - (sender.ActualHeight * 0.5), translatedMousePos.X - (sender.ActualWidth * 0.5)) * (180 / Math.PI);
@@ -106,18 +165,31 @@ public static class UIElementExtensions
         return element;
     }
 
-    public static AToggle AddToggle(this IAddChild panel, string title, Action<AToggle>? cfg = null)
+
+    public static AToggle AddToggle(this IAddChild panel, string title, bool bindToSettings = true, Action<AToggle>? cfg = null)
     {
+        var value = bindToSettings && Dictionary.toggleState.TryGetValue(title, out var val) ? val : false;
         return panel.Add<AToggle>(toggle =>
         {
             toggle.Text = title;
+            toggle.Checked = value;
+            if (bindToSettings)
+            {
+                toggle.Changed += (sender, e) =>
+                {
+                    if (Dictionary.toggleState.ContainsKey(title))
+                        Dictionary.toggleState[title] = e.Value;
+                    (Application.Current.MainWindow as MainWindow)?.Toggle_Action(title); // TODO: remove this whole bullshit
+                };
+            }
+
             cfg?.Invoke(toggle);
         });
     }
 
     public static APButton AddButton(this IAddChild panel, string title, Action<APButton>? cfg = null)
     {
-        return panel.Add(new APButton(title),button =>
+        return panel.Add(new APButton(title), button =>
         {
             cfg?.Invoke(button);
         });
@@ -131,7 +203,7 @@ public static class UIElementExtensions
     }
     internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, string keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
     {
-        var keyChanger = panel.Add(new AKeyChanger(title, keybind),keyChanger =>
+        var keyChanger = panel.Add(new AKeyChanger(title, keybind), keyChanger =>
         {
             cfg?.Invoke(keyChanger);
         });
@@ -181,7 +253,7 @@ public static class UIElementExtensions
 
     public static ASlider AddSlider(this IAddChild panel, string title, string label, double frequency, double buttonsteps, double min, double max, bool forAntiRecoil = false)
     {
-        return panel.Add<ASlider>(new ASlider(title, label, frequency) ,slider =>
+        return panel.Add<ASlider>(new ASlider(title, label, frequency), slider =>
         {
             slider.Slider.Minimum = min;
             slider.Slider.Maximum = max;
@@ -228,7 +300,7 @@ public static class UIElementExtensions
     public static AFileLocator AddFileLocator(this IAddChild panel, string title, string filter = "All files (*.*)|*.*", string dlExtension = "", Action<AFileLocator>? cfg = null)
     {
         string path = title; // TODO: DIe sind doch alle dumm
-        return panel.Add(new AFileLocator(title, path, filter, dlExtension) ,fileLocator =>
+        return panel.Add(new AFileLocator(title, path, filter, dlExtension), fileLocator =>
         {
             cfg?.Invoke(fileLocator);
         });
@@ -236,7 +308,7 @@ public static class UIElementExtensions
 
     public static ATitle AddTitle(this IAddChild panel, string title, bool canMinimize = false, Action<ATitle>? cfg = null)
     {
-        return panel.Add<ATitle>(new ATitle(title, canMinimize) ,atitle =>
+        return panel.Add<ATitle>(new ATitle(title, canMinimize), atitle =>
         {
             cfg?.Invoke(atitle);
         });

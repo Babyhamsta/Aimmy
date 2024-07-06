@@ -29,7 +29,7 @@
                         Content="&#xE921;"
                         HorizontalAlignment="Right"
                         BorderThickness="0"
-                        EffectBrush="#FF722ED1"
+                        EffectBrush="{StaticResource ButtonBackground}"
                         Foreground="#ffffff"
                         BorderBrush="#00D9D9D9"
                         Background="Transparent"

@@ -5,6 +5,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/TotallyNotAimmyV2;component/Theme.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/AntWpf;component/Styles/Theme.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/AntWpf;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />

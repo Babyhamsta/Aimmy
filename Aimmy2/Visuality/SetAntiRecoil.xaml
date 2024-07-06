@@ -21,16 +21,8 @@
         Height="1080">
     <Grid>
         <Border VerticalAlignment="Top"
+                Background="{StaticResource Background}"
                 Height="200">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1"
-                                     StartPoint="0.5,0">
-                    <GradientStop Color="#00000000"
-                                  Offset="1" />
-                    <GradientStop Color="#FF120338"
-                                  Offset="0" />
-                </LinearGradientBrush>
-            </Border.Background>
             <Grid>
                 <Label Content="Aimmy"
                        Foreground="#DDFFFFFF"
@@ -54,34 +46,14 @@
         <Border x:Name="BulletBorder"
                 VerticalAlignment="Bottom"
                 HorizontalAlignment="Center"
+                Background="{StaticResource Background}"
                 Width="270"
                 Height="140"
                 CornerRadius="5,5,5,5"
                 BorderBrush="Black"
                 BorderThickness="1,1,1,1"
                 Margin="0,0,0,100">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1"
-                                     StartPoint="0,0">
-                    <LinearGradientBrush.RelativeTransform>
-                        <TransformGroup>
-                            <ScaleTransform CenterY="0.5"
-                                            CenterX="0.5" />
-                            <SkewTransform CenterX="0.5"
-                                           CenterY="0.5" />
-                            <RotateTransform x:Name="RotaryGradient"
-                                             Angle="0"
-                                             CenterX="0.5"
-                                             CenterY="0.5" />
-                            <TranslateTransform />
-                        </TransformGroup>
-                    </LinearGradientBrush.RelativeTransform>
-                    <GradientStop Color="Black"
-                                  Offset="0.27" />
-                    <GradientStop Color="#FF120338"
-                                  Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
+            
             <Grid>
                 <Label Content="How many bullets have you fired?"
                        HorizontalAlignment="Center"
@@ -113,9 +85,9 @@
                          VerticalContentAlignment="Center"
                          TextChanged="BulletNumberTextbox_TextChanged" />
                 <Ant:Button x:Name="ConfirmB"
-                            BorderBrush="#FFD3ADF7"
-                            Background="#FF722ED1"
-                            EffectBrush="#FFD3ADF7"
+                            BorderBrush="{StaticResource ButtonBorder}"
+                            Background="{StaticResource ButtonBackground}"
+                            EffectBrush="{StaticResource ButtonEffect}"
                             Content="Confirm"
                             HorizontalAlignment="Left"
                             Height="24"
@@ -129,9 +101,9 @@
                             Click="ConfirmB_Click"
                             Margin="64,0,0,20" />
                 <Ant:Button x:Name="TryAgainB"
-                            BorderBrush="#FFD3ADF7"
-                            Background="#7F722ED1"
-                            EffectBrush="#FFD3ADF7"
+                            BorderBrush="{StaticResource ButtonBorder}"
+                            Background="{StaticResource ButtonBackground}"
+                            EffectBrush="{StaticResource ButtonEffect}"
                             Content="Try Again"
                             HorizontalAlignment="Left"
                             Height="24"

@@ -21,29 +21,9 @@
                 CornerRadius="5,5,5,5"
                 BorderBrush="Black"
                 BorderThickness="1,1,1,1"
+                Background="{StaticResource Background}"
                 MouseLeftButtonDown="Border_MouseLeftButtonDown">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1"
-                                     StartPoint="0,0">
-                    <LinearGradientBrush.RelativeTransform>
-                        <TransformGroup>
-                            <ScaleTransform CenterY="0.5"
-                                            CenterX="0.5" />
-                            <SkewTransform CenterX="0.5"
-                                           CenterY="0.5" />
-                            <RotateTransform x:Name="RotaryGradient"
-                                             Angle="0"
-                                             CenterX="0.5"
-                                             CenterY="0.5" />
-                            <TranslateTransform />
-                        </TransformGroup>
-                    </LinearGradientBrush.RelativeTransform>
-                    <GradientStop Color="Black"
-                                  Offset="0.27" />
-                    <GradientStop Color="#FF120338"
-                                  Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
+            
             <Grid>
                 <Grid x:Name="Topbar"
                       VerticalAlignment="Top"
@@ -172,7 +152,7 @@
                             CornerRadius="8,8,8,8"
                             Margin="0,80,0,0"
                             BorderThickness="2"
-                            BorderBrush="#FF722ED1">
+                            BorderBrush="{StaticResource ButtonBackground}">
                         <Border x:Name="SwitchMoving"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
@@ -201,9 +181,9 @@
                             BorderThickness="0"
                             Click="DownloadableModelChecker_Click" />
                     <Ant:Button x:Name="SaveButton"
-                                BorderBrush="#FFD3ADF7"
-                                Background="#FF722ED1"
-                                EffectBrush="#FFD3ADF7"
+                                BorderBrush="{StaticResource ButtonBorder}"
+                                Background="{StaticResource ButtonBackground}"
+                                EffectBrush="{StaticResource ButtonEffect}"
                                 Content="Save"
                                 HorizontalAlignment="Right"
                                 Height="24"

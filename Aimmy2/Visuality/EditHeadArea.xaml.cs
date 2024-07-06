@@ -94,7 +94,7 @@ namespace Visuality
         {
             InitializeComponent();
             DataContext = this;
-            MainBorder.BindMouseGradientAngle(RotaryGradient, ShouldBindGradientMouse);
+            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
 
         private void UpdateGreenRectangle()

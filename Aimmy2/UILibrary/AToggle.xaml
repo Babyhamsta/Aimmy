@@ -33,7 +33,7 @@
                         CornerRadius="8,8,8,8"
                         Margin="0,0,10,0"
                         BorderThickness="2"
-                        BorderBrush="#FF722ED1">
+                        BorderBrush="{StaticResource ButtonBackground}">
                     <Border x:Name="SwitchMoving"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
@@ -45,7 +45,7 @@
                             Margin="0,0,16,0" />
                 </Border>
 
-                <Button x:Name="Reader"
+                <Button Click="ButtonBase_OnClick"
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Padding="0,0,0,0"
