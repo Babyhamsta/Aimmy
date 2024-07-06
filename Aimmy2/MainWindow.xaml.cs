@@ -152,7 +152,7 @@ namespace Aimmy2
         private void LoadGlobalUI()
         {
             uiManager.G_Active = AddToggle(TopCenterGrid, "Global Active");
-            uiManager.G_Active_Keybind = AddKeyChanger(TopCenterGrid, "Active ToogleKey", Dictionary.bindingSettings["Active ToogleKey"]);
+            uiManager.G_Active_Keybind = TopCenterGrid.AddKeyChanger("Active ToogleKey", () => Dictionary.bindingSettings["Active ToogleKey"], bindingManager);
             
             uiManager.G_Active.Deactivated += (s, e) => SetActive(false);
             uiManager.G_Active.Activated += (s, e) => SetActive(true);
@@ -402,47 +402,6 @@ namespace Aimmy2
             }
         }
 
-        private AKeyChanger AddKeyChanger(StackPanel panel, string title, string keybind, Action<AKeyChanger>? cfg = null)
-        {
-            var keyChanger = new AKeyChanger(title, keybind);
-            Application.Current.Dispatcher.Invoke(() => panel.Children.Add(keyChanger));
-
-            keyChanger.KeyDeleted += (sender, e) =>
-            {
-                Dictionary.bindingSettings[title] = "";
-                keyChanger.SetContent("");
-            };
-
-            keyChanger.Reader.Click += (sender, e) =>
-            {
-                keyChanger.InUpdateMode = true;
-                keyChanger.SetContent("...");
-                bindingManager.StartListeningForBinding(title);
-
-                // Event handler for setting the binding
-                Action<string, string>? bindingSetHandler = null;
-                bindingSetHandler = (bindingId, key) =>
-                {
-                    if (bindingId == title)
-                    {
-                        keyChanger.SetContent(key);
-                        Dictionary.bindingSettings[bindingId] = key;
-                        bindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
-                        Task.Delay(300).ContinueWith(_ => keyChanger.InUpdateMode = false);
-                    }
-                };
-
-                bindingManager.OnBindingSet += bindingSetHandler;
-            };
-
-            if (cfg != null)
-            {
-                keyChanger.InitWith(cfg);
-            }
-
-            return keyChanger;
-        }
-
         // All Keybind Listening is moved to a seperate function because having it stored in "AddKeyChanger" was making these functions run several times.
         // Nori
         private void ListenForKeybinds()
@@ -641,18 +600,7 @@ namespace Aimmy2
             return button;
         }
 
-        private T Add<T>(IAddChild panel, Action<T>? cfg = null) where T : UIElement, new()
-        {
-            var element = new T();
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                panel.AddChild(element);
-            });
-            if (cfg != null)
-                element.InitWith(cfg);
-            return element;
-        }
-
+      
         private void AddCredit(StackPanel panel, string name, string role) => Application.Current.Dispatcher.Invoke(() => panel.Children.Add(new ACredit(name, role)));
 
         private void AddSeparator(StackPanel panel)
@@ -684,8 +632,8 @@ namespace Aimmy2
                     new NoticeBar("Please load a model first", 5000).Show();
                 }
             };
-            uiManager.C_Keybind = AddKeyChanger(AimAssist, "Aim Keybind", Dictionary.bindingSettings["Aim Keybind"]);
-            uiManager.C_Keybind = AddKeyChanger(AimAssist, "Second Aim Keybind", Dictionary.bindingSettings["Second Aim Keybind"]);
+            uiManager.C_Keybind = AimAssist.AddKeyChanger("Aim Keybind", () => Dictionary.bindingSettings["Aim Keybind"], bindingManager);
+            uiManager.C_Keybind = AimAssist.AddKeyChanger("Second Aim Keybind", () => Dictionary.bindingSettings["Second Aim Keybind"], bindingManager);
             uiManager.T_ConstantAITracking = AddToggle(AimAssist, "Constant AI Tracking");
             uiManager.T_ConstantAITracking.Reader.Click += (s, e) =>
             {
@@ -702,9 +650,9 @@ namespace Aimmy2
             };
             uiManager.T_Predictions = AddToggle(AimAssist, "Predictions");
             uiManager.T_EMASmoothing = AddToggle(AimAssist, "EMA Smoothening");
-            uiManager.C_EmergencyKeybind = AddKeyChanger(AimAssist, "Emergency Stop Keybind", Dictionary.bindingSettings["Emergency Stop Keybind"]);
+            uiManager.C_EmergencyKeybind = AimAssist.AddKeyChanger("Emergency Stop Keybind", () => Dictionary.bindingSettings["Emergency Stop Keybind"], bindingManager);
             uiManager.T_EnableModelSwitchKeybind = AddToggle(AimAssist, "Enable Model Switch Keybind");
-            uiManager.C_ModelSwitchKeybind = AddKeyChanger(AimAssist, "Model Switch Keybind", Dictionary.bindingSettings["Model Switch Keybind"]);
+            uiManager.C_ModelSwitchKeybind = AimAssist.AddKeyChanger("Model Switch Keybind", () => Dictionary.bindingSettings["Model Switch Keybind"], bindingManager);
             AddSeparator(AimAssist);
             AimAssist.Visibility = GetVisibilityFor("AimAssist");
             #endregion Aim Assist
@@ -768,7 +716,7 @@ namespace Aimmy2
                 //t.Deactivated += (sender, args) => Array.ForEach(TriggerBot.FindChildren<UIElement>(el => el != sender && !ignored.Contains(el)), el => el.IsEnabled = false);
             });
 
-            uiManager.T_TriggerSendKey = AddKeyChanger(TriggerBot, "Trigger Additional Send", Dictionary.bindingSettings["Trigger Additional Send"]);
+            uiManager.T_TriggerSendKey = TriggerBot.AddKeyChanger("Trigger Additional Send", () => Dictionary.bindingSettings["Trigger Additional Send"], bindingManager);
             uiManager.T_TriggerCheck = AddDropdown(TriggerBot, "Trigger Check");
             AddDropdownItem(uiManager.T_TriggerCheck, "None");
             AddDropdownItem(uiManager.T_TriggerCheck, "Intersecting Center");
@@ -786,7 +734,7 @@ namespace Aimmy2
                 uiManager.T_HeadAreaBtn.Visibility = argsAddedItem?.Content.ToString() == "Head Intersecting Center" ? Visibility.Visible : Visibility.Collapsed;
             };
 
-            uiManager.T_TriggerKey = AddKeyChanger(TriggerBot, "Trigger Key", Dictionary.bindingSettings["Trigger Key"]);
+            uiManager.T_TriggerKey = TriggerBot.AddKeyChanger("Trigger Key", () => Dictionary.bindingSettings["Trigger Key"], bindingManager);
             uiManager.S_AutoTriggerDelay = AddSlider(TriggerBot, "Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 1);
             AddSeparator(TriggerBot);
             TriggerBot.Visibility = GetVisibilityFor("TriggerBot");
@@ -796,8 +744,8 @@ namespace Aimmy2
 
             uiManager.AT_AntiRecoil = AddTitle(AntiRecoil, "Anti Recoil", true);
             uiManager.T_AntiRecoil = AddToggle(AntiRecoil, "Anti Recoil");
-            uiManager.C_AntiRecoilKeybind = AddKeyChanger(AntiRecoil, "Anti Recoil Keybind", "Left");
-            uiManager.C_ToggleAntiRecoilKeybind = AddKeyChanger(AntiRecoil, "Disable Anti Recoil Keybind", "Oem6");
+            uiManager.C_AntiRecoilKeybind = AntiRecoil.AddKeyChanger("Anti Recoil Keybind", "Left", bindingManager);
+            uiManager.C_ToggleAntiRecoilKeybind = AntiRecoil.AddKeyChanger("Disable Anti Recoil Keybind", "Oem6", bindingManager);
             uiManager.S_HoldTime = AddSlider(AntiRecoil, "Hold Time", "Milliseconds", 1, 1, 1, 1000, true);
             uiManager.B_RecordFireRate = AddButton(AntiRecoil, "Record Fire Rate");
             uiManager.B_RecordFireRate.Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
@@ -825,9 +773,9 @@ namespace Aimmy2
                     new NoticeBar($"[Anti Recoil] Config has been saved to \"{saveFileDialog.FileName}\"", 2000).Show();
                 }
             };
-            uiManager.C_Gun1Key = AddKeyChanger(ARConfig, "Gun 1 Key", "D1");
+            uiManager.C_Gun1Key = ARConfig.AddKeyChanger("Gun 1 Key", "D1", bindingManager);
             uiManager.AFL_Gun1Config = AddFileLocator(ARConfig, "Gun 1 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg", "\\bin\\anti_recoil_configs");
-            uiManager.C_Gun2Key = AddKeyChanger(ARConfig, "Gun 2 Key", "D2");
+            uiManager.C_Gun2Key = ARConfig.AddKeyChanger("Gun 2 Key", "D2", bindingManager);
             uiManager.AFL_Gun2Config = AddFileLocator(ARConfig, "Gun 2 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg", "\\bin\\anti_recoil_configs");
 
             uiManager.B_LoadGun1Config = AddButton(ARConfig, "Load Gun 1 Config");
@@ -843,7 +791,7 @@ namespace Aimmy2
             uiManager.AT_FOV = AddTitle(FOVConfig, "FOV Config", true);
             uiManager.T_FOV = AddToggle(FOVConfig, "FOV");
             uiManager.T_DynamicFOV = AddToggle(FOVConfig, "Dynamic FOV");
-            uiManager.C_DynamicFOV = AddKeyChanger(FOVConfig, "Dynamic FOV Keybind", Dictionary.bindingSettings["Dynamic FOV Keybind"]);
+            uiManager.C_DynamicFOV = FOVConfig.AddKeyChanger("Dynamic FOV Keybind", () => Dictionary.bindingSettings["Dynamic FOV Keybind"], bindingManager);
             uiManager.CC_FOVColor = AddColorChanger(FOVConfig, "FOV Color");
             uiManager.CC_FOVColor.ColorChangingBorder.Opacity = 0.2;
             uiManager.CC_FOVColor.ColorChangingBorder.Background = (Brush)new BrushConverter().ConvertFromString(Dictionary.colorState["FOV Color"]);
@@ -934,7 +882,7 @@ namespace Aimmy2
         {
             AddTitle(GamepadSettingsConfig, "Gamepad Settings");
             AddCredit(GamepadSettingsConfig, "Target Process", "In order to use the Gamepad to send actions or AIM you need to select the process where the commands should be send to");
-            Add<AProcessPicker>(GamepadSettingsConfig, picker =>
+            GamepadSettingsConfig.Add<AProcessPicker>(picker =>
             {
                 picker.SelectedProcessModel = new ProcessModel {Title = Dictionary.dropdownState["Gamepad Process"] };
                 picker.PropertyChanged += (sender, e) =>
