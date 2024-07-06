@@ -1,5 +1,8 @@
-﻿using System.ComponentModel;
+﻿using Class;
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Aimmy2.Extensions;
@@ -57,5 +60,30 @@ public static class UIElementExtensions
         }
 
         return children.ToArray();
+    }
+
+
+    public static void BindMouseGradientAngle(this FrameworkElement sender, RotateTransform transform, bool condition = true)
+    {
+        if (!condition)
+            return;
+        
+        double currentGradientAngle = 0;
+        sender.MouseMove += (s, e) =>
+        {
+            var currentMousePos = WinAPICaller.GetCursorPosition();
+            var translatedMousePos = sender.PointFromScreen(new Point(currentMousePos.X, currentMousePos.Y));
+            double targetAngle = Math.Atan2(translatedMousePos.Y - (sender.ActualHeight * 0.5), translatedMousePos.X - (sender.ActualWidth * 0.5)) * (180 / Math.PI);
+
+            double angleDifference = (targetAngle - currentGradientAngle + 360) % 360;
+            if (angleDifference > 180)
+            {
+                angleDifference -= 360;
+            }
+
+            angleDifference = Math.Max(Math.Min(angleDifference, 1), -1); // Clamp the angle difference between -1 and 1 (smoothing)
+            currentGradientAngle = (currentGradientAngle + angleDifference + 360) % 360;
+            transform.Angle = currentGradientAngle;
+        };
     }
 }

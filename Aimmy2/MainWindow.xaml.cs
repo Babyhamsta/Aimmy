@@ -20,10 +20,7 @@ using System.Windows.Media;
 using Aimmy2.InputLogic;
 using UILibrary;
 using Visuality;
-using Aimmy2.AILogic;
 using Aimmy2.Extensions;
-using Newtonsoft.Json;
-using System.Collections.Generic;
 using Aimmy2.Types;
 using System.Windows.Markup;
 using Aimmy2.Models;
@@ -131,28 +128,23 @@ namespace Aimmy2
 
             DataContext = this;
 
-            var selectedModel = "default.onnx";
-            string modelPath = Path.Combine("bin/models", selectedModel);
-            if (File.Exists(modelPath))
+            string modelPath = Path.Combine("bin/models", ApplicationConstants.DefaultModel);
+            if (File.Exists(modelPath) && !FileManager.CurrentlyLoadingModel && FileManager.AIManager?.IsModelLoaded != true)
             {
-                _ = fileManager.LoadModel(selectedModel, modelPath);//.ContinueWith(_ => Dispatcher.BeginInvoke(new Action(() => SetActive(false))));
+                _ = fileManager.LoadModel(ApplicationConstants.DefaultModel, modelPath);
             }
 
-            if (!string.IsNullOrEmpty(ShowOnly))
+            if (!string.IsNullOrEmpty(ApplicationConstants.ShowOnly))
             {
                 Sidebar.Visibility = Visibility.Collapsed;
-                _ =SwitchScrollPanels(FindName(ShowOnly) as ScrollViewer);
-                CurrentMenu = ShowOnly;
+                _ =SwitchScrollPanels(FindName(ApplicationConstants.ShowOnly) as ScrollViewer);
+                CurrentMenu = ApplicationConstants.ShowOnly;
             }
 
             //Console.WriteLine(JsonConvert.SerializeObject(Dictionary.toggleState));
             Console.WriteLine("Init UI Complete");
         }
 
-        private const string ShowOnly = "";
-        private const bool EasyMode = false;
-
-        private string[] _disabledFeatures => EasyMode ? ["AimAssist", "AntiRecoil", "ASP2", "AimConfig", "ARConfig"] : [];
 
         public bool IsModelLoaded => FileManager.AIManager?.IsModelLoaded ?? false;
         public bool IsNotModelLoaded => !IsModelLoaded;
@@ -161,7 +153,6 @@ namespace Aimmy2
         {
             uiManager.G_Active = AddToggle(TopCenterGrid, "Global Active");
             uiManager.G_Active_Keybind = AddKeyChanger(TopCenterGrid, "Active ToogleKey", Dictionary.bindingSettings["Active ToogleKey"]);
-            //uiManager.C_Keybind = AddKeyChanger(AimAssist, "Aim Keybind", Dictionary.bindingSettings["Aim Keybind"]);
             
             uiManager.G_Active.Deactivated += (s, e) => SetActive(false);
             uiManager.G_Active.Activated += (s, e) => SetActive(true);
@@ -175,12 +166,12 @@ namespace Aimmy2
                 FileManager.AIManager.HeadRelativeRect = RelativeRect.ParseOrDefault(Dictionary.dropdownState["Head Area"]);
             }
 
-            LastGradientStop.Color = active ? Colors.Green : Color.FromArgb(255, 18, 3, 56); 
+            LastGradientStop.Color = active ? ApplicationConstants.ActiveColor : ApplicationConstants.MainColor; 
         }
 
         public Visibility GetVisibilityFor(string feature)
         {
-            return _disabledFeatures.Contains(feature) ? Visibility.Collapsed : Visibility.Visible;
+            return ApplicationConstants.DisabledFeatures.Contains(feature) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private async void LoadStoreMenuAsync() => await LoadStoreMenu();
