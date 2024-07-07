@@ -1,0 +1,75 @@
+﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Aimmy2.UILibrary"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             x:Class="Aimmy2.UILibrary.ARepoListing"
+             mc:Ignorable="d"
+             d:DesignHeight="50"
+             d:DesignWidth="532"
+             Height="50">
+    <Grid>
+        <Border Background="#3F3C3C3C"
+                BorderBrush="#3FFFFFFF"
+                BorderThickness="1"
+                CornerRadius="5"
+                Margin="0,0,0,10">
+            <Grid>
+                <Label x:Name="GithubLogo"
+                       Foreground="White"
+                       Content="github"
+                       FontFamily="{DynamicResource Font Awesome 6 Brands}"
+                       VerticalContentAlignment="Center"
+                       Padding="10,0,0,0"
+                       FontSize="13"
+                       Margin="0,0,60,0"
+                       Width="23"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       Height="38" />
+                <Label x:Name="Title"
+                       Foreground="White"
+                       Content="Babyhamsta/Aimmy"
+                       FontFamily="{StaticResource Atkinson Hyperlegible}"
+                       VerticalContentAlignment="Center"
+                       Padding="5,0,0,0"
+                       FontSize="13"
+                       Margin="23,0,90,0" />
+                <Grid>
+                    <Border HorizontalAlignment="Left"
+                         VerticalAlignment="Center"
+                         Width="60"
+                         Height="22"
+                         Margin="430,0,0,0"
+                         CornerRadius="5"
+                         Background="#d48806">
+                    <Label x:Name="Label"
+                                Content="Models"
+                                FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                Foreground="#DDFFFFFF"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Padding="0,0,0,0"
+                                FontSize="10" />
+                        </Border>
+                    <Button x:Name="RemovalButton"
+                             Content="&#xE74D;"
+                             HorizontalAlignment="Right"
+                             Height="20"
+                             Margin="0,0,10,0"
+                             VerticalAlignment="Center"
+                             Width="20"
+                             Padding="0,0,0,0"
+                             FontFamily="Segoe MDL2 Assets"
+                             BorderThickness="0,0,0,0"
+                             BorderBrush="{x:Null}"
+                             Background="#FF722ED1"
+                             FontSize="10"
+                             materialDesign:ButtonAssist.CornerRadius="5"
+                             Foreground="White" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

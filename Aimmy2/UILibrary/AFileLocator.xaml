@@ -1,0 +1,67 @@
+﻿<UserControl x:Class="UILibrary.AFileLocator"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
+             xmlns:local="clr-namespace:UILibrary"
+             mc:Ignorable="d"
+             d:DesignWidth="282.5"
+             Height="80">
+
+    <Grid>
+        <Border Height="80"
+                Background="#3F3C3C3C"
+                BorderThickness="1,0,1,0"
+                BorderBrush="#3FFFFFFF"
+                CornerRadius="0">
+
+            <Grid>
+                <Label x:Name="DropdownTitle"
+                       Padding="10,10,10,10"
+                       FontFamily="{StaticResource Atkinson Hyperlegible}"
+                       Content="Prediction Method"
+                       Foreground="#DDFFFFFF"
+                       VerticalContentAlignment="Center"
+                       FontSize="13"
+                       VerticalAlignment="Top"
+                       Height="40" />
+
+                <TextBox x:Name="FileLocationTextbox"
+                         BorderBrush="#3FFFFFFF"
+                         Foreground="White"
+                         BorderThickness="1"
+                         TextWrapping="Wrap"
+                         Text=""
+                         Tag="No File Located"
+                         VerticalAlignment="Top"
+                         FontFamily="{StaticResource Atkinson Hyperlegible}"
+                         Padding="5,0,5,0"
+                         Style="{DynamicResource placeHolder}"
+                         Background="{x:Null}"
+                         Margin="10,40,45,0"
+                         Height="30"
+                         IsReadOnly="True"
+                         VerticalContentAlignment="Center" />
+
+                <Ant:Button x:Name="OpenFileB"
+                            BorderBrush="#FFD3ADF7"
+                            Background="#FF722ED1"
+                            EffectBrush="#FFD3ADF7"
+                            Content="&#xE838;"
+                            HorizontalAlignment="Right"
+                            Height="30"
+                            Width="30"
+                            Margin="0,0,10,10"
+                            VerticalAlignment="Bottom"
+                            Padding="0,0,0,0"
+                            FontFamily="Segoe MDL2 Assets"
+                            BorderThickness="0,0,0,0"
+                            FontSize="13"
+                            Foreground="White"
+                            Click="OpenFileB_Click" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
