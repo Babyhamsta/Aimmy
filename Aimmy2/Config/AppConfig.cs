@@ -23,6 +23,8 @@ public class AppConfig : BaseSettings
     public DetectedPlayerWindow? DetectedPlayerOverlay;
     public FOV? FOVWindow;
 
+    public string ThemeName { get; set; } = ThemePalette.DefaultPalette.Name;
+    public string ActiveThemeName { get; set; } = ThemePalette.GreenPalette.Name;
     public BindingSettings BindingSettings { get; set; } = new BindingSettings();
     public SliderSettings SliderSettings { get; set; } = new SliderSettings();
     public ToggleState ToggleState { get; set; } = new ToggleState();

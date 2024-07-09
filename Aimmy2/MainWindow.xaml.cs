@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -37,7 +38,6 @@ public partial class MainWindow
 {
     #region Main Variables
 
-    private readonly ThemePalette _theme = ApplicationConstants.Theme;
     private InputBindingManager? bindingManager;
     private FileManager fileManager;
     private static FOV FOVWindow;
@@ -56,7 +56,7 @@ public partial class MainWindow
 
     #region Loading Window
 
-    public AppConfig Config { get; private set; }
+    public AppConfig? Config { get; }
 
     public MainWindow()
     {
@@ -89,6 +89,9 @@ public partial class MainWindow
 
     private void CreateUI()
     {
+        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.DefaultPalette;
+        ApplicationConstants.Theme = theme;
+
         CurrentScrollViewer = FindName("AimMenu") as ScrollViewer;
         if (CurrentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
 
@@ -175,10 +178,11 @@ public partial class MainWindow
     {
         AppConfig.Current.ToggleState.GlobalActive = active;
         if (FileManager.AIManager != null)
-            FileManager.AIManager.HeadRelativeRect =
-                RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea);
+            FileManager.AIManager.HeadRelativeRect = RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea);
 
-        ApplicationConstants.Theme = active ? ThemePalette.GreenPalette : _theme;
+        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.DefaultPalette;
+        var themeActive = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
+        ApplicationConstants.Theme = active ? themeActive : theme;
     }
 
     public Visibility GetVisibilityFor(string feature)
@@ -590,6 +594,19 @@ public partial class MainWindow
     {
         SettingsConfig.RemoveAll();
         SettingsConfig.AddTitle("Settings Menu", true);
+
+        SettingsConfig.AddDropdown("Theme", ApplicationConstants.Theme, ThemePalette.All, palette =>
+        {
+            ApplicationConstants.Theme = palette;
+            if(Config != null)
+                Config.ThemeName = palette.Name;
+        });
+        var themeOnActive = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
+        SettingsConfig.AddDropdown("Theme when active", themeOnActive, ThemePalette.All, palette =>
+        {
+            if (Config != null)
+                Config.ActiveThemeName = palette.Name;
+        });
 
         SettingsConfig.AddToggle("Collect Data While Playing").BindTo(() => AppConfig.Current.ToggleState.CollectDataWhilePlaying);
         SettingsConfig.AddToggle("Auto Label Data").BindTo(() => AppConfig.Current.ToggleState.AutoLabelData);

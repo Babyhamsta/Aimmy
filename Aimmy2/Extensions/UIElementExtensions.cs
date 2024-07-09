@@ -258,6 +258,28 @@ public static class UIElementExtensions
         });
     }
 
+    public static ADropdown AddDropdown<T>(this IAddChild panel, string title, T value, IEnumerable<T> items, Action<T> onSelect, Action<ADropdown>? cfg = null)
+    {
+        var res = panel.Add<ADropdown>(new ADropdown(title), dropdown =>
+        {
+            cfg?.Invoke(dropdown);
+        });
+        foreach (var v in items)
+        {
+            res.AddDropdownItem(v.ToString(), item =>
+            {
+                if (v.Equals(value))
+                {
+                    res.DropdownBox.SelectedItem = item;
+                }
+
+                item.Selected += (s, e) => { onSelect(v); };
+            });
+        }
+
+        return res;
+    }
+
     public static ADropdown AddDropdown<TEnum>(this IAddChild panel, string title, TEnum value, Action<TEnum> onSelect, Action<ADropdown>? cfg = null) where TEnum : struct, Enum
     {
         var res = panel.Add<ADropdown>(new ADropdown(title), dropdown =>
@@ -269,7 +291,6 @@ public static class UIElementExtensions
             if (v.Equals(value))
             {
                 res.DropdownBox.SelectedItem = item;
-                res.DropdownTitle.Content = v.ToDescriptionString();
             }
             item.Selected += (s, e) =>
             {

@@ -14,6 +14,11 @@ public class ThemePalette
     public Color AccentColor;
     public Color EffectColor;
 
+    public override string ToString()
+    {
+        return Name;
+    }
+
     public static ThemePalette DefaultPalette = new ThemePalette("Default")
     {
         MainColor = Color.FromArgb(255, 18, 3, 56),
@@ -41,4 +46,7 @@ public class ThemePalette
         AccentColor = Color.FromArgb(255, 53, 105, 180),
         EffectColor = Color.FromArgb(255, 173, 211, 247)
     };
+
+    public static ThemePalette[] All = { DefaultPalette, GreenPalette, RedPalette, BluePalette };
+
 }
