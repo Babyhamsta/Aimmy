@@ -1,4 +1,6 @@
-﻿namespace Aimmy2.Config;
+﻿using InputLogic;
+
+namespace Aimmy2.Config;
 
 public class SliderSettings: BaseSettings
 {
@@ -27,7 +29,7 @@ public class SliderSettings: BaseSettings
         set => SetField(ref _suggestedModel, value);
     }
 
-    public double ActualFovSize => AppConfig.Current.ToggleState.DynamicFOV ? _dynamicFovSize : _fovSize;
+    public double ActualFovSize => AppConfig.Current.ToggleState.DynamicFOV && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind)) ? _dynamicFovSize : _fovSize;
 
     public double FOVSize
     {
@@ -133,7 +135,7 @@ public class SliderSettings: BaseSettings
         set => SetField(ref _fovOpacity, value);
     }
 
-    protected override void OnPropertyChanged(string? propertyName = null)
+    internal override void OnPropertyChanged(string? propertyName = null)
     {
         if (propertyName is nameof(FOVSize) or nameof(DynamicFOVSize))
             OnPropertyChanged(nameof(ActualFovSize));

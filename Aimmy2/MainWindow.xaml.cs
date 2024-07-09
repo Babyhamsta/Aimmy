@@ -43,7 +43,6 @@ public partial class MainWindow
     private static FOV FOVWindow;
     private static DetectedPlayerWindow DPWindow;
     private static GithubManager githubManager = new();
-    public UI uiManager = new();
     public AntiRecoilManager arManager = new();
 
 
@@ -52,8 +51,6 @@ public partial class MainWindow
 
     private readonly HashSet<string> AvailableModels = new();
     private readonly HashSet<string> AvailableConfigs = new();
-
-    private static double ActualFOV = 640;
 
     #endregion Main Variables
 
@@ -142,9 +139,6 @@ public partial class MainWindow
         LoadStoreMenuAsync();
         LoadGlobalUI();
 
-
-        ActualFOV = AppConfig.Current.SliderSettings.FOVSize;
-        
         bindingManager.OnBindingPressed += BindingOnKeyPressed;
         bindingManager.OnBindingReleased += BindingOnKeyReleased;
     }
@@ -298,15 +292,9 @@ public partial class MainWindow
         switch (bindingId)
         {
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
-                if (AppConfig.Current.ToggleState.DynamicFOV)
-                {
-                    AppConfig.Current.SliderSettings.FOVSize = ActualFOV;
-                    Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
-                        FOVWindow.Circle.ActualWidth, ActualFOV);
-                    Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
-                        FOVWindow.Circle.ActualHeight, ActualFOV);
-                }
-
+                AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
+                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualWidth, AppConfig.Current.SliderSettings.FOVSize);
+                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualHeight, AppConfig.Current.SliderSettings.FOVSize);
                 break;
             // Anti Recoil
             case nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind):
@@ -346,15 +334,9 @@ public partial class MainWindow
                 break;
 
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
-                if (AppConfig.Current.ToggleState.DynamicFOV)
-                {
-                    AppConfig.Current.SliderSettings.FOVSize = AppConfig.Current.SliderSettings.DynamicFOVSize;
-                    Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
-                        FOVWindow.Circle.ActualWidth, AppConfig.Current.SliderSettings.DynamicFOVSize);
-                    Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
-                        FOVWindow.Circle.ActualHeight, AppConfig.Current.SliderSettings.DynamicFOVSize);
-                }
-
+                AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
+                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualWidth, AppConfig.Current.SliderSettings.DynamicFOVSize);
+                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualHeight, AppConfig.Current.SliderSettings.DynamicFOVSize);
                 break;
 
 
@@ -553,11 +535,7 @@ public partial class MainWindow
         FOVConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), () => keybind.DynamicFOVKeybind, bindingManager);
         FOVConfig.AddColorChanger("FOV Color").BindTo(() => AppConfig.Current.ColorState.FOVColor);
 
-        uiManager.S_FOVSize = FOVConfig.AddSlider("FOV Size", "Size", 1, 1, 10, 640).BindTo(() => AppConfig.Current.SliderSettings.FOVSize);
-        uiManager.S_FOVSize.Slider.ValueChanged += (s, x) =>
-        {
-            ActualFOV = uiManager.S_FOVSize.Slider.Value;
-        };
+        FOVConfig.AddSlider("FOV Size", "Size", 1, 1, 10, 640).BindTo(() => AppConfig.Current.SliderSettings.FOVSize);
         FOVConfig.AddSlider("Dynamic FOV Size", "Size", 1, 1, 10, 640).BindTo(() => AppConfig.Current.SliderSettings.DynamicFOVSize);
         FOVConfig.AddSlider("FOV Opacity", "FOV Opacity", 0.1, 0.1, 0, 1).BindTo(() => AppConfig.Current.SliderSettings.FOVOpacity);
 
@@ -568,7 +546,7 @@ public partial class MainWindow
 
         #region ESP Config
 
-        uiManager.AT_DetectedPlayer = ESPConfig.AddTitle("ESP Config", true);
+        ESPConfig.AddTitle("ESP Config", true);
         ESPConfig.AddToggle("Show Detected Player").BindTo(() => AppConfig.Current.ToggleState.ShowDetectedPlayer);
         ESPConfig.AddToggle("Show Trigger Head Area").BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea); 
         ESPConfig.AddToggle("Show AI Confidence").BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
@@ -611,11 +589,11 @@ public partial class MainWindow
     private void LoadSettingsMenu()
     {
         SettingsConfig.RemoveAll();
-        uiManager.AT_SettingsMenu = SettingsConfig.AddTitle("Settings Menu", true);
+        SettingsConfig.AddTitle("Settings Menu", true);
 
         SettingsConfig.AddToggle("Collect Data While Playing").BindTo(() => AppConfig.Current.ToggleState.CollectDataWhilePlaying);
         SettingsConfig.AddToggle("Auto Label Data").BindTo(() => AppConfig.Current.ToggleState.AutoLabelData);
-        uiManager.D_MouseMovementMethod = SettingsConfig.AddDropdown("Mouse Movement Method",
+        SettingsConfig.AddDropdown("Mouse Movement Method",
             AppConfig.Current.DropdownState.MouseMovementMethod, async v =>
             {
                 AppConfig.Current.DropdownState.MouseMovementMethod = v;
@@ -623,7 +601,9 @@ public partial class MainWindow
                     || (v == MouseMovementMethod.RazerSynapse && !await RZMouse.Load())
                     || (v == MouseMovementMethod.ddxoft && !await DdxoftMain.Load())
                    )
-                    SelectMouseEvent();
+                {
+                    AppConfig.Current.DropdownState.MouseMovementMethod = MouseMovementMethod.MouseEvent;
+                }
             });
 
         SettingsConfig.AddSlider("AI Minimum Confidence", "% Confidence", 1, 1, 1, 100).BindTo(() => AppConfig.Current.SliderSettings.AIMinimumConfidence).Slider.PreviewMouseLeftButtonUp += (sender, e) =>
@@ -775,17 +755,6 @@ public partial class MainWindow
     }
 
     #endregion Open Folder
-
-    #region Menu Functions
-
-    private async void SelectMouseEvent()
-    {
-        await Task.Delay(500);
-        uiManager.D_MouseMovementMethod!.DropdownBox.SelectedIndex = 0;
-    }
-
-
-    #endregion Menu Functions
 
     #region System Information
 
