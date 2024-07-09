@@ -5,7 +5,10 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media;
 using Aimmy2.Class;
+using Aimmy2.Config;
 using InputLogic;
+using Nextended.Core.Extensions;
+using Nextended.Core.Helper;
 using UILibrary;
 
 namespace Aimmy2.Extensions;
@@ -168,7 +171,7 @@ public static class UIElementExtensions
 
     public static AToggle AddToggle(this IAddChild panel, string title, bool bindToSettings = true, Action<AToggle>? cfg = null)
     {
-        var value = bindToSettings && Dictionary.toggleState.TryGetValue(title, out var val) ? val : false;
+        var value = bindToSettings && bool.TryParse(AppConfig.Current.ToggleState[title].ToString(), out var val) ? val : false;
         return panel.Add<AToggle>(toggle =>
         {
             toggle.Text = title;
@@ -177,9 +180,7 @@ public static class UIElementExtensions
             {
                 toggle.Changed += (sender, e) =>
                 {
-                    if (Dictionary.toggleState.ContainsKey(title))
-                        Dictionary.toggleState[title] = e.Value;
-                    (Application.Current.MainWindow as MainWindow)?.Toggle_Action(title); // TODO: remove this whole bullshit
+                    AppConfig.Current.ToggleState[title] = e.Value;
                 };
             }
 
@@ -215,7 +216,7 @@ public static class UIElementExtensions
 
         keyChanger.KeyDeleted += (sender, e) =>
         {
-            Dictionary.bindingSettings[title] = "";
+            AppConfig.Current.BindingSettings[title] = "";
             keyChanger.SetContent("");
         };
 
@@ -232,7 +233,7 @@ public static class UIElementExtensions
                 if (bindingId == title)
                 {
                     keyChanger.SetContent(key);
-                    Dictionary.bindingSettings[bindingId] = key;
+                    AppConfig.Current.BindingSettings[bindingId] = key;
                     bindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
                     Task.Delay(300).ContinueWith(_ => keyChanger.InUpdateMode = false);
                 }
@@ -247,7 +248,7 @@ public static class UIElementExtensions
     {
         return panel.Add<AColorChanger>(new AColorChanger(title), colorChanger =>
         {
-            colorChanger.ColorChangingBorder.Background = (Brush)new BrushConverter().ConvertFromString(Dictionary.colorState[title]);
+            colorChanger.ColorChangingBorder.Background = (Brush)new BrushConverter().ConvertFromString(AppConfig.Current.ColorState[title].ToString());
         });
     }
 
@@ -259,39 +260,48 @@ public static class UIElementExtensions
             slider.Slider.Maximum = max;
             slider.Slider.TickFrequency = frequency;
 
-            var settings = forAntiRecoil ? Dictionary.AntiRecoilSettings : Dictionary.sliderSettings;
-            slider.Slider.Value = settings.TryGetValue(title, out var value) ? value : min;
-
+            BaseSettings settings = forAntiRecoil ? AppConfig.Current.AntiRecoilSettings : AppConfig.Current.SliderSettings;
+            var sliderValue = settings[title].ToString();
+            slider.Slider.Value = double.TryParse(sliderValue, out var d) ? d : int.Parse(sliderValue);
+            
             slider.Slider.ValueChanged += (s, e) => settings[title] = slider.Slider.Value;
         });
     }
 
-    public static ADropdown AddDropdown(this IAddChild panel, string title, Action<ADropdown>? cfg = null)
+    public static ADropdown AddDropdown<TEnum>(this IAddChild panel, string title, TEnum value, Action<TEnum> onSelect, Action<ADropdown>? cfg = null) where TEnum : struct, Enum
     {
-        string path = title; // TODO: DIe sind doch alle dumm
-        return panel.Add<ADropdown>(new ADropdown(title, path), dropdown =>
+        var res = panel.Add<ADropdown>(new ADropdown(title), dropdown =>
         {
             cfg?.Invoke(dropdown);
         });
+        Enum<TEnum>.GetValues().Apply(v => res.AddDropdownItem(v.ToDescriptionString(), item =>
+        {
+            if (v.Equals(value))
+            {
+                res.DropdownBox.SelectedItem = item;
+                res.DropdownTitle.Content = v.ToDescriptionString();
+            }
+            item.Selected += (s, e) =>
+            {
+                onSelect(v);
+            };
+        }));
+
+        return res;
     }
+
 
     public static ComboBoxItem AddDropdownItem(this ADropdown dropdown, string title, Action<ComboBoxItem>? cfg = null)
     {
-        // TODO: Check if tryfindresource is working
+        var fontName = "Atkinson Hyperlegible";
+        var fontFamily = (dropdown.TryFindResource(fontName) ?? Application.Current.TryFindResource(fontName) ?? Application.Current.MainWindow?.TryFindResource(fontName)) as FontFamily;
         var dropdownItem = new ComboBoxItem
         {
             Content = title,
             Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0)),
-            FontFamily = dropdown.TryFindResource("Atkinson Hyperlegible") as FontFamily
+            FontFamily = fontFamily
         };
-
-        dropdownItem.Selected += (s, e) =>
-        {
-            string? key = dropdown.DropdownTitle.Content?.ToString();
-            if (key != null) Dictionary.dropdownState[key] = title;
-            else throw new NullReferenceException("dropdown.DropdownTitle.Content.ToString() is null");
-        };
-
+        
         cfg?.Invoke(dropdownItem);
         dropdown.DropdownBox.Items.Add(dropdownItem);
         return dropdownItem;

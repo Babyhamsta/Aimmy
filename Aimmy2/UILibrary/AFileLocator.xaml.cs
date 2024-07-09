@@ -1,4 +1,5 @@
 ﻿using Aimmy2.Class;
+using Aimmy2.Config;
 using Microsoft.Win32;
 using System.IO;
 using UserControl = System.Windows.Controls.UserControl;
@@ -21,7 +22,8 @@ namespace UILibrary
             DropdownTitle.Content = title;
 
             main_dictionary_path = dictionary_path;
-            FileLocationTextbox.Text = Dictionary.filelocationState[main_dictionary_path];
+            FileLocationTextbox.Text = AppConfig.Current.FileLocationState[main_dictionary_path]?.ToString();
+
 
             OFDFilter = FileFilter;
             DefaultLocationExtension = DLExtension;
@@ -38,7 +40,7 @@ namespace UILibrary
             if (openFileDialog.ShowDialog() == true)
             {
                 FileLocationTextbox.Text = openFileDialog.FileName;
-                Dictionary.filelocationState[main_dictionary_path] = openFileDialog.FileName;
+                AppConfig.Current.FileLocationState[main_dictionary_path] = openFileDialog.FileName;
             }
         }
     }

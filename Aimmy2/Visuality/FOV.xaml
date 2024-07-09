@@ -13,7 +13,9 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStyle="None"
+        Visibility="{Binding Path=ToggleState.FOV, Converter={StaticResource boolToVis}}"
         WindowStartupLocation="CenterScreen" WindowState="Maximized">
+
     <Grid>
         <Grid x:Name="FOVStrictEnclosure"
               Width="640"

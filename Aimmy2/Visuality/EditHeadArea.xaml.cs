@@ -3,7 +3,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
+using Aimmy2;
 using Aimmy2.Class;
+using Aimmy2.Config;
 using Aimmy2.Models;
 using Aimmy2.Types;
 
@@ -185,7 +187,7 @@ namespace Visuality
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            Dictionary.dropdownState["Head Area"] = RelativeRect.ToString();
+            AppConfig.Current.DropdownState.HeadArea = RelativeRect.ToString();
             if (FileManager.AIManager != null)
             {
                 FileManager.AIManager.HeadRelativeRect = RelativeRect.ToRelativeRect();

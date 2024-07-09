@@ -5,8 +5,11 @@ using Class;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
+using Aimmy2.Config;
 using Visuality;
 using static Aimmy2.Other.GithubManager;
+using System.Windows.Input;
 
 namespace Other
 {
@@ -48,7 +51,7 @@ namespace Other
         private void CheckForRequiredFolders()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string[] dirs = ["bin\\models", "bin\\images", "bin\\labels", "bin\\configs", "bin\\anti_recoil_configs"];
+            string[] dirs = { "bin\\models", "bin\\images", "bin\\labels", "bin\\configs", "bin\\anti_recoil_configs" };
 
             try
             {
@@ -84,17 +87,17 @@ namespace Other
         public async Task LoadModel(string selectedModel, string modelPath)
         {
             // Check if the model is already selected or currently loading
-            if (Dictionary.lastLoadedModel == selectedModel || CurrentlyLoadingModel) return;
+            if (AppConfig.Current.lastLoadedModel == selectedModel || CurrentlyLoadingModel) return;
 
             CurrentlyLoadingModel = true;
-            Dictionary.lastLoadedModel = selectedModel;
+            AppConfig.Current.lastLoadedModel = selectedModel;
 
             // Store original values and disable them temporarily
             var toggleKeys = new[] { "Aim Assist", "Constant AI Tracking", "Auto Trigger", "Show Detected Player", "Show AI Confidence", "Show Tracers" };
-            var originalToggleStates = toggleKeys.ToDictionary(key => key, key => Dictionary.toggleState[key]);
+            var originalToggleStates = toggleKeys.ToDictionary(key => key, key => AppConfig.Current.ToggleState[key]);
             foreach (var key in toggleKeys)
             {
-                Dictionary.toggleState[key] = false;
+                AppConfig.Current.ToggleState[key] = false;
             }
 
             // Let the AI finish up
@@ -104,10 +107,11 @@ namespace Other
             AIManager?.Dispose();
             AIManager = new AIManager(modelPath);
 
+            // TODO: Remove reflection
             // Restore original values
             foreach (var keyValuePair in originalToggleStates)
             {
-                Dictionary.toggleState[keyValuePair.Key] = keyValuePair.Value;
+                AppConfig.Current.ToggleState[keyValuePair.Key] = keyValuePair.Value;
             }
 
             string content = "Loaded Model: " + selectedModel;
@@ -122,7 +126,7 @@ namespace Other
 
             string configPath = Path.Combine("bin/configs", selectedConfig);
 
-            SaveDictionary.LoadJSON(Dictionary.sliderSettings, configPath);
+            AppConfig.Load(configPath);
             PropertyChanger.PostNewConfig(configPath, true);
 
             SelectedConfigNotifier.Content = "Loaded Config: " + selectedConfig;
@@ -175,7 +179,7 @@ namespace Other
 
                     if (ModelListBox.Items.Count > 0)
                     {
-                        string? lastLoadedModel = Dictionary.lastLoadedModel;
+                        string? lastLoadedModel = AppConfig.Current.lastLoadedModel;
                         if (lastLoadedModel != "N/A" && !ModelListBox.Items.Contains(lastLoadedModel)) { ModelListBox.SelectedItem = lastLoadedModel; }
                         SelectedModelNotifier.Content = $"Loaded Model: {lastLoadedModel}";
                     }
@@ -199,7 +203,7 @@ namespace Other
 
                     if (ConfigListBox.Items.Count > 0)
                     {
-                        string? lastLoadedConfig = Dictionary.lastLoadedConfig;
+                        string? lastLoadedConfig = AppConfig.Current.lastLoadedConfig;
                         if (lastLoadedConfig != "N/A" && !ConfigListBox.Items.Contains(lastLoadedConfig)) { ConfigListBox.SelectedItem = lastLoadedConfig; }
 
                         SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;

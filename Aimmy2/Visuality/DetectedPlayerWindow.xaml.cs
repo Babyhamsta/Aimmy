@@ -6,6 +6,7 @@ using System.Windows.Media;
 using Aimmy2.Types;
 using Color = System.Windows.Media.Color;
 using System.Windows.Controls;
+using Aimmy2.Config;
 
 namespace Visuality
 {
@@ -23,7 +24,7 @@ namespace Visuality
         public DetectedPlayerWindow()
         {
             InitializeComponent();
-
+            DataContext = AppConfig.Current;
             Title = "";
 
             DetectedTracers.X1 = (WinAPICaller.ScreenWidth / 2) / WinAPICaller.scalingFactorX;

@@ -4,6 +4,7 @@ using AimmyWPF.Class;
 using InputLogic;
 using System.Windows;
 using System.Windows.Threading;
+using Aimmy2.Config;
 
 namespace Visuality
 {
@@ -33,12 +34,12 @@ namespace Visuality
             HoldDownTimer.Interval = TimeSpan.FromMilliseconds(1);
             HoldDownTimer.Start();
 
-            ChangingFireRate = (int)Dictionary.AntiRecoilSettings["Fire Rate"];
+            ChangingFireRate = AppConfig.Current.AntiRecoilSettings.FireRate;
         }
 
         private void HoldDownTimerTicker(object? sender, EventArgs e)
         {
-            if (InputBindingManager.IsHoldingBinding("Anti Recoil Keybind"))
+            if (InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind)))
             {
                 GetReading();
                 HoldDownTimer.Stop();
@@ -48,7 +49,7 @@ namespace Visuality
         private async void GetReading()
         {
             LastClickTime = DateTime.Now;
-            while (InputBindingManager.IsHoldingBinding("Anti Recoil Keybind"))
+            while (InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind)))
             {
                 await Task.Delay(1);
             }
@@ -84,7 +85,7 @@ namespace Visuality
 
         private void ConfirmB_Click(object sender, RoutedEventArgs e)
         {
-            Dictionary.AntiRecoilSettings["Fire Rate"] = ChangingFireRate;
+            AppConfig.Current.AntiRecoilSettings.FireRate = ChangingFireRate;
             MainWin.uiManager.S_FireRate!.Slider.Value = ChangingFireRate;
 
             MainWin.WindowState = WindowState.Normal;

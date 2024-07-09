@@ -36,6 +36,14 @@ public static class ApplicationConstants
         }
     }
 
+    public static Color Foreground => GetForegroundFor(MainColor);
+
+    private static Color GetForegroundFor(Color background)
+    {
+        var luminance = 1 - (0.299 * background.R + 0.587 * background.G + 0.114 * background.B) / 255;
+        return luminance < 0.5 ? Colors.White : Colors.Black;
+    }
+
     public static Color MainColor => Theme.MainColor;
     public static Color AccentColor => Theme.AccentColor;
     public static Color EffectColor => Theme.EffectColor;

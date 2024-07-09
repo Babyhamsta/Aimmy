@@ -14,12 +14,14 @@
         ShowInTaskbar="False"
         Closing="Window_Closing"
         ResizeMode="NoResize"
+        Visibility="{Binding Path=ToggleState.ShowDetectedPlayer, Converter={StaticResource boolToVis}}"
         IsTabStop="False">
     <Canvas>
         <Label x:Name="DetectedPlayerConfidence"
                HorizontalAlignment="Left"
                VerticalAlignment="Top"
                FontFamily="Consolas"
+               Visibility="{Binding Path=ToggleState.ShowAIConfidence, Converter={StaticResource boolToVis}}"
                Content="Confidence = 20%"
                Padding="0,0,0,0"
                Opacity="0"
@@ -28,12 +30,12 @@
                Foreground="#DDFF0000"
                FontSize="20" />
         <Border x:Name="DetectedPlayerFocus"
+                Visibility="{Binding Path=ToggleState.ShowDetectedPlayer, Converter={StaticResource boolToVis}}"
                 Width="50"
                 Height="50"
                 BorderThickness="1"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Visibility="Visible"
                 Opacity="0">
             <Canvas>
                 <!-- Green Head Area Border -->
@@ -45,6 +47,7 @@
             </Canvas>
         </Border>
         <Line x:Name="DetectedTracers"
+              Visibility="{Binding Path=ToggleState.ShowTracers, Converter={StaticResource boolToVis}}"
               X1="0"
               Y1="0"
               X2="10"

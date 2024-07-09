@@ -15,7 +15,7 @@
         Width="670"
         MinWidth="670"
         WindowStyle="None"
-        Topmost="True"
+        Topmost="{Binding Config.ToggleState.UITopMost}"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         AllowsTransparency="True"

@@ -1,6 +1,7 @@
 ﻿using Aimmy2.Class;
 using InputLogic;
 using System.Windows.Threading;
+using Aimmy2.Config;
 
 namespace Other
 {
@@ -22,7 +23,7 @@ namespace Other
         {
             //Debug.WriteLine(Math.Abs(IndependentMousePress));
             IndependentMousePress += 1;
-            if (IndependentMousePress >= Dictionary.AntiRecoilSettings["Hold Time"])
+            if (IndependentMousePress >= AppConfig.Current.AntiRecoilSettings.HoldTime)
                 MouseManager.DoAntiRecoil();
         }
     }

@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Aimmy2.Config;
 using Aimmy2.Extensions;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
@@ -38,7 +39,7 @@ namespace Visuality
 
         private void WriteJSON()
         {
-            SaveDictionary.WriteJSON(Dictionary.sliderSettings, $"bin\\configs\\{ConfigNameTextbox.Text}.cfg", RecommendedModelNameTextBox.Text, ExtraStrings);
+            AppConfig.Current.Save($"bin\\configs\\{ConfigNameTextbox.Text}.cfg");
             new NoticeBar("Config has been saved to bin/configs.", 4000).Show();
             Close();
         }

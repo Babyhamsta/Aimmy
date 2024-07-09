@@ -1,6 +1,7 @@
 ﻿using SharpDX.XInput;
 using System.Threading;
 using Aimmy2.Class;
+using Aimmy2.Config;
 using Newtonsoft.Json;
 
 namespace Aimmy2.InputLogic;
@@ -129,8 +130,8 @@ public class GamepadReader: IDisposable
         if (newState != oldState)
         {
             var value = newState / 255.0f;
-            var minValue = Dictionary.sliderSettings[$"Gamepad Minimum {triggerName}"];
-            var isPressed = value >= (minValue ?? 0.1);
+            var minValue = triggerName == "LT" ? AppConfig.Current.SliderSettings.GamepadMinimumLT : AppConfig.Current.SliderSettings.GamepadMinimumRT;
+            var isPressed = value >= minValue;
             InvokeEvent(new GamepadEventArgs { Button = triggerName, IsPressed = isPressed, Value = value });
         }
     }

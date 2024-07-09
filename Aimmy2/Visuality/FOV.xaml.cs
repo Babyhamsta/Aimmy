@@ -3,6 +3,7 @@ using Class;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using Aimmy2.Config;
 using Color = System.Windows.Media.Color;
 
 namespace Visuality
@@ -22,6 +23,7 @@ namespace Visuality
         {
             InitializeComponent();
             //new WinAPICaller().GetScreenWidth(this);
+            DataContext = AppConfig.Current;
 
             Application.Current.Dispatcher.BeginInvoke(() => FOVStrictEnclosure.Margin = new Thickness(
                 Convert.ToInt16((WinAPICaller.ScreenWidth / 2) / WinAPICaller.scalingFactorX) - 320,

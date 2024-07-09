@@ -1,4 +1,5 @@
 using Aimmy2.Class;
+using Aimmy2.Config;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Class;
 using MouseMovementLibraries.ddxoftSupport;
@@ -11,6 +12,7 @@ namespace InputLogic
 {
     internal class MouseManager
     {
+
         private static readonly double ScreenWidth = WinAPICaller.ScreenWidth;
         private static readonly double ScreenHeight = WinAPICaller.ScreenHeight;
 
@@ -23,7 +25,7 @@ namespace InputLogic
         private static double previousX = 0;
         private static double previousY = 0;
         public static double smoothingFactor = 0.5;
-        public static bool IsEMASmoothingEnabled = false;
+        public static bool IsEMASmoothingEnabled => AppConfig.Current.ToggleState.EMASmoothening;
 
         [DllImport("user32.dll")]
         private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
@@ -53,7 +55,7 @@ namespace InputLogic
         public static async Task DoTriggerClick()
         {
             int timeSinceLastClick = (int)(DateTime.UtcNow - LastClickTime).TotalMilliseconds;
-            int triggerDelayMilliseconds = (int)(Dictionary.sliderSettings["Auto Trigger Delay"] * 1000);
+            int triggerDelayMilliseconds = (int)(AppConfig.Current.SliderSettings.AutoTriggerDelay * 1000);
             const int clickDelayMilliseconds = 20;
 
             if (timeSinceLastClick < triggerDelayMilliseconds && LastClickTime != DateTime.MinValue)
@@ -61,28 +63,28 @@ namespace InputLogic
                 return;
             }
 
-            string mouseMovementMethod = Dictionary.dropdownState["Mouse Movement Method"];
+            var mouseMovementMethod = AppConfig.Current.DropdownState.MouseMovementMethod;
             Action mouseDownAction;
             Action mouseUpAction;
 
             switch (mouseMovementMethod)
             {
-                case "SendInput":
+                case MouseMovementMethod.SendInput:
                     mouseDownAction = () => SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTDOWN);
                     mouseUpAction = () => SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTUP);
                     break;
 
-                case "LG HUB":
+                case MouseMovementMethod.LGHUB:
                     mouseDownAction = () => LGMouse.Move(1, 0, 0, 0);
                     mouseUpAction = () => LGMouse.Move(0, 0, 0, 0);
                     break;
 
-                case "Razer Synapse (Require Razer Peripheral)":
+                case MouseMovementMethod.RazerSynapse:
                     mouseDownAction = () => RZMouse.mouse_click(1);
                     mouseUpAction = () => RZMouse.mouse_click(0);
                     break;
 
-                case "ddxoft Virtual Input Driver":
+                case MouseMovementMethod.ddxoft:
                     mouseDownAction = () => DdxoftMain.ddxoftInstance.btn!(1);
                     mouseUpAction = () => DdxoftMain.ddxoftInstance.btn(2);
                     break;
@@ -104,29 +106,29 @@ namespace InputLogic
         {
             int timeSinceLastClick = Math.Abs(DateTime.UtcNow.Millisecond - LastAntiRecoilClickTime);
 
-            if (timeSinceLastClick < Dictionary.AntiRecoilSettings["Fire Rate"])
+            if (timeSinceLastClick < AppConfig.Current.AntiRecoilSettings.FireRate)
             {
                 return;
             }
 
-            int xRecoil = (int)Dictionary.AntiRecoilSettings["X Recoil (Left/Right)"];
-            int yRecoil = (int)Dictionary.AntiRecoilSettings["Y Recoil (Up/Down)"];
+            int xRecoil = (int)AppConfig.Current.AntiRecoilSettings.XRecoil;
+            int yRecoil = (int)AppConfig.Current.AntiRecoilSettings.YRecoil;
 
-            switch (Dictionary.dropdownState["Mouse Movement Method"])
+            switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
-                case "SendInput":
+                case MouseMovementMethod.SendInput:
                     SendInputMouse.SendMouseCommand(MOUSEEVENTF_MOVE, xRecoil, yRecoil);
                     break;
 
-                case "LG HUB":
+                case MouseMovementMethod.LGHUB:
                     LGMouse.Move(0, xRecoil, yRecoil, 0);
                     break;
 
-                case "Razer Synapse (Require Razer Peripheral)":
+                case MouseMovementMethod.RazerSynapse:
                     RZMouse.mouse_move(xRecoil, yRecoil, true);
                     break;
 
-                case "ddxoft Virtual Input Driver":
+                case MouseMovementMethod.ddxoft:
                     DdxoftMain.ddxoftInstance.movR!(xRecoil, yRecoil);
                     break;
 
@@ -148,7 +150,7 @@ namespace InputLogic
 
             double aspectRatioCorrection = ScreenWidth / ScreenHeight;
 
-            int MouseJitter = (int)Dictionary.sliderSettings["Mouse Jitter"];
+            int MouseJitter = (int)AppConfig.Current.SliderSettings.MouseJitter;
             int jitterX = MouseRandom.Next(-MouseJitter, MouseJitter);
             int jitterY = MouseRandom.Next(-MouseJitter, MouseJitter);
 
@@ -156,7 +158,7 @@ namespace InputLogic
             Point end = new(targetX, targetY);
             Point control1 = new(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
             Point control2 = new(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
-            Point newPosition = CubicBezier(start, end, control1, control2, 1 - Dictionary.sliderSettings["Mouse Sensitivity (+/-)"]);
+            Point newPosition = CubicBezier(start, end, control1, control2, 1 - AppConfig.Current.SliderSettings.MouseSensitivity);
 
             targetX = Math.Clamp(targetX, -150, 150);
             targetY = Math.Clamp(targetY, -150, 150);
@@ -166,21 +168,21 @@ namespace InputLogic
             targetX += jitterX;
             targetY += jitterY;
 
-            switch (Dictionary.dropdownState["Mouse Movement Method"])
+            switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
-                case "SendInput":
+                case MouseMovementMethod.SendInput:
                     SendInputMouse.SendMouseCommand(MOUSEEVENTF_MOVE, newPosition.X, newPosition.Y);
                     break;
 
-                case "LG HUB":
+                case MouseMovementMethod.LGHUB:
                     LGMouse.Move(0, newPosition.X, newPosition.Y, 0);
                     break;
 
-                case "Razer Synapse (Require Razer Peripheral)":
+                case MouseMovementMethod.RazerSynapse:
                     RZMouse.mouse_move(newPosition.X, newPosition.Y, true);
                     break;
 
-                case "ddxoft Virtual Input Driver":
+                case MouseMovementMethod.ddxoft:
                     DdxoftMain.ddxoftInstance.movR!(newPosition.X, newPosition.Y);
                     break;
 

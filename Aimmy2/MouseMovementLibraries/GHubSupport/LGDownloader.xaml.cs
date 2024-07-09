@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Aimmy2.Config;
 
 namespace Visuality
 {
@@ -41,7 +42,7 @@ namespace Visuality
 
         private void Main_Background_Gradient(object sender, MouseEventArgs e)
         {
-            if (Dictionary.toggleState["Mouse Background Effect"])
+            if (AppConfig.Current.ToggleState.MouseBackgroundEffect)
             {
                 var CurrentMousePos = WinAPICaller.GetCursorPosition();
                 var translatedMousePos = PointFromScreen(new Point(CurrentMousePos.X, CurrentMousePos.Y));

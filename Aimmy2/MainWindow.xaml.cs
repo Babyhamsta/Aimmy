@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Class;
+using Aimmy2.Config;
 using Aimmy2.Extensions;
 using Aimmy2.InputLogic;
 using Aimmy2.Models;
@@ -25,7 +26,6 @@ using Visuality;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
 using MessageBox = System.Windows.MessageBox;
-using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Panel = System.Windows.Controls.Panel;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using TextBox = System.Windows.Controls.TextBox;
@@ -35,16 +35,17 @@ namespace Aimmy2;
 public partial class MainWindow
 {
     #region Main Variables
-    private ThemePalette _theme = ApplicationConstants.Theme;
+
+    private readonly ThemePalette _theme = ApplicationConstants.Theme;
     private readonly InputBindingManager bindingManager;
     private readonly FileManager fileManager;
-    private static readonly FOV FOVWindow = new();
-    private static readonly DetectedPlayerWindow DPWindow = new();
+    private static FOV FOVWindow;
+    private static DetectedPlayerWindow DPWindow;
     private static GithubManager githubManager = new();
     public UI uiManager = new();
     public AntiRecoilManager arManager = new();
 
-    
+
     private bool CurrentlySwitching;
     private ScrollViewer? CurrentScrollViewer;
 
@@ -57,6 +58,8 @@ public partial class MainWindow
 
     #region Loading Window
 
+    public AppConfig Config { get; private set; }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -67,11 +70,13 @@ public partial class MainWindow
 
         GamepadManager.Init();
 
+        Config = AppConfig.Load();
+
         CurrentScrollViewer = FindName("AimMenu") as ScrollViewer;
         if (CurrentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
 
-        Dictionary.DetectedPlayerOverlay = DPWindow;
-        Dictionary.FOVWindow = FOVWindow;
+        AppConfig.Current.DetectedPlayerOverlay = DPWindow = new();
+        AppConfig.Current.FOVWindow = FOVWindow = new();
 
         fileManager = new FileManager(ModelListBox, SelectedModelNotifier, ConfigsListBox, SelectedConfigNotifier);
 
@@ -80,30 +85,32 @@ public partial class MainWindow
 
         arManager.HoldDownLoad();
 
-        LoadConfig();
         LoadAntiRecoilConfig();
 
-        SaveDictionary.LoadJSON(Dictionary.minimizeState, "bin\\minimize.cfg");
-        SaveDictionary.LoadJSON(Dictionary.bindingSettings, "bin\\binding.cfg");
-        SaveDictionary.LoadJSON(Dictionary.colorState, "bin\\colors.cfg");
-        SaveDictionary.LoadJSON(Dictionary.filelocationState, "bin\\filelocations.cfg");
-        SaveDictionary.LoadJSON(Dictionary.toggleState, "bin\\toggles.cfg");
 
         bindingManager = new InputBindingManager();
-        bindingManager.SetupDefault("Aim Keybind", Dictionary.bindingSettings["Aim Keybind"]);
-        bindingManager.SetupDefault("Trigger Key", Dictionary.bindingSettings["Trigger Key"]);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind),
+            AppConfig.Current.BindingSettings.AimKeybind);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey),
+            AppConfig.Current.BindingSettings.TriggerKey);
 
-        bindingManager.SetupDefault("Active ToogleKey", Dictionary.bindingSettings["Active ToogleKey"]);
-        bindingManager.SetupDefault("Second Aim Keybind", Dictionary.bindingSettings["Second Aim Keybind"]);
-        bindingManager.SetupDefault("Dynamic FOV Keybind", Dictionary.bindingSettings["Dynamic FOV Keybind"]);
-        bindingManager.SetupDefault("Emergency Stop Keybind", Dictionary.bindingSettings["Emergency Stop Keybind"]);
-        bindingManager.SetupDefault("Model Switch Keybind", Dictionary.bindingSettings["Model Switch Keybind"]);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ActiveToggleKey),
+            AppConfig.Current.BindingSettings.ActiveToggleKey);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind),
+            AppConfig.Current.BindingSettings.SecondAimKeybind);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind),
+            AppConfig.Current.BindingSettings.DynamicFOVKeybind);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind),
+            AppConfig.Current.BindingSettings.ModelSwitchKeybind);
 
-        bindingManager.SetupDefault("Anti Recoil Keybind", Dictionary.bindingSettings["Anti Recoil Keybind"]);
-        bindingManager.SetupDefault("Disable Anti Recoil Keybind",
-            Dictionary.bindingSettings["Disable Anti Recoil Keybind"]);
-        bindingManager.SetupDefault("Gun 1 Key", Dictionary.bindingSettings["Gun 1 Key"]);
-        bindingManager.SetupDefault("Gun 2 Key", Dictionary.bindingSettings["Gun 2 Key"]);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind),
+            AppConfig.Current.BindingSettings.AntiRecoilKeybind);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind),
+            AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun1Key),
+            AppConfig.Current.BindingSettings.Gun1Key);
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun2Key),
+            AppConfig.Current.BindingSettings.Gun2Key);
 
         LoadAimMenu();
         LoadSettingsMenu();
@@ -112,21 +119,19 @@ public partial class MainWindow
         LoadStoreMenuAsync();
         LoadGlobalUI();
 
-        SaveDictionary.LoadJSON(Dictionary.dropdownState, "bin\\dropdown.cfg");
-        LoadDropdownStates();
 
         PropertyChanger.ReceiveNewConfig = LoadConfig;
 
-        ActualFOV = Dictionary.sliderSettings["FOV Size"];
-        PropertyChanger.PostNewFOVSize(Dictionary.sliderSettings["FOV Size"]);
-        PropertyChanger.PostColor((Color)ColorConverter.ConvertFromString(Dictionary.colorState["FOV Color"]));
+        ActualFOV = AppConfig.Current.SliderSettings.FOVSize;
+        PropertyChanger.PostNewFOVSize(AppConfig.Current.SliderSettings.FOVSize);
+        PropertyChanger.PostColor((Color)ColorConverter.ConvertFromString(AppConfig.Current.ColorState.FOVColor));
 
         PropertyChanger.PostDPColor(
-            (Color)ColorConverter.ConvertFromString(Dictionary.colorState["Detected Player Color"]));
-        PropertyChanger.PostDPFontSize((int)Dictionary.sliderSettings["AI Confidence Font Size"]);
-        PropertyChanger.PostDPWCornerRadius((int)Dictionary.sliderSettings["Corner Radius"]);
-        PropertyChanger.PostDPWBorderThickness((double)Dictionary.sliderSettings["Border Thickness"]);
-        PropertyChanger.PostDPWOpacity((double)Dictionary.sliderSettings["Opacity"]);
+            (Color)ColorConverter.ConvertFromString(AppConfig.Current.ColorState.DetectedPlayerColor));
+        PropertyChanger.PostDPFontSize(AppConfig.Current.SliderSettings.AIConfidenceFontSize);
+        PropertyChanger.PostDPWCornerRadius(AppConfig.Current.SliderSettings.CornerRadius);
+        PropertyChanger.PostDPWBorderThickness(AppConfig.Current.SliderSettings.BorderThickness);
+        PropertyChanger.PostDPWOpacity(AppConfig.Current.SliderSettings.Opacity);
 
         ListenForKeybinds();
         LoadMenuMinimizers();
@@ -157,8 +162,9 @@ public partial class MainWindow
     private void LoadGlobalUI()
     {
         uiManager.G_Active = TopCenterGrid.AddToggle("Global Active");
-        uiManager.G_Active_Keybind = TopCenterGrid.AddKeyChanger("Active ToogleKey",
-            () => Dictionary.bindingSettings["Active ToogleKey"], bindingManager);
+        uiManager.G_Active_Keybind = TopCenterGrid.AddKeyChanger(
+            nameof(AppConfig.Current.BindingSettings.ActiveToggleKey),
+            () => AppConfig.Current.BindingSettings.ActiveToggleKey, bindingManager);
 
         uiManager.G_Active.Deactivated += (s, e) => SetActive(false);
         uiManager.G_Active.Activated += (s, e) => SetActive(true);
@@ -166,9 +172,10 @@ public partial class MainWindow
 
     public void SetActive(bool active)
     {
-        Dictionary.toggleState["Global Active"] = active;
+        AppConfig.Current.ToggleState.GlobalActive = active;
         if (FileManager.AIManager != null)
-            FileManager.AIManager.HeadRelativeRect = RelativeRect.ParseOrDefault(Dictionary.dropdownState["Head Area"]);
+            FileManager.AIManager.HeadRelativeRect =
+                RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea);
 
         ApplicationConstants.Theme = active ? ThemePalette.GreenPalette : _theme;
     }
@@ -202,26 +209,17 @@ public partial class MainWindow
     private void Window_Closing(object sender, CancelEventArgs e)
     {
         fileManager.InQuittingState = true;
+        FileManager.AIManager?.Dispose();
 
-        Dictionary.toggleState["Aim Assist"] = false;
-        Dictionary.toggleState["FOV"] = false;
-        Dictionary.toggleState["Show Detected Player"] = false;
 
         FOVWindow.Close();
         DPWindow.Close();
 
-        if (Dictionary.dropdownState["Mouse Movement Method"] == "LG HUB") LGMouse.Close();
 
-        SaveDictionary.WriteJSON(Dictionary.sliderSettings);
-        SaveDictionary.WriteJSON(Dictionary.toggleState, "bin\\toggles.cfg");
-        SaveDictionary.WriteJSON(Dictionary.minimizeState, "bin\\minimize.cfg");
-        SaveDictionary.WriteJSON(Dictionary.bindingSettings, "bin\\binding.cfg");
-        SaveDictionary.WriteJSON(Dictionary.dropdownState, "bin\\dropdown.cfg");
-        SaveDictionary.WriteJSON(Dictionary.colorState, "bin\\colors.cfg");
-        SaveDictionary.WriteJSON(Dictionary.filelocationState, "bin\\filelocations.cfg");
-        SaveDictionary.WriteJSON(Dictionary.AntiRecoilSettings, "bin\\anti_recoil_configs\\Default.cfg");
+        if (AppConfig.Current.DropdownState.MouseMovementMethod == MouseMovementMethod.LGHUB) LGMouse.Close();
 
-        FileManager.AIManager?.Dispose();
+        AppConfig.Current.Save();
+
 
         Application.Current.Shutdown();
     }
@@ -287,59 +285,9 @@ public partial class MainWindow
                 : Visibility.Collapsed;
     }
 
-
-    private void LoadDropdownStates()
-    {
-        // Trigger check
-        uiManager.T_TriggerCheck!.DropdownBox.SelectedIndex = Dictionary.dropdownState["Trigger Check"] switch
-        {
-            "None" => 0,
-            "Intersecting Center" => 1,
-            "Head Intersecting Center" => 2,
-            _ => 0 // Default case if none of the above matches
-        };
-
-        // Prediction Method Dropdown
-        uiManager.D_PredictionMethod!.DropdownBox.SelectedIndex = Dictionary.dropdownState["Prediction Method"] switch
-        {
-            "Shall0e's Prediction" => 1,
-            "wisethef0x's EMA Prediction" => 2,
-            _ => 0 // Default case if none of the above matches
-        };
-
-        // Detection Area Type Dropdown
-        uiManager.D_DetectionAreaType!.DropdownBox.SelectedIndex =
-            Dictionary.dropdownState["Detection Area Type"] switch
-            {
-                "Closest to Mouse" => 1,
-                // Add more cases as needed
-                _ => 0 // Default case
-            };
-
-        // Aiming Boundaries Alignment Dropdown
-        uiManager.D_AimingBoundariesAlignment!.DropdownBox.SelectedIndex =
-            Dictionary.dropdownState["Aiming Boundaries Alignment"] switch
-            {
-                "Top" => 1,
-                "Bottom" => 2,
-                _ => 0 // Default case if none of the above matches
-            };
-
-        // Mouse Movement Method Dropdown
-        uiManager.D_MouseMovementMethod!.DropdownBox.SelectedIndex =
-            Dictionary.dropdownState["Mouse Movement Method"] switch
-            {
-                "SendInput" => 1,
-                "LG HUB" => 2,
-                "Razer Synapse (Require Razer Peripheral)" => 3,
-                "ddxoft Virtual Input Driver" => 4,
-                _ => 0 // Default case if none of the above matches
-            };
-    }
-
-
     private void UpdateToggleUI(AToggle toggle, bool isEnabled)
     {
+        // TODO: Remove bullshit 
         Application.Current.Dispatcher.Invoke(() =>
         {
             if (isEnabled)
@@ -347,36 +295,6 @@ public partial class MainWindow
             else
                 toggle.DisableSwitch();
         });
-    }
-
-    internal void Toggle_Action(string title)
-    {
-        switch (title)
-        {
-            case "FOV":
-                FOVWindow.Visibility = Dictionary.toggleState[title] ? Visibility.Visible : Visibility.Hidden;
-                break;
-
-            case "Show Detected Player":
-                ShowHideDPWindow();
-                DPWindow.DetectedPlayerFocus.Visibility =
-                    Dictionary.toggleState[title] ? Visibility.Visible : Visibility.Collapsed;
-                break;
-
-            case "Show AI Confidence":
-                DPWindow.DetectedPlayerConfidence.Visibility =
-                    Dictionary.toggleState[title] ? Visibility.Visible : Visibility.Collapsed;
-                break;
-
-            case "UI TopMost":
-                Topmost = Dictionary.toggleState[title];
-                break;
-
-            case "EMA Smoothening":
-                MouseManager.IsEMASmoothingEnabled = Dictionary.toggleState[title];
-                Debug.WriteLine(MouseManager.IsEMASmoothingEnabled);
-                break;
-        }
     }
 
     // All Keybind Listening is moved to a seperate function because having it stored in "AddKeyChanger" was making these functions run several times.
@@ -387,12 +305,12 @@ public partial class MainWindow
         {
             switch (bindingId)
             {
-                case "Active ToogleKey":
+                case nameof(AppConfig.Current.BindingSettings.ActiveToggleKey):
                     if (IsModelLoaded) UpdateToggleUI(uiManager.G_Active!, !uiManager.G_Active.Checked);
 
                     break;
-                case "Model Switch Keybind":
-                    if (Dictionary.toggleState["Enable Model Switch Keybind"])
+                case nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind):
+                    if (AppConfig.Current.ToggleState.EnableModelSwitchKeybind)
                         if (!FileManager.CurrentlyLoadingModel)
                         {
                             if (ModelListBox.SelectedIndex >= 0 &&
@@ -404,32 +322,21 @@ public partial class MainWindow
 
                     break;
 
-                case "Dynamic FOV Keybind":
-                    if (Dictionary.toggleState["Dynamic FOV"])
+                case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
+                    if (AppConfig.Current.ToggleState.DynamicFOV)
                     {
-                        Dictionary.sliderSettings["FOV Size"] = Dictionary.sliderSettings["Dynamic FOV Size"];
+                        AppConfig.Current.SliderSettings.FOVSize = AppConfig.Current.SliderSettings.DynamicFOVSize;
                         Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
-                            FOVWindow.Circle.ActualWidth, Dictionary.sliderSettings["Dynamic FOV Size"]);
+                            FOVWindow.Circle.ActualWidth, AppConfig.Current.SliderSettings.DynamicFOVSize);
                         Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
-                            FOVWindow.Circle.ActualHeight, Dictionary.sliderSettings["Dynamic FOV Size"]);
+                            FOVWindow.Circle.ActualHeight, AppConfig.Current.SliderSettings.DynamicFOVSize);
                     }
 
                     break;
 
-                case "Emergency Stop Keybind":
-                    // Disable Aim Assist
-                    Dictionary.toggleState["Aim Assist"] = false;
-                    Dictionary.toggleState["Constant AI Tracking"] = false;
-                    Dictionary.toggleState["Auto Trigger"] = false;
 
-                    UpdateToggleUI(uiManager.T_AimAligner!, false);
-                    UpdateToggleUI(uiManager.T_ConstantAITracking!, false);
-                    UpdateToggleUI(uiManager.T_AutoTrigger!, false);
-                    new NoticeBar("[Emergency Stop Keybind] Disabled all AI features.", 4000).Show();
-                    break;
-                // Anti Recoil
-                case "Anti Recoil Keybind":
-                    if (Dictionary.toggleState["Anti Recoil"])
+                case nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind):
+                    if (AppConfig.Current.ToggleState.AntiRecoil)
                     {
                         arManager.IndependentMousePress = 0;
                         arManager.HoldDownTimer.Start();
@@ -437,24 +344,24 @@ public partial class MainWindow
 
                     break;
 
-                case "Disable Anti Recoil Keybind":
-                    if (Dictionary.toggleState["Anti Recoil"])
+                case nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind):
+                    if (AppConfig.Current.ToggleState.AntiRecoil)
                     {
-                        Dictionary.toggleState["Anti Recoil"] = false;
+                        AppConfig.Current.ToggleState.AntiRecoil = false;
                         UpdateToggleUI(uiManager.T_AntiRecoil!, false);
                         new NoticeBar("[Disable Anti Recoil Keybind] Disabled Anti-Recoil.", 4000).Show();
                     }
 
                     break;
 
-                case "Gun 1 Key":
-                    if (Dictionary.toggleState["Enable Gun Switching Keybind"])
-                        LoadAntiRecoilConfig(Dictionary.filelocationState["Gun 1 Config"], true);
+                case nameof(AppConfig.Current.BindingSettings.Gun1Key):
+                    if (AppConfig.Current.ToggleState.EnableModelSwitchKeybind)
+                        LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun1Config, true);
                     break;
 
-                case "Gun 2 Key":
-                    if (Dictionary.toggleState["Enable Gun Switching Keybind"])
-                        LoadAntiRecoilConfig(Dictionary.filelocationState["Gun 2 Config"], true);
+                case nameof(AppConfig.Current.BindingSettings.Gun2Key):
+                    if (AppConfig.Current.ToggleState.EnableModelSwitchKeybind)
+                        LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun2Config, true);
                     break;
             }
         };
@@ -463,10 +370,10 @@ public partial class MainWindow
         {
             switch (bindingId)
             {
-                case "Dynamic FOV Keybind":
-                    if (Dictionary.toggleState["Dynamic FOV"])
+                case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
+                    if (AppConfig.Current.ToggleState.DynamicFOV)
                     {
-                        Dictionary.sliderSettings["FOV Size"] = ActualFOV;
+                        AppConfig.Current.SliderSettings.FOVSize = ActualFOV;
                         Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
                             FOVWindow.Circle.ActualWidth, ActualFOV);
                         Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle,
@@ -475,8 +382,8 @@ public partial class MainWindow
 
                     break;
                 // Anti Recoil
-                case "Anti Recoil Keybind":
-                    if (Dictionary.toggleState["Anti Recoil"])
+                case nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind):
+                    if (AppConfig.Current.ToggleState.AntiRecoil)
                     {
                         arManager.HoldDownTimer.Stop();
                         arManager.IndependentMousePress = 0;
@@ -495,31 +402,32 @@ public partial class MainWindow
     {
         #region Aim Assist
 
+        var keybind = AppConfig.Current.BindingSettings;
         uiManager.AT_Aim = AimAssist.AddTitle("Aim Assist", true);
         uiManager.T_AimAligner = AimAssist.AddToggle("Aim Assist");
 
 
-        uiManager.C_Keybind = AimAssist.AddKeyChanger("Aim Keybind", () => Dictionary.bindingSettings["Aim Keybind"],
+        uiManager.C_Keybind = AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AimKeybind),
+            () => keybind.AimKeybind,
             bindingManager);
-        uiManager.C_Keybind = AimAssist.AddKeyChanger("Second Aim Keybind",
-            () => Dictionary.bindingSettings["Second Aim Keybind"], bindingManager);
+        uiManager.C_Keybind = AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind),
+            () => keybind.SecondAimKeybind, bindingManager);
         uiManager.T_ConstantAITracking = AimAssist.AddToggle("Constant AI Tracking");
-        
+
         uiManager.T_ConstantAITracking.Changed += (s, e) =>
         {
             if (e.Value)
             {
-                Dictionary.toggleState["Aim Assist"] = true;
+                AppConfig.Current.ToggleState.AimAssist = true;
                 UpdateToggleUI(uiManager.T_AimAligner, true);
             }
         };
         uiManager.T_Predictions = AimAssist.AddToggle("Predictions");
         uiManager.T_EMASmoothing = AimAssist.AddToggle("EMA Smoothening");
-        uiManager.C_EmergencyKeybind = AimAssist.AddKeyChanger("Emergency Stop Keybind",
-            () => Dictionary.bindingSettings["Emergency Stop Keybind"], bindingManager);
         uiManager.T_EnableModelSwitchKeybind = AimAssist.AddToggle("Enable Model Switch Keybind");
-        uiManager.C_ModelSwitchKeybind = AimAssist.AddKeyChanger("Model Switch Keybind",
-            () => Dictionary.bindingSettings["Model Switch Keybind"], bindingManager);
+        uiManager.C_ModelSwitchKeybind = AimAssist.AddKeyChanger(
+            nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), () => keybind.ModelSwitchKeybind,
+            bindingManager);
         AimAssist.AddSeparator();
         AimAssist.Visibility = GetVisibilityFor("AimAssist");
 
@@ -528,31 +436,29 @@ public partial class MainWindow
         #region Config
 
         uiManager.AT_AimConfig = AimConfig.AddTitle("Aim Config", true);
-        uiManager.D_PredictionMethod = AimConfig.AddDropdown("Prediction Method");
+        uiManager.D_PredictionMethod = AimConfig.AddDropdown("Prediction Method",
+            AppConfig.Current.DropdownState.PredictionMethod,
+            v => AppConfig.Current.DropdownState.PredictionMethod = v);
+        uiManager.D_PredictionMethod = AimConfig.AddDropdown("Detection Area Type",
+            AppConfig.Current.DropdownState.DetectionAreaType, async v =>
+            {
+                AppConfig.Current.DropdownState.DetectionAreaType = v;
+                if (v == DetectionAreaType.ClosestToCenterScreen)
+                {
+                    await Task.Delay(100);
+                    await Application.Current.Dispatcher.BeginInvoke(() =>
+                        FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
+                            Convert.ToInt16(WinAPICaller.ScreenWidth / 2 / WinAPICaller.scalingFactorX) - 320,
+                            Convert.ToInt16(WinAPICaller.ScreenHeight / 2 / WinAPICaller.scalingFactorY) - 320,
+                            0, 0));
+                }
+            });
 
-        uiManager.D_PredictionMethod.AddDropdownItem("Kalman Filter");
-        uiManager.D_PredictionMethod.AddDropdownItem("Shall0e's Prediction");
-        uiManager.D_PredictionMethod.AddDropdownItem("wisethef0x's EMA Prediction");
 
-        uiManager.D_DetectionAreaType = AimConfig.AddDropdown("Detection Area Type");
-        uiManager.DDI_ClosestToCenterScreen = uiManager.D_DetectionAreaType.AddDropdownItem("Closest to Center Screen");
-        uiManager.DDI_ClosestToCenterScreen.Selected += async (sender, e) =>
-        {
-            await Task.Delay(100);
-            await Application.Current.Dispatcher.BeginInvoke(() =>
-                FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
-                    Convert.ToInt16(WinAPICaller.ScreenWidth / 2 / WinAPICaller.scalingFactorX) - 320,
-                    Convert.ToInt16(WinAPICaller.ScreenHeight / 2 / WinAPICaller.scalingFactorY) - 320,
-                    0, 0));
-        };
+        uiManager.D_AimingBoundariesAlignment = AimConfig.AddDropdown("Aiming Boundaries Alignment",
+            AppConfig.Current.DropdownState.AimingBoundariesAlignment,
+            v => AppConfig.Current.DropdownState.AimingBoundariesAlignment = v);
 
-        uiManager.D_DetectionAreaType.AddDropdownItem("Closest to Mouse");
-
-        uiManager.D_AimingBoundariesAlignment = AimConfig.AddDropdown("Aiming Boundaries Alignment");
-
-        uiManager.D_AimingBoundariesAlignment.AddDropdownItem("Center");
-        uiManager.D_AimingBoundariesAlignment.AddDropdownItem("Top");
-        uiManager.D_AimingBoundariesAlignment.AddDropdownItem("Bottom");
 
         uiManager.S_MouseSensitivity =
             AimConfig.AddSlider("Mouse Sensitivity (+/-)", "Sensitivity", 0.01, 0.01, 0.01, 1);
@@ -593,20 +499,20 @@ public partial class MainWindow
         });
 
         uiManager.T_TriggerSendKey = TriggerBot.AddKeyChanger("Trigger Additional Send",
-            () => Dictionary.bindingSettings["Trigger Additional Send"], bindingManager);
-        uiManager.T_TriggerCheck = TriggerBot.AddDropdown("Trigger Check");
-        uiManager.T_TriggerCheck.AddDropdownItem("None");
-        uiManager.T_TriggerCheck.AddDropdownItem("Intersecting Center");
-        uiManager.T_TriggerCheck.AddDropdownItem("Head Intersecting Center");
+            () => keybind.TriggerAdditionalSend, bindingManager);
+
+        uiManager.T_TriggerCheck = TriggerBot.AddDropdown("Trigger Check", AppConfig.Current.DropdownState.TriggerCheck,
+            check => AppConfig.Current.DropdownState.TriggerCheck = check);
+
         uiManager.T_HeadAreaBtn = TriggerBot.AddButton("Configure Head Area", b =>
         {
-            b.Visibility = Dictionary.dropdownState["Trigger Check"] == "Head Intersecting Center"
+            b.Visibility = AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter
                 ? Visibility.Visible
                 : Visibility.Collapsed;
             b.ToolTip = "Specify the area of the Head when this interaction center the trigger will be executed";
         });
         uiManager.T_HeadAreaBtn.Reader.Click += (s, e) =>
-            new EditHeadArea(Dictionary.dropdownState["Head Area"]?.ToString()).Show();
+            new EditHeadArea(AppConfig.Current.DropdownState.HeadArea).Show();
 
         uiManager.T_TriggerCheck.DropdownBox.SelectionChanged += (sender, args) =>
         {
@@ -616,8 +522,8 @@ public partial class MainWindow
                 : Visibility.Collapsed;
         };
 
-        uiManager.T_TriggerKey = TriggerBot.AddKeyChanger("Trigger Key",
-            () => Dictionary.bindingSettings["Trigger Key"], bindingManager);
+        uiManager.T_TriggerKey = TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerKey),
+            () => keybind.TriggerKey, bindingManager);
         uiManager.S_AutoTriggerDelay = TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 1);
         TriggerBot.AddSeparator();
         TriggerBot.Visibility = GetVisibilityFor("TriggerBot");
@@ -628,9 +534,12 @@ public partial class MainWindow
 
         uiManager.AT_AntiRecoil = AntiRecoil.AddTitle("Anti Recoil", true);
         uiManager.T_AntiRecoil = AntiRecoil.AddToggle("Anti Recoil");
-        uiManager.C_AntiRecoilKeybind = AntiRecoil.AddKeyChanger("Anti Recoil Keybind", "Left", bindingManager);
+        uiManager.C_AntiRecoilKeybind =
+            AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), "Left",
+                bindingManager);
         uiManager.C_ToggleAntiRecoilKeybind =
-            AntiRecoil.AddKeyChanger("Disable Anti Recoil Keybind", "Oem6", bindingManager);
+            AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), "Oem6",
+                bindingManager);
         uiManager.S_HoldTime = AntiRecoil.AddSlider("Hold Time", "Milliseconds", 1, 1, 1, 1000, true);
         uiManager.B_RecordFireRate = AntiRecoil.AddButton("Record Fire Rate");
         uiManager.B_RecordFireRate.Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
@@ -657,24 +566,24 @@ public partial class MainWindow
                 Filter = "Aimmy Style Recoil Config (*.cfg)|*.cfg"
             };
             if (saveFileDialog.ShowDialog() == true)
-            {
-                SaveDictionary.WriteJSON(Dictionary.AntiRecoilSettings, saveFileDialog.FileName);
+                AppConfig.Current.AntiRecoilSettings.Save<AntiRecoilSettings>(saveFileDialog.FileName);
                 new NoticeBar($"[Anti Recoil] Config has been saved to \"{saveFileDialog.FileName}\"", 2000).Show();
-            }
         };
-        uiManager.C_Gun1Key = ARConfig.AddKeyChanger("Gun 1 Key", "D1", bindingManager);
+        uiManager.C_Gun1Key =
+            ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun1Key), "D1", bindingManager);
         uiManager.AFL_Gun1Config = ARConfig.AddFileLocator("Gun 1 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg",
             "\\bin\\anti_recoil_configs");
-        uiManager.C_Gun2Key = ARConfig.AddKeyChanger("Gun 2 Key", "D2", bindingManager);
+        uiManager.C_Gun2Key =
+            ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun2Key), "D2", bindingManager);
         uiManager.AFL_Gun2Config = ARConfig.AddFileLocator("Gun 2 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg",
             "\\bin\\anti_recoil_configs");
 
         uiManager.B_LoadGun1Config = ARConfig.AddButton("Load Gun 1 Config");
         uiManager.B_LoadGun1Config.Reader.Click +=
-            (s, e) => LoadAntiRecoilConfig(Dictionary.filelocationState["Gun 1 Config"], true);
+            (s, e) => LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun1Config, true);
         uiManager.B_LoadGun2Config = ARConfig.AddButton("Load Gun 2 Config");
         uiManager.B_LoadGun2Config.Reader.Click +=
-            (s, e) => LoadAntiRecoilConfig(Dictionary.filelocationState["Gun 2 Config"], true);
+            (s, e) => LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun2Config, true);
         ARConfig.AddSeparator();
         ARConfig.Visibility = GetVisibilityFor("ARConfig");
 
@@ -685,12 +594,12 @@ public partial class MainWindow
         uiManager.AT_FOV = FOVConfig.AddTitle("FOV Config", true);
         uiManager.T_FOV = FOVConfig.AddToggle("FOV");
         uiManager.T_DynamicFOV = FOVConfig.AddToggle("Dynamic FOV");
-        uiManager.C_DynamicFOV = FOVConfig.AddKeyChanger("Dynamic FOV Keybind",
-            () => Dictionary.bindingSettings["Dynamic FOV Keybind"], bindingManager);
+        uiManager.C_DynamicFOV = FOVConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind),
+            () => keybind.DynamicFOVKeybind, bindingManager);
         uiManager.CC_FOVColor = FOVConfig.AddColorChanger("FOV Color");
         uiManager.CC_FOVColor.ColorChangingBorder.Opacity = 0.2;
         uiManager.CC_FOVColor.ColorChangingBorder.Background =
-            (Brush)new BrushConverter().ConvertFromString(Dictionary.colorState["FOV Color"]);
+            (Brush)new BrushConverter().ConvertFromString(AppConfig.Current.ColorState.FOVColor);
         uiManager.CC_FOVColor.Reader.Click += (s, x) =>
         {
             ColorDialog colorDialog = new();
@@ -698,7 +607,7 @@ public partial class MainWindow
             {
                 uiManager.CC_FOVColor.ColorChangingBorder.Background = new SolidColorBrush(
                     Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
-                Dictionary.colorState["FOV Color"] = Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R,
+                AppConfig.Current.ColorState.FOVColor = Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R,
                     colorDialog.Color.G, colorDialog.Color.B).ToString();
                 PropertyChanger.PostColor(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G,
                     colorDialog.Color.B));
@@ -715,12 +624,12 @@ public partial class MainWindow
         uiManager.S_DynamicFOVSize = FOVConfig.AddSlider("Dynamic FOV Size", "Size", 1, 1, 10, 640);
         uiManager.S_DynamicFOVSize.Slider.ValueChanged += (s, x) =>
         {
-            if (Dictionary.toggleState["Dynamic FOV"])
+            if (AppConfig.Current.ToggleState.DynamicFOV)
                 PropertyChanger.PostNewFOVSize(uiManager.S_DynamicFOVSize.Slider.Value);
         };
         uiManager.S_EMASmoothing.Slider.ValueChanged += (s, x) =>
         {
-            if (Dictionary.toggleState["EMA Smoothening"])
+            if (AppConfig.Current.ToggleState.EMASmoothening)
             {
                 MouseManager.smoothingFactor = uiManager.S_EMASmoothing.Slider.Value;
                 Debug.WriteLine(MouseManager.smoothingFactor);
@@ -730,7 +639,7 @@ public partial class MainWindow
         uiManager.S_FOVOpacity.Slider.ValueChanged += (s, x) =>
         {
             uiManager.CC_FOVColor.ColorChangingBorder.Opacity = x.NewValue;
-            Dictionary.colorState["FOV Opacity"] = x.NewValue;
+            AppConfig.Current.SliderSettings.FOVOpacity = x.NewValue;
             PropertyChanger.PostOpacity(x.NewValue);
         };
 
@@ -748,7 +657,7 @@ public partial class MainWindow
         uiManager.T_ShowTracers = ESPConfig.AddToggle("Show Tracers");
         uiManager.CC_DetectedPlayerColor = ESPConfig.AddColorChanger("Detected Player Color");
         uiManager.CC_DetectedPlayerColor.ColorChangingBorder.Background =
-            (Brush)new BrushConverter().ConvertFromString(Dictionary.colorState["Detected Player Color"]);
+            (Brush)new BrushConverter().ConvertFromString(AppConfig.Current.ColorState.DetectedPlayerColor);
         uiManager.CC_DetectedPlayerColor.Reader.Click += (s, x) =>
         {
             ColorDialog colorDialog = new();
@@ -756,7 +665,7 @@ public partial class MainWindow
             {
                 uiManager.CC_DetectedPlayerColor.ColorChangingBorder.Background = new SolidColorBrush(
                     Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
-                Dictionary.colorState["Detected Player Color"] = Color.FromArgb(colorDialog.Color.A,
+                AppConfig.Current.ColorState.DetectedPlayerColor = Color.FromArgb(colorDialog.Color.A,
                     colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B).ToString();
                 PropertyChanger.PostDPColor(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R,
                     colorDialog.Color.G, colorDialog.Color.B));
@@ -790,11 +699,11 @@ public partial class MainWindow
             "In order to use the Gamepad to send actions or AIM you need to select the process where the commands should be send to");
         GamepadSettingsConfig.Add<AProcessPicker>(picker =>
         {
-            picker.SelectedProcessModel = new ProcessModel { Title = Dictionary.dropdownState["Gamepad Process"] };
+            picker.SelectedProcessModel = new ProcessModel { Title = AppConfig.Current.DropdownState.GamepadProcess };
             picker.PropertyChanged += (sender, e) =>
             {
                 if (e.PropertyName == nameof(picker.SelectedProcessModel))
-                    Dictionary.dropdownState["Gamepad Process"] = picker.SelectedProcessModel.Title;
+                    AppConfig.Current.DropdownState.GamepadProcess = picker.SelectedProcessModel.Title;
             };
         });
         GamepadSettingsConfig.AddSeparator();
@@ -806,27 +715,17 @@ public partial class MainWindow
 
         uiManager.T_CollectDataWhilePlaying = SettingsConfig.AddToggle("Collect Data While Playing");
         uiManager.T_AutoLabelData = SettingsConfig.AddToggle("Auto Label Data");
-        uiManager.D_MouseMovementMethod = SettingsConfig.AddDropdown("Mouse Movement Method");
-        uiManager.D_MouseMovementMethod.AddDropdownItem("Mouse Event");
-        uiManager.D_MouseMovementMethod.AddDropdownItem("SendInput");
-        uiManager.DDI_LGHUB = uiManager.D_MouseMovementMethod.AddDropdownItem("LG HUB");
+        uiManager.D_MouseMovementMethod = SettingsConfig.AddDropdown("Mouse Movement Method",
+            AppConfig.Current.DropdownState.MouseMovementMethod, async v =>
+            {
+                AppConfig.Current.DropdownState.MouseMovementMethod = v;
+                if ((v == MouseMovementMethod.LGHUB && !new LGHubMain().Load())
+                    || (v == MouseMovementMethod.RazerSynapse && !await RZMouse.Load())
+                    || (v == MouseMovementMethod.ddxoft && !await DdxoftMain.Load())
+                   )
+                    SelectMouseEvent();
+            });
 
-        uiManager.DDI_LGHUB.Selected += (sender, e) =>
-        {
-            if (!new LGHubMain().Load()) SelectMouseEvent();
-        };
-
-        uiManager.DDI_RazerSynapse =
-            uiManager.D_MouseMovementMethod.AddDropdownItem("Razer Synapse (Require Razer Peripheral)");
-        uiManager.DDI_RazerSynapse.Selected += async (sender, e) =>
-        {
-            if (!await RZMouse.Load()) SelectMouseEvent();
-        };
-        uiManager.DDI_ddxoft = uiManager.D_MouseMovementMethod.AddDropdownItem("ddxoft Virtual Input Driver");
-        uiManager.DDI_ddxoft.Selected += async (sender, e) =>
-        {
-            if (!await DdxoftMain.Load()) SelectMouseEvent();
-        };
         uiManager.S_AIMinimumConfidence =
             SettingsConfig.AddSlider("AI Minimum Confidence", "% Confidence", 1, 1, 1, 100);
         uiManager.S_AIMinimumConfidence.Slider.PreviewMouseLeftButtonUp += (sender, e) =>
@@ -869,7 +768,7 @@ public partial class MainWindow
         CreditsPanel.AddCredit("Babyhamsta", "AI Logic");
         CreditsPanel.AddCredit("MarsQQ", "Design");
         CreditsPanel.AddCredit("Taylor", "Optimization, Cleanup");
-        CreditsPanel.AddCredit("Florian Gilde", "Optimization, Cleanup, Trigger Bot improvements");
+        CreditsPanel.AddCredit("Florian Gilde", "Optimization, Cleanup, Trigger Bot improvements, Gamepad support");
         CreditsPanel.AddSeparator();
 
         CreditsPanel.AddTitle("Contributors");
@@ -939,49 +838,50 @@ public partial class MainWindow
 
     #region Menu Minizations
 
+    // TODO: Refactor this region completely its also bullshit
     private void ToggleAimMenu()
     {
-        SetMenuVisibility(AimAssist, !Dictionary.minimizeState["Aim Assist"]);
+        SetMenuVisibility(AimAssist, !AppConfig.Current.MinimizeState.AimAssist);
     }
 
     private void ToggleAimConfig()
     {
-        SetMenuVisibility(AimConfig, !Dictionary.minimizeState["Aim Config"]);
+        SetMenuVisibility(AimConfig, !AppConfig.Current.MinimizeState.AimConfig);
     }
 
     private void ToggleAutoTrigger()
     {
-        SetMenuVisibility(TriggerBot, !Dictionary.minimizeState["Auto Trigger"]);
+        SetMenuVisibility(TriggerBot, !AppConfig.Current.MinimizeState.AutoTrigger);
     }
 
     private void ToggleAntiRecoilMenu()
     {
-        SetMenuVisibility(AntiRecoil, !Dictionary.minimizeState["Anti Recoil"]);
+        SetMenuVisibility(AntiRecoil, !AppConfig.Current.MinimizeState.AntiRecoil);
     }
 
     private void ToggleAntiRecoilConfigMenu()
     {
-        SetMenuVisibility(ARConfig, !Dictionary.minimizeState["Anti Recoil Config"]);
+        SetMenuVisibility(ARConfig, !AppConfig.Current.MinimizeState.AntiRecoilConfig);
     }
 
     private void ToggleFOVConfigMenu()
     {
-        SetMenuVisibility(FOVConfig, !Dictionary.minimizeState["FOV Config"]);
+        SetMenuVisibility(FOVConfig, !AppConfig.Current.MinimizeState.FOVConfig);
     }
 
     private void ToggleESPConfigMenu()
     {
-        SetMenuVisibility(ESPConfig, !Dictionary.minimizeState["ESP Config"]);
+        SetMenuVisibility(ESPConfig, !AppConfig.Current.MinimizeState.ESPConfig);
     }
 
     private void ToggleSettingsMenu()
     {
-        SetMenuVisibility(SettingsConfig, !Dictionary.minimizeState["Settings Menu"]);
+        SetMenuVisibility(SettingsConfig, !AppConfig.Current.MinimizeState.SettingsMenu);
     }
 
     private void ToggleXYPercentageAdjustmentEnabler()
     {
-        SetMenuVisibility(XYPercentageEnablerMenu, !Dictionary.minimizeState["X/Y Percentage Adjustment"]);
+        SetMenuVisibility(XYPercentageEnablerMenu, !AppConfig.Current.MinimizeState.XYPercentageAdjustment);
     }
 
     private void LoadMenuMinimizers()
@@ -1028,41 +928,42 @@ public partial class MainWindow
 
     #region Config Loader
 
-    private void LoadConfig(string path = "bin\\configs\\Default.cfg", bool loading_from_configlist = false)
+    private void LoadConfig(string path = AppConfig.DefaultConfigPath, bool loading_from_configlist = false)
     {
-        SaveDictionary.LoadJSON(Dictionary.sliderSettings, path);
+        AppConfig.Load(path);
+        // TODO: Refactor this method
+        
         try
         {
             if (loading_from_configlist)
             {
-                if (Dictionary.sliderSettings["Suggested Model"] != "N/A" ||
-                    Dictionary.sliderSettings["Suggested Model"] != "")
+                if (AppConfig.Current.SuggestedModelName != "N/A")
                     MessageBox.Show(
                         "The creator of this model suggests you use this model:\n" +
-                        Dictionary.sliderSettings["Suggested Model"], "Suggested Model - Aimmy"
+                        AppConfig.Current.SuggestedModelName, "Suggested Model - Aimmy"
                     );
 
-                uiManager.S_FireRate!.Slider.Value = GetValueOrDefault(Dictionary.sliderSettings, "Fire Rate", 1);
+                //uiManager.S_FireRate!.Slider.Value = GetValueOrDefault(Dictionary.sliderSettings, "Fire Rate", 1);
 
-                uiManager.S_FOVSize!.Slider.Value = GetValueOrDefault(Dictionary.sliderSettings, "FOV Size", 640);
+                //uiManager.S_FOVSize!.Slider.Value = GetValueOrDefault(Dictionary.sliderSettings, "FOV Size", 640);
 
-                uiManager.S_MouseSensitivity!.Slider.Value =
-                    GetValueOrDefault(Dictionary.sliderSettings, "Mouse Sensitivity (+/-)", 0.8);
-                uiManager.S_MouseJitter!.Slider.Value = GetValueOrDefault(Dictionary.sliderSettings, "Mouse Jitter", 0);
+                //uiManager.S_MouseSensitivity!.Slider.Value =
+                //    GetValueOrDefault(Dictionary.sliderSettings, "Mouse Sensitivity (+/-)", 0.8);
+                //uiManager.S_MouseJitter!.Slider.Value = GetValueOrDefault(Dictionary.sliderSettings, "Mouse Jitter", 0);
 
-                uiManager.S_YOffset!.Slider.Value =
-                    GetValueOrDefault(Dictionary.sliderSettings, "Y Offset (Up/Down)", 0);
-                uiManager.S_XOffset!.Slider.Value =
-                    GetValueOrDefault(Dictionary.sliderSettings, "X Offset (Left/Right)", 0);
+                //uiManager.S_YOffset!.Slider.Value =
+                //    GetValueOrDefault(Dictionary.sliderSettings, "Y Offset (Up/Down)", 0);
+                //uiManager.S_XOffset!.Slider.Value =
+                //    GetValueOrDefault(Dictionary.sliderSettings, "X Offset (Left/Right)", 0);
 
-                uiManager.S_AutoTriggerDelay!.Slider.Value =
-                    GetValueOrDefault(Dictionary.sliderSettings, "Auto Trigger Delay", .25);
-                uiManager.S_AIMinimumConfidence!.Slider.Value =
-                    GetValueOrDefault(Dictionary.sliderSettings, "AI Minimum Confidence", 50);
-                uiManager.S_MinimumLT!.Slider.Value =
-                    GetValueOrDefault(Dictionary.sliderSettings, "Gamepad Minimum LT", 0.7);
-                uiManager.S_MinimumRT!.Slider.Value =
-                    GetValueOrDefault(Dictionary.sliderSettings, "Gamepad Minimum RT", 0.7);
+                //uiManager.S_AutoTriggerDelay!.Slider.Value =
+                //    GetValueOrDefault(Dictionary.sliderSettings, "Auto Trigger Delay", .25);
+                //uiManager.S_AIMinimumConfidence!.Slider.Value =
+                //    GetValueOrDefault(Dictionary.sliderSettings, "AI Minimum Confidence", 50);
+                //uiManager.S_MinimumLT!.Slider.Value =
+                //    GetValueOrDefault(Dictionary.sliderSettings, "Gamepad Minimum LT", 0.7);
+                //uiManager.S_MinimumRT!.Slider.Value =
+                //    GetValueOrDefault(Dictionary.sliderSettings, "Gamepad Minimum RT", 0.7);
             }
         }
         catch (Exception e)
@@ -1078,33 +979,34 @@ public partial class MainWindow
     private void LoadAntiRecoilConfig(string path = "bin\\anti_recoil_configs\\Default.cfg",
         bool loading_outside_startup = false)
     {
-        if (File.Exists(path))
-        {
-            SaveDictionary.LoadJSON(Dictionary.AntiRecoilSettings, path);
-            try
-            {
-                if (loading_outside_startup)
-                {
-                    uiManager.S_HoldTime!.Slider.Value = Dictionary.AntiRecoilSettings["Hold Time"];
+        // TODO: Refactor this method
+        //if (File.Exists(path))
+        //{
+        //    SaveDictionary.LoadJSON(Dictionary.AntiRecoilSettings, path);
+        //    try
+        //    {
+        //        if (loading_outside_startup)
+        //        {
+        //            uiManager.S_HoldTime!.Slider.Value = Dictionary.AntiRecoilSettings["Hold Time"];
 
-                    uiManager.S_FireRate!.Slider.Value = Dictionary.AntiRecoilSettings["Fire Rate"];
+        //            uiManager.S_FireRate!.Slider.Value = Dictionary.AntiRecoilSettings["Fire Rate"];
 
-                    uiManager.S_YAntiRecoilAdjustment!.Slider.Value =
-                        Dictionary.AntiRecoilSettings["Y Recoil (Up/Down)"];
-                    uiManager.S_XAntiRecoilAdjustment!.Slider.Value =
-                        Dictionary.AntiRecoilSettings["X Recoil (Left/Right)"];
-                    new NoticeBar($"[Anti Recoil] Loaded \"{path}\"", 2000).Show();
-                }
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"Error loading config, possibly outdated\n{e}");
-            }
-        }
-        else
-        {
-            new NoticeBar("[Anti Recoil] Config not found.", 5000).Show();
-        }
+        //            uiManager.S_YAntiRecoilAdjustment!.Slider.Value =
+        //                Dictionary.AntiRecoilSettings["Y Recoil (Up/Down)"];
+        //            uiManager.S_XAntiRecoilAdjustment!.Slider.Value =
+        //                Dictionary.AntiRecoilSettings["X Recoil (Left/Right)"];
+        //            new NoticeBar($"[Anti Recoil] Loaded \"{path}\"", 2000).Show();
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new Exception($"Error loading config, possibly outdated\n{e}");
+        //    }
+        //}
+        //else
+        //{
+        //    new NoticeBar("[Anti Recoil] Config not found.", 5000).Show();
+        //}
     }
 
     #endregion Anti Recoil Config Loader
@@ -1114,7 +1016,7 @@ public partial class MainWindow
     private void OpenFolderB_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button clickedButton)
-            Process.Start("explorer.exe", Directory.GetCurrentDirectory() + "bin\\" + clickedButton.Tag);
+            Process.Start("explorer.exe", Path.Combine(Directory.GetCurrentDirectory(), "bin", clickedButton.Tag.ToString()));
     }
 
     #endregion Open Folder
@@ -1127,14 +1029,6 @@ public partial class MainWindow
         uiManager.D_MouseMovementMethod!.DropdownBox.SelectedIndex = 0;
     }
 
-    private static T GetValueOrDefault<T>(Dictionary<string, T> dictionary, string key, T defaultValue)
-    {
-        if (dictionary.TryGetValue(key, out var value))
-            //Debug.WriteLine($"Value: {value}, Dictionary: {key}");
-            return value;
-        //Debug.WriteLine($"Default: {defaultValue}, Dictionary: {key}");
-        return defaultValue;
-    }
 
     #endregion Menu Functions
 
@@ -1175,7 +1069,7 @@ public partial class MainWindow
 
     private static void ShowHideDPWindow()
     {
-        if (!Dictionary.toggleState["Show Detected Player"]) DPWindow.Hide();
+        if (!AppConfig.Current.ToggleState.ShowDetectedPlayer) DPWindow.Hide();
         else DPWindow.Show();
     }
 

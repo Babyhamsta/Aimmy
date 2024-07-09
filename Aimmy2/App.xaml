@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+
+        
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/TotallyNotAimmyV2;component/Theme.xaml" />
@@ -15,6 +17,7 @@
             <FontFamily x:Key="AKONY">pack://application:,,,/Graphics/Fonts/#AKONY</FontFamily>
             <FontFamily x:Key="Atkinson Hyperlegible">pack://application:,,,/Graphics/Fonts/#Atkinson Hyperlegible</FontFamily>
             <FontFamily x:Key="Font Awesome 6 Brands">pack://application:,,,/Graphics/Fonts/#Font Awesome 6 Brands Regular</FontFamily>
+            <BooleanToVisibilityConverter x:Key="boolToVis"/>
 
             <!--#region Material Main Hues  -->
             <SolidColorBrush x:Key="PrimaryHueLightBrush"

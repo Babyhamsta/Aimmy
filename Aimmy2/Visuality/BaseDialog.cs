@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using Aimmy2.Class;
+using Aimmy2.Config;
 
 namespace Visuality;
 
@@ -11,7 +12,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected Func<bool> ShouldBindGradientMouse = () => Dictionary.toggleState["Mouse Background Effect"];
+    protected Func<bool> ShouldBindGradientMouse = () => AppConfig.Current.ToggleState.MouseBackgroundEffect;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {

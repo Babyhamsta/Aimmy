@@ -1,4 +1,5 @@
 ﻿using Aimmy2.Class;
+using Aimmy2.Config;
 
 namespace Aimmy2.UILibrary
 {
@@ -16,7 +17,8 @@ namespace Aimmy2.UILibrary
             if (MinimizableMenu)
             {
                 Minimize.Visibility = System.Windows.Visibility.Visible;
-                switch (Dictionary.minimizeState[Text])
+                var b = AppConfig.Current.MinimizeState[Text];
+                switch (bool.Parse(b?.ToString()))
                 {
                     case false:
                         Minimize.Content = "\xE921";
@@ -30,8 +32,10 @@ namespace Aimmy2.UILibrary
 
             Minimize.Click += (s, e) =>
             {
+                var b = AppConfig.Current.MinimizeState[Text];
                 //Debug.WriteLine(Minimize.Content);
-                switch (Dictionary.minimizeState[Text])
+                var minimized = bool.Parse(b?.ToString());
+                switch (minimized)
                 {
                     case false:
                         Minimize.Content = "\xE710";
@@ -42,7 +46,7 @@ namespace Aimmy2.UILibrary
                         break;
                 }
 
-                Dictionary.minimizeState[Text] = !Dictionary.minimizeState[Text];
+                AppConfig.Current.MinimizeState[Text] = !minimized;
             };
         }
     }
