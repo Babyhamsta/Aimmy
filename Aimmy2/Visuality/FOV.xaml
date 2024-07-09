@@ -25,9 +25,12 @@
             <Ellipse x:Name="Circle"
                      HorizontalAlignment="Center"
                      VerticalAlignment="Center"
-                     Width="640"
-                     Height="640"
-                     Stroke="Red">
+                     Width="{Binding SliderSettings.ActualFovSize}"
+                     Height="{Binding SliderSettings.ActualFovSize}"
+                     Opacity="{Binding SliderSettings.FOVOpacity}">
+                <Ellipse.Stroke>
+                    <SolidColorBrush Color="{Binding ColorState.FOVColor}"></SolidColorBrush>
+                </Ellipse.Stroke>
             </Ellipse>
         </Grid>
     </Grid>

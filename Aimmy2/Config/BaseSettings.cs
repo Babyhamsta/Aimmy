@@ -1,13 +1,68 @@
-﻿using System.ComponentModel;
+﻿using Nextended.Core.Types;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Visuality;
 
 namespace Aimmy2.Config;
 
 public abstract class BaseSettings : INotifyPropertyChanged
 {
+    protected void RaiseAllPropertiesChanged()
+    {
+        var processedObjects = new HashSet<object>();
+        RaiseAllPropertiesChanged(processedObjects);
+    }
+
+    private void RaiseAllPropertiesChanged(HashSet<object> processedObjects)
+    {
+        // Mark this object as processed
+        if (!processedObjects.Add(this))
+        {
+            // If the object was already processed, return to avoid infinite recursion
+            return;
+        }
+
+        GetType().GetProperties().ToList().ForEach(p =>
+        {
+            if (typeof(BaseSettings).IsAssignableFrom(p.PropertyType))
+            {
+                var settingsObj = p.GetValue(this) as BaseSettings;
+                settingsObj?.RaiseAllPropertiesChanged(processedObjects);
+            }
+            else
+            {
+                Console.WriteLine(p.Name);
+                OnPropertyChanged(p.Name);
+            }
+        });
+    }
+
+    public void Load<T>(string path) where T : BaseSettings
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                string json = File.ReadAllText(path);
+                var obj = JsonSerializer.Deserialize<T>(json);
+                foreach (var property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    var value = property.GetValue(obj);
+                    property.SetValue(this, value);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading configuration: {ex.Message}");
+            new NoticeBar($"{ex.Message}", 5000).Show();
+        }
+
+    }
+
     public void Save<T>(string path) where T : BaseSettings
     {
         try
@@ -17,13 +72,12 @@ public abstract class BaseSettings : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            // Fehlerbehandlung hier hinzufügen
             Console.WriteLine($"Error saving configuration: {ex.Message}");
         }
     }
 
 
-    private string PrepareName(string name)
+    protected string PrepareName(string name)
     {
         name = name.Replace("(Up/Down)", "").Replace("(Left/Right)", "");
         var res = name.Replace(" ", "").Replace(":", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace("\\", "").Replace("?", "").Replace("!", "").Replace("'", "").Replace("\"", "").Replace(";", "").Replace(",", "").Replace(".", "").Replace("[", "").Replace("]", "").Replace("{", "").Replace("}", "").Replace("|", "").Replace("=", "").Replace("+", "").Replace("-", "").Replace("*", "").Replace("&", "").Replace("^", "").Replace("%", "").Replace("$", "").Replace("#", "").Replace("@", "").Replace("~", "").Replace("`", "").Replace("<", "").Replace(">", "").Replace(" ", "");

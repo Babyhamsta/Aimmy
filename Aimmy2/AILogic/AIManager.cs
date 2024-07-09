@@ -1,5 +1,4 @@
 ﻿using AILogic;
-using Aimmy2.Class;
 using Class;
 using InputLogic;
 using Microsoft.ML.OnnxRuntime;
@@ -9,12 +8,10 @@ using Supercluster.KDTree;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Globalization;
 using System.IO;
 using System.Windows;
 using Aimmy2.Types;
 using Visuality;
-using Aimmy2.MouseMovementLibraries.GHubSupport.dist;
 using Aimmy2.Config;
 
 namespace Aimmy2.AILogic

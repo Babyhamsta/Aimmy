@@ -1,17 +1,19 @@
-﻿namespace Aimmy2.Config;
+﻿using System.Windows.Media;
+
+namespace Aimmy2.Config;
 
 public class ColorState : BaseSettings
 {
-    private string _fovColor = "#FF8080FF";
-    private string _detectedPlayerColor = "#FF00FFFF";
+    private Color _fovColor = Colors.LightBlue;
+    private Color _detectedPlayerColor = Colors.IndianRed;
 
-    public string FOVColor
+    public Color FOVColor
     {
         get => _fovColor;
         set => SetField(ref _fovColor, value);
     }
 
-    public string DetectedPlayerColor
+    public Color DetectedPlayerColor
     {
         get => _detectedPlayerColor;
         set => SetField(ref _detectedPlayerColor, value);

@@ -27,16 +27,23 @@
                Opacity="0"
                HorizontalContentAlignment="Center"
                VerticalContentAlignment="Center"
-               Foreground="#DDFF0000"
-               FontSize="20" />
+               FontSize="{Binding SliderSettings.AIConfidenceFontSize}" >
+            <Label.Foreground>
+                <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
+            </Label.Foreground>
+        </Label>
         <Border x:Name="DetectedPlayerFocus"
                 Visibility="{Binding Path=ToggleState.ShowDetectedPlayer, Converter={StaticResource boolToVis}}"
                 Width="50"
                 Height="50"
-                BorderThickness="1"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                CornerRadius="{Binding SliderSettings.CornerRadius, Converter={StaticResource doubleToRadius}}"
+                BorderThickness="{Binding SliderSettings.BorderThickness, Converter={StaticResource doubleToThickness}}"
                 Opacity="0">
+            <Border.BorderBrush>
+                <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
+            </Border.BorderBrush>
             <Canvas>
                 <!-- Green Head Area Border -->
                 <Border x:Name="HeadAreaBorder"
@@ -52,8 +59,11 @@
               Y1="0"
               X2="10"
               Y2="10"
-              Stroke="Red"
+              StrokeThickness="{Binding SliderSettings.BorderThickness}"
               Opacity="0">
+            <Line.Stroke>
+                <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
+            </Line.Stroke>
         </Line>
     </Canvas>
 </Window>

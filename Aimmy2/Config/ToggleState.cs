@@ -41,7 +41,14 @@ public class ToggleState : BaseSettings
     public bool ConstantAITracking
     {
         get => _constantAiTracking;
-        set => SetField(ref _constantAiTracking, value);
+        set
+        {
+            SetField(ref _constantAiTracking, value);
+            if (value)
+            {
+                AimAssist = true;
+            }
+        }
     }
 
     public bool Predictions

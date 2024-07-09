@@ -1,17 +1,23 @@
-﻿using AimmyWPF.Class;
+﻿using System.ComponentModel;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using AimmyWPF.Class;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Aimmy2.Types;
+using Nextended.Core.Extensions;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
+using System.Reflection;
+using Aimmy2.Extensions;
 
 namespace Aimmy2.UILibrary
 {
     /// <summary>
     /// Interaction logic for AToggle.xaml
     /// </summary>
-    public partial class AToggle : System.Windows.Controls.UserControl
+    public partial class AToggle : INotifyPropertyChanged
     {
         private static Color EnableColor => ApplicationConstants.AccentColor;
         private static Color DisableColor = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");
@@ -68,6 +74,31 @@ namespace Aimmy2.UILibrary
             };
         }
 
+
+        public AToggle BindTo(Expression<Func<bool>> fn)
+        {
+            var memberExpression = fn.GetMemberExpression();
+            var propertyInfo = (PropertyInfo)memberExpression.Member;
+            var owner = memberExpression.GetOwnerAs<INotifyPropertyChanged>();
+
+            Checked = fn.Compile()();
+
+            owner.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == propertyInfo.Name)
+                {
+                    Checked = fn.Compile()();
+                }
+            };
+
+            Changed += (s, e) =>
+            {
+                propertyInfo.SetValue(owner, e.Value);
+            };
+
+            return this;
+        }
+
         public AToggle(string text) : this()
         {
             Text = text;
@@ -101,6 +132,7 @@ namespace Aimmy2.UILibrary
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, -1, 0));
             Activated?.Invoke(this, EventArgs.Empty);
             Changed?.Invoke(this, new EventArgs<bool>(true));
+            OnPropertyChanged(nameof(Checked));
         }
 
         public void DisableSwitch()
@@ -111,11 +143,20 @@ namespace Aimmy2.UILibrary
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, 16, 0));
             Deactivated?.Invoke(this, EventArgs.Empty);
             Changed?.Invoke(this, new EventArgs<bool>(false));
+            OnPropertyChanged(nameof(Checked));
         }
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
             ToggleState();
         }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
     }
 }

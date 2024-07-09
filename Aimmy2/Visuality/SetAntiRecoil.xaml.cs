@@ -86,7 +86,6 @@ namespace Visuality
         private void ConfirmB_Click(object sender, RoutedEventArgs e)
         {
             AppConfig.Current.AntiRecoilSettings.FireRate = ChangingFireRate;
-            MainWin.uiManager.S_FireRate!.Slider.Value = ChangingFireRate;
 
             MainWin.WindowState = WindowState.Normal;
 

@@ -1,6 +1,7 @@
 ﻿<Application x:Class="Aimmy2.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converter="clr-namespace:Aimmy2.Converter"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
 
@@ -18,6 +19,8 @@
             <FontFamily x:Key="Atkinson Hyperlegible">pack://application:,,,/Graphics/Fonts/#Atkinson Hyperlegible</FontFamily>
             <FontFamily x:Key="Font Awesome 6 Brands">pack://application:,,,/Graphics/Fonts/#Font Awesome 6 Brands Regular</FontFamily>
             <BooleanToVisibilityConverter x:Key="boolToVis"/>
+            <converter:DoubleToThicknessConverter x:Key="doubleToThickness"/>
+            <converter:DoubleToCornerRadiusConverter x:Key="doubleToRadius"/>
 
             <!--#region Material Main Hues  -->
             <SolidColorBrush x:Key="PrimaryHueLightBrush"

@@ -87,10 +87,10 @@ namespace Other
         public async Task LoadModel(string selectedModel, string modelPath)
         {
             // Check if the model is already selected or currently loading
-            if (AppConfig.Current.lastLoadedModel == selectedModel || CurrentlyLoadingModel) return;
+            if (CurrentlyLoadingModel) return;
 
             CurrentlyLoadingModel = true;
-            AppConfig.Current.lastLoadedModel = selectedModel;
+            AppConfig.Current.LastLoadedModel = selectedModel;
 
             // Store original values and disable them temporarily
             var toggleKeys = new[] { "Aim Assist", "Constant AI Tracking", "Auto Trigger", "Show Detected Player", "Show AI Confidence", "Show Tracers" };
@@ -127,8 +127,6 @@ namespace Other
             string configPath = Path.Combine("bin/configs", selectedConfig);
 
             AppConfig.Load(configPath);
-            PropertyChanger.PostNewConfig(configPath, true);
-
             SelectedConfigNotifier.Content = "Loaded Config: " + selectedConfig;
         }
 
@@ -179,7 +177,7 @@ namespace Other
 
                     if (ModelListBox.Items.Count > 0)
                     {
-                        string? lastLoadedModel = AppConfig.Current.lastLoadedModel;
+                        string? lastLoadedModel = AppConfig.Current.LastLoadedModel;
                         if (lastLoadedModel != "N/A" && !ModelListBox.Items.Contains(lastLoadedModel)) { ModelListBox.SelectedItem = lastLoadedModel; }
                         SelectedModelNotifier.Content = $"Loaded Model: {lastLoadedModel}";
                     }
@@ -203,7 +201,7 @@ namespace Other
 
                     if (ConfigListBox.Items.Count > 0)
                     {
-                        string? lastLoadedConfig = AppConfig.Current.lastLoadedConfig;
+                        string? lastLoadedConfig = AppConfig.Current.LastLoadedConfig;
                         if (lastLoadedConfig != "N/A" && !ConfigListBox.Items.Contains(lastLoadedConfig)) { ConfigListBox.SelectedItem = lastLoadedConfig; }
 
                         SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;

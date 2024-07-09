@@ -24,7 +24,7 @@ namespace InputLogic
         private const uint MOUSEEVENTF_MOVE = 0x0001;
         private static double previousX = 0;
         private static double previousY = 0;
-        public static double smoothingFactor = 0.5;
+        public static double smoothingFactor => AppConfig.Current.SliderSettings.EMASmoothening;
         public static bool IsEMASmoothingEnabled => AppConfig.Current.ToggleState.EMASmoothening;
 
         [DllImport("user32.dll")]

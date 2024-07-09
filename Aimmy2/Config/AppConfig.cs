@@ -1,17 +1,24 @@
-﻿using System.IO;
+﻿using System.ComponentModel;
+using System.IO;
 using System.Text.Json;
+using System.Windows;
 using Accord.IO;
+using Aimmy2.Types;
 using Visuality;
 
 namespace Aimmy2.Config;
 
 public class AppConfig : BaseSettings
 {
-    public const string DefaultConfigPath = "bin\\configs\\Default.config";
+    public const string DefaultConfigPath = "bin\\configs\\Default.cfg";
+
+    public string? Path;
+
     public static AppConfig Current { get; private set; }
 
-    public string lastLoadedModel = "N/A";
-    public string lastLoadedConfig = "N/A";
+    public string LastLoadedModel { get; set; } = "N/A";
+    
+    public string LastLoadedConfig = "N/A";
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     public DetectedPlayerWindow? DetectedPlayerOverlay;
     public FOV? FOVWindow;
@@ -37,7 +44,8 @@ public class AppConfig : BaseSettings
                 string json = File.ReadAllText(path);
                 
                 Current = JsonSerializer.Deserialize<AppConfig>(json);
-                Current.lastLoadedConfig = path;
+                Current.Path = path;
+                Current.LastLoadedConfig = path;
             }
             else
             {
@@ -50,12 +58,23 @@ public class AppConfig : BaseSettings
             Console.WriteLine($"Error loading configuration: {ex.Message}");
             Current = new AppConfig();
         }
+        ConfigLoaded?.Invoke(null, new EventArgs<AppConfig>(Current));
+        Current.RaiseAllPropertiesChanged();
         return Current;
     }
 
-
-    public void Save(string path = DefaultConfigPath)
+    public static void BindToDataContext(FrameworkElement element)
     {
+        element.DataContext = Current;
+        ConfigLoaded += (sender, e) => element.DataContext = e.Value;
+    }
+
+    public void Save(string? path = null)
+    {
+        path ??= Path ?? DefaultConfigPath;
         Save<AppConfig>(path);
     }
+
+    public static event EventHandler<EventArgs<AppConfig>>? ConfigLoaded;
+
 }

@@ -153,6 +153,12 @@ public static class UIElementExtensions
     }
 
 
+    public static T RemoveAll<T>(this T panel) where T : Panel
+    {
+        panel.Children.Clear();
+        return panel;
+    }
+
     public static T Add<T>(this IAddChild panel, Func<T> ctor, Action<T>? cfg = null) where T : UIElement => panel.Add<T>(ctor(), cfg);
 
     public static T Add<T>(this IAddChild panel, Action<T>? cfg = null) where T : UIElement, new() => panel.Add(new T(), cfg);
@@ -169,21 +175,11 @@ public static class UIElementExtensions
     }
 
 
-    public static AToggle AddToggle(this IAddChild panel, string title, bool bindToSettings = true, Action<AToggle>? cfg = null)
+    public static AToggle AddToggle(this IAddChild panel, string title, Action<AToggle>? cfg = null)
     {
-        var value = bindToSettings && bool.TryParse(AppConfig.Current.ToggleState[title].ToString(), out var val) ? val : false;
         return panel.Add<AToggle>(toggle =>
         {
             toggle.Text = title;
-            toggle.Checked = value;
-            if (bindToSettings)
-            {
-                toggle.Changed += (sender, e) =>
-                {
-                    AppConfig.Current.ToggleState[title] = e.Value;
-                };
-            }
-
             cfg?.Invoke(toggle);
         });
     }
@@ -259,12 +255,6 @@ public static class UIElementExtensions
             slider.Slider.Minimum = min;
             slider.Slider.Maximum = max;
             slider.Slider.TickFrequency = frequency;
-
-            BaseSettings settings = forAntiRecoil ? AppConfig.Current.AntiRecoilSettings : AppConfig.Current.SliderSettings;
-            var sliderValue = settings[title].ToString();
-            slider.Slider.Value = double.TryParse(sliderValue, out var d) ? d : int.Parse(sliderValue);
-            
-            slider.Slider.ValueChanged += (s, e) => settings[title] = slider.Slider.Value;
         });
     }
 

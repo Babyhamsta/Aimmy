@@ -16,7 +16,7 @@ public class SliderSettings: BaseSettings
     private double _gamepadMinimumLt = 0.7;
     private double _gamepadMinimumRt = 0.7;
     private int _aiConfidenceFontSize = 20;
-    private int _cornerRadius = 0;
+    private double _cornerRadius = 0;
     private double _borderThickness = 1;
     private double _opacity = 1;
     private double _fovOpacity = 1;
@@ -26,6 +26,8 @@ public class SliderSettings: BaseSettings
         get => _suggestedModel;
         set => SetField(ref _suggestedModel, value);
     }
+
+    public double ActualFovSize => AppConfig.Current.ToggleState.DynamicFOV ? _dynamicFovSize : _fovSize;
 
     public double FOVSize
     {
@@ -107,7 +109,7 @@ public class SliderSettings: BaseSettings
         set => SetField(ref _aiConfidenceFontSize, value);
     }
 
-    public int CornerRadius
+    public double CornerRadius
     {
         get => _cornerRadius;
         set => SetField(ref _cornerRadius, value);
@@ -129,5 +131,13 @@ public class SliderSettings: BaseSettings
     {
         get => _fovOpacity;
         set => SetField(ref _fovOpacity, value);
+    }
+
+    protected override void OnPropertyChanged(string? propertyName = null)
+    {
+        if (propertyName is nameof(FOVSize) or nameof(DynamicFOVSize))
+            OnPropertyChanged(nameof(ActualFovSize));
+        
+        base.OnPropertyChanged(propertyName);
     }
 }

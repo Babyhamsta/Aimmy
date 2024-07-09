@@ -1,5 +1,12 @@
-﻿using System.Windows.Controls;
+﻿using Nextended.Core;
+using System.ComponentModel;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Threading.Channels;
+using System.Windows.Controls;
 using System.Windows.Input;
+using Aimmy2.Extensions;
+using System.Numerics;
 
 namespace Aimmy2.UILibrary
 {
@@ -22,6 +29,31 @@ namespace Aimmy2.UILibrary
             SubtractOne.Click += (s, e) => UpdateSliderValue(-ButtonSteps);
             AddOne.Click += (s, e) => UpdateSliderValue(ButtonSteps);
         }
+
+        public ASlider BindTo<T>(Expression<Func<T>> fn) where T : struct, INumber<T>
+        {
+            var memberExpression = fn.GetMemberExpression();
+            var propertyInfo = (PropertyInfo)memberExpression.Member;
+            var owner = memberExpression.GetOwnerAs<INotifyPropertyChanged>();
+
+            Slider.Value = Convert.ToDouble(fn.Compile()());
+
+            owner.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == propertyInfo.Name)
+                {
+                    Slider.Value = Convert.ToDouble(fn.Compile()());
+                }
+            };
+
+            Slider.ValueChanged += (s, e) =>
+            {
+                propertyInfo.SetValue(owner, T.CreateChecked(e.NewValue));
+            };
+
+            return this;
+        }
+
 
         private void UpdateSliderValue(double change)
         {
