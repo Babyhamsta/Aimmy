@@ -462,22 +462,29 @@ public partial class MainWindow
             {
                 if (args.PropertyName == nameof(Config.DropdownState.TriggerCheck))
                 {
-                    b.Visibility = AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter
-                        ? Visibility.Visible
-                        : Visibility.Collapsed;
+                    b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter;
                 }
             };
-            b.Visibility = AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+            b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter; 
             b.ToolTip = "Specify the area of the Head when this interaction center the trigger will be executed";
         }).Reader.Click += (s, e) => 
             new EditHeadArea(AppConfig.Current.DropdownState.HeadArea).Show();
 
 
-        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerKey),
-            () => keybind.TriggerKey, bindingManager);
-        TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
+        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerKey), () => keybind.TriggerKey, bindingManager);
+        TriggerBot.AddSlider("Min Time Trigger Key", "Seconds", 0.01, 0.1, 0.0, 5).InitWith(slider =>
+        {
+            Config.BindingSettings.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(Config.BindingSettings.TriggerKey))
+                {
+                    slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey); 
+                }
+            };
+            slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey); 
+            slider.ToolTip = "The minimum time the trigger key must be held down before the trigger is executed";
+        }).BindTo(() => AppConfig.Current.SliderSettings.TriggerKeyMin);
+        TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
         TriggerBot.AddSeparator();
         TriggerBot.Visibility = GetVisibilityFor("TriggerBot");
 

@@ -34,7 +34,6 @@ public abstract class BaseSettings : INotifyPropertyChanged
             }
             else
             {
-                Console.WriteLine(p.Name);
                 OnPropertyChanged(p.Name);
             }
         });

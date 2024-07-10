@@ -8,8 +8,8 @@ namespace InputLogic
     {
         private IKeyboardMouseEvents? _mEvents;
         private bool _gamepadListen;
-        private readonly Dictionary<string, string> bindings = [];
-        private static readonly Dictionary<string, bool> isHolding = [];
+        private readonly Dictionary<string, string> bindings = new();
+        private static readonly Dictionary<string, (bool IsHolding, DateTime StartTime)> isHolding = new();
         private string? settingBindingId = null;
 
         public event Action<string, string>? OnBindingSet;
@@ -18,15 +18,36 @@ namespace InputLogic
 
         public event Action<string>? OnBindingReleased;
 
+        public static bool IsValidKey(string key)
+        {
+            return !string.IsNullOrWhiteSpace(key) && key.ToLower() != "none";
+        }
+
         public static bool IsHoldingBinding(string bindingId)
         {
-            return isHolding.TryGetValue(bindingId, out bool holding) && holding;
+            return isHolding.TryGetValue(bindingId, out var holding) && holding.IsHolding;
+        }
+
+        public static TimeSpan GetHoldingTime(string bindingId)
+        {
+            if (isHolding.TryGetValue(bindingId, out var holding) && holding.IsHolding)
+            {
+                return DateTime.Now - holding.StartTime;
+            }
+            return TimeSpan.Zero;
+        }
+
+        public static bool IsHoldingBindingFor(string bindingId, TimeSpan? duration)
+        {
+            if(duration == null || duration <= TimeSpan.Zero)
+                return IsHoldingBinding(bindingId);
+            return GetHoldingTime(bindingId) >= duration;
         }
 
         public void SetupDefault(string bindingId, string keyCode)
         {
             bindings[bindingId] = keyCode;
-            isHolding[bindingId] = false;
+            isHolding[bindingId] = (false, DateTime.MinValue);
             OnBindingSet?.Invoke(bindingId, keyCode);
             EnsureHookEvents();
         }
@@ -72,13 +93,14 @@ namespace InputLogic
                     {
                         if (binding.Value == e.Code)
                         {
-                            isHolding[binding.Key] = pressed;
                             if (pressed)
                             {
+                                isHolding[binding.Key] = (true, DateTime.Now);
                                 OnBindingPressed?.Invoke(binding.Key);
                             }
                             else
                             {
+                                isHolding[binding.Key] = (false, DateTime.MinValue);
                                 OnBindingReleased?.Invoke(binding.Key);
                             }
                         }
@@ -101,7 +123,7 @@ namespace InputLogic
                 {
                     if (binding.Value == e.KeyCode.ToString())
                     {
-                        isHolding[binding.Key] = true;
+                        isHolding[binding.Key] = (true, DateTime.Now);
                         OnBindingPressed?.Invoke(binding.Key);
                     }
                 }
@@ -122,7 +144,7 @@ namespace InputLogic
                 {
                     if (binding.Value == e.Button.ToString())
                     {
-                        isHolding[binding.Key] = true;
+                        isHolding[binding.Key] = (true, DateTime.Now);
                         OnBindingPressed?.Invoke(binding.Key);
                     }
                 }
@@ -135,7 +157,7 @@ namespace InputLogic
             {
                 if (binding.Value == e.KeyCode.ToString())
                 {
-                    isHolding[binding.Key] = false;
+                    isHolding[binding.Key] = (false, DateTime.MinValue);
                     OnBindingReleased?.Invoke(binding.Key);
                 }
             }
@@ -147,7 +169,7 @@ namespace InputLogic
             {
                 if (binding.Value == e.Button.ToString())
                 {
-                    isHolding[binding.Key] = false;
+                    isHolding[binding.Key] = (false, DateTime.MinValue);
                     OnBindingReleased?.Invoke(binding.Key);
                 }
             }

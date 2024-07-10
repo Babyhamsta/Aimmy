@@ -5,6 +5,9 @@ using System.Windows;
 using System.Windows.Input;
 using Aimmy2.Class;
 using Aimmy2.Config;
+using System.IO;
+using Accord.Math;
+using Aimmy2;
 
 namespace Visuality;
 
@@ -27,4 +30,25 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
         return true;
     }
 
+    protected override void OnInitialized(EventArgs e)
+    {
+        base.OnInitialized(e);
+        var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
+        settingsManager.LoadWindowSettings(this);
+    }
+    
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
+        settingsManager.SaveWindowSettings(this);
+    }
+
+    private string GetSettingsFilePath()
+    {
+        var dialogType = GetType().Name;
+        var folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ApplicationConstants.ApplicationName);
+        Directory.CreateDirectory(folderPath);
+        return Path.Combine(folderPath, $"{dialogType}_WindowSettings.bin");
+    }
 }

@@ -22,6 +22,7 @@ public class SliderSettings: BaseSettings
     private double _borderThickness = 1;
     private double _opacity = 1;
     private double _fovOpacity = 1;
+    private double _triggerKeyMin = 0.0;
 
     public string SuggestedModel
     {
@@ -79,6 +80,12 @@ public class SliderSettings: BaseSettings
     {
         get => _emaSmoothening;
         set => SetField(ref _emaSmoothening, value);
+    }
+
+    public double TriggerKeyMin
+    {
+        get => _triggerKeyMin;
+        set => SetField(ref _triggerKeyMin, value);
     }
 
     public double AutoTriggerDelay

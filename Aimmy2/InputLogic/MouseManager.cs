@@ -5,8 +5,10 @@ using Class;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
 using MouseMovementLibraries.SendInputSupport;
-using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Input;
+using Point = System.Drawing.Point;
 
 namespace InputLogic
 {
@@ -51,53 +53,79 @@ namespace InputLogic
         }
 
         private static double EmaSmoothing(double previousValue, double currentValue, double smoothingFactor) => (currentValue * smoothingFactor) + (previousValue * (1 - smoothingFactor));
+        public static bool IsLeftDown
+        {
+            get
+            {
+                if (Application.Current.Dispatcher.CheckAccess())
+                {
+                    return Mouse.LeftButton == MouseButtonState.Pressed;
+                }
+
+                return Application.Current.Dispatcher.Invoke(() => Mouse.LeftButton == MouseButtonState.Pressed);
+            }
+        }
+
+        public static void LeftDown()
+        {
+            switch (AppConfig.Current.DropdownState.MouseMovementMethod)
+            {
+                case MouseMovementMethod.SendInput:
+                    SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTDOWN);
+                    return;
+
+                case MouseMovementMethod.LGHUB:
+                    LGMouse.Move(1, 0, 0, 0);
+                    return;
+
+                case MouseMovementMethod.RazerSynapse:
+                    RZMouse.mouse_click(1);
+                    return;
+
+                case MouseMovementMethod.ddxoft:
+                    DdxoftMain.ddxoftInstance.btn!(1);
+                    return;
+
+                default:
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    break;
+            }
+
+        }
+
+        public static void LeftUp()
+        {
+            switch (AppConfig.Current.DropdownState.MouseMovementMethod)
+            {
+                case MouseMovementMethod.SendInput:
+                    SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTUP);
+                    return;
+
+                case MouseMovementMethod.LGHUB:
+                    LGMouse.Move(0, 0, 0, 0);
+                    return;
+
+                case MouseMovementMethod.RazerSynapse:
+                    RZMouse.mouse_click(0);
+                    return;
+
+                case MouseMovementMethod.ddxoft:
+                    DdxoftMain.ddxoftInstance.btn(2);
+                    return;
+
+                default:
+                    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                    break;
+            }
+        }
 
         public static async Task DoTriggerClick()
         {
-            int timeSinceLastClick = (int)(DateTime.UtcNow - LastClickTime).TotalMilliseconds;
-            int triggerDelayMilliseconds = (int)(AppConfig.Current.SliderSettings.AutoTriggerDelay * 1000);
             const int clickDelayMilliseconds = 20;
 
-            if (timeSinceLastClick < triggerDelayMilliseconds && LastClickTime != DateTime.MinValue)
-            {
-                return;
-            }
-
-            var mouseMovementMethod = AppConfig.Current.DropdownState.MouseMovementMethod;
-            Action mouseDownAction;
-            Action mouseUpAction;
-
-            switch (mouseMovementMethod)
-            {
-                case MouseMovementMethod.SendInput:
-                    mouseDownAction = () => SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTDOWN);
-                    mouseUpAction = () => SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTUP);
-                    break;
-
-                case MouseMovementMethod.LGHUB:
-                    mouseDownAction = () => LGMouse.Move(1, 0, 0, 0);
-                    mouseUpAction = () => LGMouse.Move(0, 0, 0, 0);
-                    break;
-
-                case MouseMovementMethod.RazerSynapse:
-                    mouseDownAction = () => RZMouse.mouse_click(1);
-                    mouseUpAction = () => RZMouse.mouse_click(0);
-                    break;
-
-                case MouseMovementMethod.ddxoft:
-                    mouseDownAction = () => DdxoftMain.ddxoftInstance.btn!(1);
-                    mouseUpAction = () => DdxoftMain.ddxoftInstance.btn(2);
-                    break;
-
-                default:
-                    mouseDownAction = () => mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-                    mouseUpAction = () => mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-                    break;
-            }
-
-            mouseDownAction.Invoke();
+            LeftDown();
             await Task.Delay(clickDelayMilliseconds);
-            mouseUpAction.Invoke();
+            LeftUp();
 
             LastClickTime = DateTime.UtcNow;
         }

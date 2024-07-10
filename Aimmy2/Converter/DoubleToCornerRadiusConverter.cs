@@ -10,7 +10,6 @@ public class DoubleToCornerRadiusConverter : IValueConverter
     {
         if (value is double doubleValue)
         {
-            Console.WriteLine(doubleValue);
             return new CornerRadius(doubleValue);
         }
         return new CornerRadius(0);

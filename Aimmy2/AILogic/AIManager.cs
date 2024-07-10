@@ -232,7 +232,7 @@ namespace Aimmy2.AILogic
         private bool TriggerKeyUnsetOrHold()
         {
             var triggerKey = AppConfig.Current.BindingSettings.TriggerKey;
-            return string.IsNullOrEmpty(triggerKey) || triggerKey == "None" || InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.TriggerKey));
+            return string.IsNullOrEmpty(triggerKey) || triggerKey == "None" || InputBindingManager.IsHoldingBindingFor(nameof(AppConfig.Current.BindingSettings.TriggerKey), TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.TriggerKeyMin));
         }
 
         private async Task AutoTrigger(Prediction prediction)
@@ -241,16 +241,19 @@ namespace Aimmy2.AILogic
             {
                 if (TriggerKeyUnsetOrHold())
                 {
+                   // MouseManager.LeftDown();
                     if (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.None
                         || (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter && prediction.IsUpperMiddleIntersectingCenter)
                         || (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.IntersectingCenter && prediction.InteractsWithCenterOfFov)
                         )
                     {
+                        await Task.Delay(TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.AutoTriggerDelay));
                         var addtionalSendKey = AppConfig.Current.BindingSettings.TriggerAdditionalSend;
                         if (!string.IsNullOrEmpty(addtionalSendKey) && addtionalSendKey != "None")
                         {
                             InputBindingManager.SendKey(addtionalSendKey);
                         }
+                        //MouseManager.LeftUp();
                         await MouseManager.DoTriggerClick();
                     }
                 }
