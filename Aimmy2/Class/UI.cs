@@ -30,7 +30,9 @@ namespace Class
         public ASlider? S_MouseSensitivity { get; set; }
         public ASlider? S_MouseJitter { get; set; }
         public ASlider? S_YOffset { get; set; }
+        public ASlider? S_YOffsetPercent { get; set; }
         public ASlider? S_XOffset { get; set; }
+        public ASlider? S_XOffsetPercent { get; set; }
         public ASlider? S_EMASmoothing { get; set; }
 
         // Triggerbot

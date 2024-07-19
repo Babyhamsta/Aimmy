@@ -17,7 +17,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using UILibrary;
 using Visuality;
-using static Aimmy2.Other.GithubManager;
 using Application = System.Windows.Application;
 
 namespace Aimmy2
@@ -634,10 +633,10 @@ namespace Aimmy2
             uiManager.S_MouseJitter = AddSlider(AimConfig, "Mouse Jitter", "Jitter", 1, 1, 0, 15);
 
             uiManager.S_YOffset = AddSlider(AimConfig, "Y Offset (Up/Down)", "Offset", 1, 1, -150, 150);
-            uiManager.S_YOffset = AddSlider(AimConfig, "Y Offset (%)", "Percent", 1, 1, 0, 100);
+            uiManager.S_YOffsetPercent = AddSlider(AimConfig, "Y Offset (%)", "Percent", 1, 1, 0, 100);
 
             uiManager.S_XOffset = AddSlider(AimConfig, "X Offset (Left/Right)", "Offset", 1, 1, -150, 150);
-            uiManager.S_XOffset = AddSlider(AimConfig, "X Offset (%)", "Percent", 1, 1, 0, 100);
+            uiManager.S_XOffsetPercent = AddSlider(AimConfig, "X Offset (%)", "Percent", 1, 1, 0, 100);
 
             uiManager.S_EMASmoothing = AddSlider(AimConfig, "EMA Smoothening", "Amount", 0.01, 0.01, 0.01, 1);
 
@@ -829,7 +828,7 @@ namespace Aimmy2
 
             AddSeparator(SettingsConfig);
 
-            // X/Y Percentage Adjustment Enabler
+            // X/Y Percentage Adjustment Toggles
             uiManager.AT_XYPercentageAdjustmentEnabler = AddTitle(XYPercentageEnablerMenu, "X/Y Percentage Adjustment", true);
             uiManager.T_XAxisPercentageAdjustment = AddToggle(XYPercentageEnablerMenu, "X Axis Percentage Adjustment");
             uiManager.T_YAxisPercentageAdjustment = AddToggle(XYPercentageEnablerMenu, "Y Axis Percentage Adjustment");
@@ -1007,6 +1006,9 @@ namespace Aimmy2
                     uiManager.S_YOffset!.Slider.Value = MainWindow.GetValueOrDefault(Dictionary.sliderSettings, "Y Offset (Up/Down)", 0);
                     uiManager.S_XOffset!.Slider.Value = MainWindow.GetValueOrDefault(Dictionary.sliderSettings, "X Offset (Left/Right)", 0);
 
+                    uiManager.S_YOffsetPercent!.Slider.Value = MainWindow.GetValueOrDefault(Dictionary.sliderSettings, "Y Offset (%)", 0);
+                    uiManager.S_XOffsetPercent!.Slider.Value = MainWindow.GetValueOrDefault(Dictionary.sliderSettings, "X Offset (%)", 0);
+
                     uiManager.S_AutoTriggerDelay!.Slider.Value = MainWindow.GetValueOrDefault(Dictionary.sliderSettings, "Auto Trigger Delay", .25);
                     uiManager.S_AIMinimumConfidence!.Slider.Value = MainWindow.GetValueOrDefault(Dictionary.sliderSettings, "AI Minimum Confidence", 50);
                 }
@@ -1119,8 +1121,8 @@ namespace Aimmy2
 
         private static void ShowHideDPWindow()
         {
-            if (!Dictionary.toggleState["Show Detected Player"]) DPWindow.Hide();
-            else DPWindow.Show();
+            if (!Dictionary.toggleState["Show Detected Player"]) { DPWindow.Hide(); }
+            else { DPWindow.Show(); }
         }
 
         private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
