@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Win32;
+using System.Diagnostics;
 using System.IO;
 using System.Management;
 using System.Net.Http;
@@ -39,23 +40,48 @@ namespace MouseMovementLibraries.RazerSupport
             return Razer_HID.Count != 0;
         }
 
-        public static async Task<bool> CheckRazerSynapseInstall()
+        public static async Task<bool> CheckRazerSynapseInstall() // returns true if running/installed and false if not installed/running
         {
-            var razerSynapseProcesses = Process.GetProcessesByName("Razer Synapse");
-            if (razerSynapseProcesses.Length == 0)
+            bool isSynapseRunning = Process.GetProcessesByName("RazerAppEngine").Any();
+
+            if (isSynapseRunning) return true;
+
+            var result = MessageBox.Show("Razer Synapse is not running, do you have it installed?",
+                                         "Aimmy - Razer Synapse", MessageBoxButton.YesNo);
+            Debug.WriteLine("Couldn't Find Process");
+            if (result == MessageBoxResult.No)
             {
-                var result = MessageBox.Show("Razer Synapse is not running, do you have it installed?", "Aimmy - Razer Synapse", MessageBoxButton.YesNo);
-                if (result == MessageBoxResult.No)
+                await InstallRazerSynapse();
+                return false;
+            }
+
+            bool isSynapseInstalled = Directory.Exists(@"C:\Program Files\Razer") ||
+                                      Directory.Exists(@"C:\Program Files (x86)\Razer") ||
+                                      CheckRazerRegistryKey();
+
+            // If directories are missing and the regkey, confirm installation intent with the user
+            if (!isSynapseInstalled)
+            {
+                var installConfirmation = MessageBox.Show("Razer Synapse is not installed, would you like to install it?",
+                                                          "Aimmy - Razer Synapse", MessageBoxButton.YesNo);
+
+                if (installConfirmation == MessageBoxResult.Yes)
                 {
                     await InstallRazerSynapse();
                     return false;
                 }
-                else
-                {
-                    return true;
-                }
             }
-            else return true;
+
+            // Return true if Synapse is installed (either was already installed or user declined installation)
+            return isSynapseInstalled;
+        }
+
+        private static bool CheckRazerRegistryKey()
+        {
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Razer"))
+            {
+                return key != null ? true : false;
+            }
         }
 
         private static async Task InstallRazerSynapse()
@@ -119,6 +145,7 @@ namespace MouseMovementLibraries.RazerSupport
                 MessageBox.Show("No Razer Peripheral is detected, this Mouse Movement Method is unusable.", "Aimmy");
                 return false;
             }
+
             try
             {
                 return init();

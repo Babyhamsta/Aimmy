@@ -247,13 +247,13 @@ namespace Aimmy2.AILogic
 
         private void UpdateOverlay(DetectedPlayerWindow DetectedPlayerOverlay)
         {
+            var scalingFactorX = WinAPICaller.scalingFactorX;
+            var scalingFactorY = WinAPICaller.scalingFactorY;
+            var centerX = Convert.ToInt16(LastDetectionBox.X / scalingFactorX) + (LastDetectionBox.Width / 2.0);
+            var centerY = Convert.ToInt16(LastDetectionBox.Y / scalingFactorY);
+
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var scalingFactorX = WinAPICaller.scalingFactorX;
-                var scalingFactorY = WinAPICaller.scalingFactorY;
-                var centerX = Convert.ToInt16(LastDetectionBox.X / scalingFactorX) + (LastDetectionBox.Width / 2.0);
-                var centerY = Convert.ToInt16(LastDetectionBox.Y / scalingFactorY);
-
                 if (Dictionary.toggleState["Show AI Confidence"])
                 {
                     DetectedPlayerOverlay.DetectedPlayerConfidence.Opacity = 1;
@@ -454,14 +454,13 @@ namespace Aimmy2.AILogic
                 CenterXTranslated = nearest[0].Item2.CenterXTranslated;
                 CenterYTranslated = nearest[0].Item2.CenterYTranslated;
 
-                // Moved SaveFrameAsync over here to get accurate Prediction Labelling
-                await SaveFrameAsync(frame, nearest[0].Item2);
+                SaveFrame(frame, nearest[0].Item2);
 
                 return nearest[0].Item2;
             }
             else if (Dictionary.toggleState["Collect Data While Playing"] && !Dictionary.toggleState["Constant AI Tracking"] && !Dictionary.toggleState["Auto Label Data"])
             {
-                await SaveFrameAsync(frame, null); // Save the frame without a prediction for the people without pre-existing models. Since people complained about this...
+                SaveFrame(frame);
             }
 
             return null;
@@ -513,54 +512,42 @@ namespace Aimmy2.AILogic
 
         #region Screen Capture
 
-        private async Task SaveFrameAsync(Bitmap frame, Prediction? DoLabel)
+        private void SaveFrame(Bitmap frame, Prediction? DoLabel = null)
         {
-            if (Dictionary.toggleState["Collect Data While Playing"] && !Dictionary.toggleState["Constant AI Tracking"])
+            if (!Dictionary.toggleState["Collect Data While Playing"] && Dictionary.toggleState["Constant AI Tracking"]) return;
+            if ((DateTime.Now - lastSavedTime).TotalMilliseconds < 500) return;
+
+            lastSavedTime = DateTime.Now;
+            string uuid = Guid.NewGuid().ToString();
+
+            string imagePath = Path.Combine("bin", "images", $"{uuid}.jpg");
+            frame.Save(imagePath);
+
+            if (Dictionary.toggleState["Auto Label Data"] && DoLabel != null)
             {
-                if ((DateTime.Now - lastSavedTime).TotalMilliseconds >= 500)
-                {
-                    lastSavedTime = DateTime.Now;
-                    string uuid = Guid.NewGuid().ToString();
+                var labelPath = Path.Combine("bin", "labels", $"{uuid}.txt");
 
-                    try
-                    {
-                        await Task.Run(() =>
-                        {
-                            frame.Save(Path.Combine("bin", "images", $"{uuid}.jpg"));
+                float x = (DoLabel!.Rectangle.X + DoLabel.Rectangle.Width / 2) / frame.Width;
+                float y = (DoLabel!.Rectangle.Y + DoLabel.Rectangle.Height / 2) / frame.Height;
+                float width = DoLabel.Rectangle.Width / frame.Width;
+                float height = DoLabel.Rectangle.Height / frame.Height;
 
-                            if (Dictionary.toggleState["Auto Label Data"] && DoLabel != null)
-                            {
-                                var labelPath = Path.Combine("bin", "labels", $"{uuid}.txt");
-
-                                float x = (DoLabel!.Rectangle.X + DoLabel.Rectangle.Width / 2) / frame.Width;
-                                float y = (DoLabel!.Rectangle.Y + DoLabel.Rectangle.Height / 2) / frame.Height;
-                                float width = DoLabel.Rectangle.Width / frame.Width;
-                                float height = DoLabel.Rectangle.Height / frame.Height;
-
-                                File.WriteAllText(labelPath, $"0 {x} {y} {width} {height}");
-                            }
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        new NoticeBar($"Collect Data isn't working, try again later. {e.Message}", 6000).Show();
-                    }
-                }
+                File.WriteAllText(labelPath, $"0 {x} {y} {width} {height}");
             }
         }
 
         public Bitmap? ScreenGrab(Rectangle detectionBox)
         {
-            if (_graphics == null || _screenCaptureBitmap == null || _screenCaptureBitmap.Width != detectionBox.Width || _screenCaptureBitmap.Height != detectionBox.Height)
+            if (_screenCaptureBitmap == null || _screenCaptureBitmap.Width != detectionBox.Width || _screenCaptureBitmap.Height != detectionBox.Height)
             {
                 _screenCaptureBitmap?.Dispose();
-                _screenCaptureBitmap = new Bitmap(detectionBox.Width, detectionBox.Height);
-
                 _graphics?.Dispose();
+
+                _screenCaptureBitmap = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format24bppRgb);
                 _graphics = Graphics.FromImage(_screenCaptureBitmap);
             }
 
-            _graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size);
+            _graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);
 
             return _screenCaptureBitmap;
         }
