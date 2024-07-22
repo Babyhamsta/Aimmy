@@ -50,19 +50,14 @@ namespace Other
                     return false;
                 }
 
-                string ghubfilepath;
-
-                try
+                string ghubfilepath = process.MainModule.FileName;
+                if (ghubfilepath == null)
                 {
-                    ghubfilepath = process.MainModule.FileName; //Get file path of running Logitech Ghub
-                }
-                catch (Win32Exception ex)
-                {
-                    new NoticeBar($"An error occurred: {ex.Message}\nRun as admin and try again.", 6000).Show();
+                    new NoticeBar($"An error occurred. Run as admin and try again.", 6000).Show();
                     return false;
                 }
 
-                FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(ghubfilepath); //Get Product version of running Logitech Ghub
+                FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(ghubfilepath);
 
                 if (!versionInfo.ProductVersion.Contains("2021"))
                 {

@@ -59,7 +59,6 @@ namespace MouseMovementLibraries.RazerSupport
                                       Directory.Exists(@"C:\Program Files (x86)\Razer") ||
                                       CheckRazerRegistryKey();
 
-            // If directories are missing and the regkey, confirm installation intent with the user
             if (!isSynapseInstalled)
             {
                 var installConfirmation = MessageBox.Show("Razer Synapse is not installed, would you like to install it?",
@@ -72,7 +71,6 @@ namespace MouseMovementLibraries.RazerSupport
                 }
             }
 
-            // Return true if Synapse is installed (either was already installed or user declined installation)
             return isSynapseInstalled;
         }
 
@@ -87,23 +85,23 @@ namespace MouseMovementLibraries.RazerSupport
         private static async Task InstallRazerSynapse()
         {
             using HttpClient httpClient = new();
-
             var response = await httpClient.GetAsync(new Uri("https://rzr.to/synapse-new-pc-download-beta"));
-            if (response.IsSuccessStatusCode)
+
+            if (!response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsByteArrayAsync();
                 await File.WriteAllBytesAsync($"{Path.GetTempPath()}\\rz.exe", content);
+
+                Process.Start(new ProcessStartInfo
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = "cmd.exe",
+                    Arguments = "/C start rz.exe",
+                    WorkingDirectory = Path.GetTempPath()
+                });
+
+                new NoticeBar("Razer Synapse downloaded, please look for UAC prompt and install Razer Synapse.", 4000).Show();
             }
-
-            new NoticeBar("Razer Synapse downloaded, please look for UAC prompt and install Razer Synapse.", 4000).Show();
-
-            Process.Start(new ProcessStartInfo
-            {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                FileName = "cmd.exe",
-                Arguments = "/C start rz.exe",
-                WorkingDirectory = Path.GetTempPath()
-            });
         }
 
         private static async Task downloadrzctl()
@@ -135,11 +133,13 @@ namespace MouseMovementLibraries.RazerSupport
             {
                 return false;
             }
+
             if (!File.Exists(rzctlpath))
             {
                 await downloadrzctl();
                 return false;
             }
+
             if (!CheckForRazerDevices())
             {
                 MessageBox.Show("No Razer Peripheral is detected, this Mouse Movement Method is unusable.", "Aimmy");
