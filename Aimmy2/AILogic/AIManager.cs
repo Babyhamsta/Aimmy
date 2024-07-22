@@ -27,6 +27,7 @@ namespace Aimmy2.AILogic
         private RectangleF LastDetectionBox;
         private KalmanPrediction kalmanPrediction;
         private WiseTheFoxPrediction wtfpredictionManager;
+
         private Bitmap? _screenCaptureBitmap;
 
         private readonly int ScreenWidth = WinAPICaller.ScreenWidth;
@@ -68,6 +69,7 @@ namespace Aimmy2.AILogic
         {
             kalmanPrediction = new KalmanPrediction();
             wtfpredictionManager = new WiseTheFoxPrediction();
+
             _modeloptions = new RunOptions();
 
             var sessionOptions = new SessionOptions
@@ -79,7 +81,7 @@ namespace Aimmy2.AILogic
             };
 
             // Attempt to load via DirectML (else fallback to CPU)
-            Application.Current.Dispatcher.BeginInvoke(() => InitializeModel(sessionOptions, modelPath));
+            Task.Run(() => InitializeModel(sessionOptions, modelPath));
         }
 
         #region Models
@@ -110,8 +112,8 @@ namespace Aimmy2.AILogic
         {
             try
             {
-                if (useDirectML) sessionOptions.AppendExecutionProvider_DML();
-                else sessionOptions.AppendExecutionProvider_CPU();
+                if (useDirectML) { sessionOptions.AppendExecutionProvider_DML(); }
+                else { sessionOptions.AppendExecutionProvider_CPU(); }
 
                 _onnxModel = new InferenceSession(modelPath, sessionOptions);
                 _outputNames = new List<string>(_onnxModel.OutputMetadata.Keys);
@@ -128,6 +130,7 @@ namespace Aimmy2.AILogic
             // Begin the loop
             _isAiLoopRunning = true;
             _aiLoopThread = new Thread(AiLoop);
+            _aiLoopThread.IsBackground = true;
             _aiLoopThread.Start();
         }
 

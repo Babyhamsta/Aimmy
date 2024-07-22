@@ -64,7 +64,7 @@ namespace Aimmy2.Class
             { "Auto Label Data", false },
             { "LG HUB Mouse Movement", false },
             { "Mouse Background Effect", true },
-            { "UI TopMost", true },
+            { "UI TopMost", false },
             { "X Axis Percentage Adjustment", false },
             { "Y Axis Percentage Adjustment", false }
         };
