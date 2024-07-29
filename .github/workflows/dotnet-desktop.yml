@@ -41,13 +41,13 @@ jobs:
 
     # Restore the application
     - name:  Restore the Wpf application to populate the obj folder
-      run: msbuild $env:Solution_Path /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
+      run: msbuild $env:Solution_Path /t:Restore /p:Platform=$env:TargetPlatF/p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
       env:
         Configuration: Debug
         RuntimeIdentifier: win-${{ matrix.targetplatform }}
         
     # Build the Windows Application Packaging project
-    - name: Build the Windows Application Packaging Project (wapproj) 
+    - name: Build release x64
       run: msbuild $env:Solution_Path /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=$env:SigningCertificate /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
       env:
         AppxBundle: Never
@@ -60,4 +60,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: aimmyidk
-        path: Aimmy2
+        path: Aimmy2\
