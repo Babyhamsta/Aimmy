@@ -41,7 +41,7 @@ jobs:
 
     # Restore the application
     - name:  Restore the Wpf application to populate the obj folder
-      run: msbuild $env:Solution_Path /t:Restore /p:Platform=$env:TargetPlatF/p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
+      run: msbuild $env:Solution_Path /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
       env:
         Configuration: Debug
         RuntimeIdentifier: win-${{ matrix.targetplatform }}
