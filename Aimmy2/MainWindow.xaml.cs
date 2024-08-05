@@ -450,6 +450,7 @@ public partial class MainWindow
 
         TriggerBot.AddTitle("Auto Trigger", true);
         TriggerBot.AddToggle("Auto Trigger").BindTo(() => AppConfig.Current.ToggleState.AutoTrigger);
+        TriggerBot.AddToggle("TEST Charge Mode").BindTo(() => AppConfig.Current.ToggleState.AutoTriggerCharged);
 
         TriggerBot.AddKeyChanger("Trigger Additional Send", () => keybind.TriggerAdditionalSend, bindingManager);
 

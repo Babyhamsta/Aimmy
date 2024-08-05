@@ -8,6 +8,7 @@ using MouseMovementLibraries.SendInputSupport;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.VisualBasic.CompilerServices;
 using Point = System.Drawing.Point;
 
 namespace InputLogic
@@ -20,6 +21,9 @@ namespace InputLogic
 
         private static DateTime LastClickTime = DateTime.MinValue;
         private static int LastAntiRecoilClickTime = 0;
+
+        private const uint MOUSEEVENTF_WHEEL = 0x0800;
+        private const int WHEEL_DELTA = 120; 
 
         private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         private const uint MOUSEEVENTF_LEFTUP = 0x0004;
@@ -59,15 +63,30 @@ namespace InputLogic
             {
                 if (Application.Current.Dispatcher.CheckAccess())
                 {
-                    return Mouse.LeftButton == MouseButtonState.Pressed;
+                    return _leftDown || Mouse.LeftButton == MouseButtonState.Pressed;
                 }
 
-                return Application.Current.Dispatcher.Invoke(() => Mouse.LeftButton == MouseButtonState.Pressed);
+                return _leftDown || Application.Current.Dispatcher.Invoke(() => Mouse.LeftButton == MouseButtonState.Pressed);
             }
+        }
+        private static bool _leftDown;
+        public static void ScrollMouseWheel(int delta)
+        {
+            mouse_event(MOUSEEVENTF_WHEEL, 0, 0, (uint)delta, 0);
+        }
+
+        public static async Task ScrollMouseWheelUpAndDown()
+        {
+            ScrollMouseWheel(WHEEL_DELTA); // Scroll up
+            await Task.Delay(20); // Optional: Ein kleiner Delay zwischen den Scrolls
+            ScrollMouseWheel(-WHEEL_DELTA); // Scroll down
         }
 
         public static void LeftDown()
         {
+            if (IsLeftDown)
+                return;
+            
             switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
                 case MouseMovementMethod.SendInput:
@@ -91,6 +110,33 @@ namespace InputLogic
                     break;
             }
 
+        }
+
+        public static async Task LeftDownUntil(Func<Task<bool>> condition, TimeSpan? delay = null, CancellationToken cancellationToken = default)
+        {
+            LeftDown();
+
+            try
+            {
+                while (!await condition() && !cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(5, cancellationToken);
+                }
+
+                if(delay.HasValue)
+                    await Task.Delay(delay.Value, cancellationToken);
+            }
+            catch 
+            {}
+
+            LeftUp();
+            _leftDown = true;
+            Task.Delay(1000).ContinueWith(_ =>
+            {
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                _leftDown = false;
+            });
+            LastClickTime = DateTime.UtcNow;
         }
 
         public static void LeftUp()
@@ -117,6 +163,8 @@ namespace InputLogic
                     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                     break;
             }
+
+            _leftDown = false;
         }
 
         public static async Task DoTriggerClick()

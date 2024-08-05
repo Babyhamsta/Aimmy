@@ -25,6 +25,7 @@ public class ToggleState : BaseSettings
     private bool _uiTopMost = true;
     private bool _xAxisPercentageAdjustment = false;
     private bool _yAxisPercentageAdjustment = false;
+    private bool _autoTriggerCharged;
 
     public bool GlobalActive
     {
@@ -73,6 +74,12 @@ public class ToggleState : BaseSettings
     {
         get => _enableGunSwitchingKeybind;
         set => SetField(ref _enableGunSwitchingKeybind, value);
+    }
+
+    public bool AutoTriggerCharged
+    {
+        get => _autoTriggerCharged;
+        set => SetField(ref _autoTriggerCharged, value);
     }
 
     public bool AutoTrigger

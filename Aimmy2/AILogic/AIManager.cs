@@ -178,6 +178,15 @@ namespace Aimmy2.AILogic
 
         private async void AiLoop()
         {
+            AppConfig.Current.ToggleState.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName is nameof(AppConfig.Current.ToggleState.GlobalActive) or nameof(AppConfig.Current.ToggleState.AutoTriggerCharged))
+                {
+                    if (!AppConfig.Current.ToggleState.GlobalActive || !AppConfig.Current.ToggleState.AutoTriggerCharged)
+                        CancelTriggerChargeIf();
+                }
+            };
+
             Stopwatch stopwatch = new();
             DetectedPlayerWindow? DetectedPlayerOverlay = AppConfig.Current.DetectedPlayerOverlay;
 
@@ -235,34 +244,62 @@ namespace Aimmy2.AILogic
             return string.IsNullOrEmpty(triggerKey) || triggerKey == "None" || InputBindingManager.IsHoldingBindingFor(nameof(AppConfig.Current.BindingSettings.TriggerKey), TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.TriggerKeyMin));
         }
 
+        private async Task<bool> PredictionIsIntersecting(Prediction? prediction = null)
+        {
+            prediction ??= await GetClosestPrediction();
+            if (prediction == null)
+                return false;
+
+            return AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.None
+                   || (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter && prediction.IsUpperMiddleIntersectingCenter)
+                   || (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.IntersectingCenter && prediction.InteractsWithCenterOfFov);
+        }
+
+        private CancellationTokenSource? _autoTriggerCts;
+
+        private void CancelTriggerChargeIf()
+        {
+            if (_autoTriggerCts is { IsCancellationRequested: false })
+                _autoTriggerCts.Cancel();
+        }
+        private static object _lock = new();
         private async Task AutoTrigger(Prediction prediction)
         {
             if (AppConfig.Current.ToggleState.AutoTrigger)
             {
+                var delay = TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.AutoTriggerDelay);
+                if (AppConfig.Current.ToggleState.AutoTriggerCharged)
+                {
+                    // JUST FOR TESTING
+                    if (!MouseManager.IsLeftDown && _autoTriggerCts == null)
+                    {
+                        _autoTriggerCts = new CancellationTokenSource();
+                        _autoTriggerCts.Token.Register(() => _autoTriggerCts = null);
+                        _ = MouseManager.LeftDownUntil(async () => TriggerKeyUnsetOrHold() && await PredictionIsIntersecting(), delay, _autoTriggerCts.Token).ContinueWith(_ => CancelTriggerChargeIf());
+                    }
+                    return;
+                }
                 if (TriggerKeyUnsetOrHold())
                 {
-                   // MouseManager.LeftDown();
-                    if (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.None
-                        || (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter && prediction.IsUpperMiddleIntersectingCenter)
-                        || (AppConfig.Current.DropdownState.TriggerCheck == TriggerCheck.IntersectingCenter && prediction.InteractsWithCenterOfFov)
-                        )
+                    //await MouseManager.LeftDownUntil(() => PredictionIsIntersecting());
+                    //return;
+                    if (await PredictionIsIntersecting(prediction))
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.AutoTriggerDelay));
-                        var addtionalSendKey = AppConfig.Current.BindingSettings.TriggerAdditionalSend;
-                        if (!string.IsNullOrEmpty(addtionalSendKey) && addtionalSendKey != "None")
+                        await Task.Delay(delay);
+                        if (InputBindingManager.IsValidKey(AppConfig.Current.BindingSettings.TriggerAdditionalSend))
                         {
-                            InputBindingManager.SendKey(addtionalSendKey);
+                            InputBindingManager.SendKey(AppConfig.Current.BindingSettings.TriggerAdditionalSend);
                         }
-                        //MouseManager.LeftUp();
                         await MouseManager.DoTriggerClick();
                     }
                 }
             }
         }
 
+
         private async void UpdateFOV()
         {
-            if (AppConfig.Current.DropdownState.DetectionAreaType ==DetectionAreaType.ClosestToMouse && AppConfig.Current.ToggleState.FOV)
+            if (AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse && AppConfig.Current.ToggleState.FOV)
             {
                 var mousePosition = WinAPICaller.GetCursorPosition();
                 await Application.Current.Dispatcher.BeginInvoke(() => AppConfig.Current.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(Convert.ToInt16(mousePosition.X / WinAPICaller.scalingFactorX) - 320, Convert.ToInt16(mousePosition.Y / WinAPICaller.scalingFactorY) - 320, 0, 0));
@@ -460,72 +497,76 @@ namespace Aimmy2.AILogic
 
         private async Task<Prediction?> GetClosestPrediction()
         {
-            targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().X : ScreenWidth / 2;
-            targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().Y : ScreenHeight / 2;
-
-            Rectangle detectionBox = new(targetX - IMAGE_SIZE / 2, targetY - IMAGE_SIZE / 2, IMAGE_SIZE, IMAGE_SIZE);
-
-            Bitmap? frame = ScreenGrab(detectionBox);
-            if (frame == null) return null;
-
-            float[] inputArray = BitmapToFloatArray(frame);
-            if (inputArray == null) return null;
-
-            Tensor<float> inputTensor = new DenseTensor<float>(inputArray, new int[] { 1, 3, frame.Height, frame.Width });
-            var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
-            if (_onnxModel == null) return null;
-            var results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
-
-            var outputTensor = results[0].AsTensor<float>();
-
-            // Calculate the FOV boundaries
-            float FovSize = (float)AppConfig.Current.SliderSettings.FOVSize;
-            float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
-            float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
-
-            var (KDpoints, KDPredictions) = PrepareKDTreeData(outputTensor, detectionBox, fovMinX, fovMaxX, fovMinY, fovMaxY);
-
-            if (KDpoints.Count == 0 || KDPredictions.Count == 0)
+            lock (_lock)
             {
+                targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().X : ScreenWidth / 2;
+                targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().Y : ScreenHeight / 2;
+
+                Rectangle detectionBox = new(targetX - IMAGE_SIZE / 2, targetY - IMAGE_SIZE / 2, IMAGE_SIZE, IMAGE_SIZE);
+
+                Bitmap? frame = ScreenGrab(detectionBox);
+                if (frame == null) return null;
+
+                float[] inputArray = BitmapToFloatArray(frame);
+                if (inputArray == null) return null;
+
+                Tensor<float> inputTensor = new DenseTensor<float>(inputArray, new int[] { 1, 3, frame.Height, frame.Width });
+                var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
+                if (_onnxModel == null) return null;
+                var results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
+
+                var outputTensor = results[0].AsTensor<float>();
+
+                // Calculate the FOV boundaries
+                float FovSize = (float)AppConfig.Current.SliderSettings.FOVSize;
+                float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
+                float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
+                float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
+                float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
+
+                var (KDpoints, KDPredictions) = PrepareKDTreeData(outputTensor, detectionBox, fovMinX, fovMaxX, fovMinY, fovMaxY);
+
+                if (KDpoints.Count == 0 || KDPredictions.Count == 0)
+                {
+                    return null;
+                }
+
+                var tree = new KDTree<double, Prediction>(2, KDpoints.ToArray(), KDPredictions.ToArray(), L2Norm_Squared_Double);
+
+                var nearest = tree.NearestNeighbors(new double[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 }, 1);
+
+                if (nearest != null && nearest.Length > 0)
+                {
+                    // Translate coordinates
+                    float translatedXMin = nearest[0].Item2.Rectangle.X + detectionBox.Left;
+                    float translatedYMin = nearest[0].Item2.Rectangle.Y + detectionBox.Top;
+                    LastDetectionBox = new RectangleF(translatedXMin, translatedYMin, nearest[0].Item2.Rectangle.Width, nearest[0].Item2.Rectangle.Height);
+
+                    CenterXTranslated = nearest[0].Item2.CenterXTranslated;
+                    CenterYTranslated = nearest[0].Item2.CenterYTranslated;
+
+
+                    RectangleF predictionRect = nearest[0].Item2.Rectangle;
+                    nearest[0].Item2.InteractsWithCenterOfFov = IsIntersectingCenter(predictionRect);
+
+
+                    // Check if the upper middle part of the object intersects the center of the FOV
+                    nearest[0].Item2.IsUpperMiddleIntersectingCenter = IsUpperMiddleIntersectingCenter(predictionRect, HeadRelativeRect);
+
+
+                    // Moved SaveFrameAsync over here to get accurate Prediction Labelling
+                    _ = SaveFrameAsync(frame, nearest[0].Item2);
+
+                    return nearest[0].Item2;
+                }
+
+                if (AppConfig.Current.ToggleState.CollectDataWhilePlaying && !AppConfig.Current.ToggleState.ConstantAITracking && !AppConfig.Current.ToggleState.AutoLabelData)
+                {
+                    _ = SaveFrameAsync(frame, null); // Save the frame without a prediction for the people without pre-existing models. Since people complained about this...
+                }
+
                 return null;
             }
-
-            var tree = new KDTree<double, Prediction>(2, KDpoints.ToArray(), KDPredictions.ToArray(), L2Norm_Squared_Double);
-
-            var nearest = tree.NearestNeighbors(new double[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 }, 1);
-
-            if (nearest != null && nearest.Length > 0)
-            {
-                // Translate coordinates
-                float translatedXMin = nearest[0].Item2.Rectangle.X + detectionBox.Left;
-                float translatedYMin = nearest[0].Item2.Rectangle.Y + detectionBox.Top;
-                LastDetectionBox = new RectangleF(translatedXMin, translatedYMin, nearest[0].Item2.Rectangle.Width, nearest[0].Item2.Rectangle.Height);
-
-                CenterXTranslated = nearest[0].Item2.CenterXTranslated;
-                CenterYTranslated = nearest[0].Item2.CenterYTranslated;
-
-
-                RectangleF predictionRect = nearest[0].Item2.Rectangle;
-                nearest[0].Item2.InteractsWithCenterOfFov = IsIntersectingCenter(predictionRect);
-
-
-                // Check if the upper middle part of the object intersects the center of the FOV
-                nearest[0].Item2.IsUpperMiddleIntersectingCenter = IsUpperMiddleIntersectingCenter(predictionRect, HeadRelativeRect);
-
-
-                // Moved SaveFrameAsync over here to get accurate Prediction Labelling
-                await SaveFrameAsync(frame, nearest[0].Item2);
-
-                return nearest[0].Item2;
-            }
-            else if (AppConfig.Current.ToggleState.CollectDataWhilePlaying && !AppConfig.Current.ToggleState.ConstantAITracking && !AppConfig.Current.ToggleState.AutoLabelData)
-            {
-                await SaveFrameAsync(frame, null); // Save the frame without a prediction for the people without pre-existing models. Since people complained about this...
-            }
-
-            return null;
         }
 
         private bool IsUpperMiddleIntersectingCenter(RectangleF rect, RelativeRect relativeRect)
