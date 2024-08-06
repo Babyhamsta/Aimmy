@@ -6,12 +6,12 @@ namespace Aimmy2.AILogic;
 public class RecordTarget
 {
     public RecordTargetType TargetType { get; }
-    public int ProcessId { get; }
+    public int? ProcessOrScreenId { get; }
 
-    private RecordTarget(RecordTargetType targetType, int processId = 0)
+    private RecordTarget(RecordTargetType targetType, int? processOrScreenId = null)
     {
         TargetType = targetType;
-        ProcessId = processId;
+        ProcessOrScreenId = processOrScreenId;
     }
 
     public static RecordTarget MainScreen() => new(RecordTargetType.Screen);

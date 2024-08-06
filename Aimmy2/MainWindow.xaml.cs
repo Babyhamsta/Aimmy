@@ -565,7 +565,10 @@ public partial class MainWindow
         ESPConfig.AddToggle("Show Detected Player").BindTo(() => AppConfig.Current.ToggleState.ShowDetectedPlayer);
         ESPConfig.AddToggle("Show Trigger Head Area").BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea); 
         ESPConfig.AddToggle("Show AI Confidence").BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
-        ESPConfig.AddToggle("Show Tracers").BindTo(() => AppConfig.Current.ToggleState.ShowTracers); 
+        ESPConfig.AddToggle("Show Tracers").BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
+
+        ESPConfig.AddDropdown("Drawing Method", AppConfig.Current.DropdownState.OverlayDrawingMethod, v => AppConfig.Current.DropdownState.OverlayDrawingMethod = v);
+
         ESPConfig.AddColorChanger("Detected Player Color").BindTo(() => AppConfig.Current.ColorState.DetectedPlayerColor);
 
 

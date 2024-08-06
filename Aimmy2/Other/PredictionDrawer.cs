@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Aimmy2.AILogic;
 using Aimmy2.Config;
+using Aimmy2.Extensions;
 using Class;
 using Color = System.Drawing.Color;
 using MediaColor = System.Windows.Media.Color;
@@ -18,14 +20,14 @@ namespace Aimmy2.Other
         [DllImport("user32.dll")]
         private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
-        public static void DrawPredictions(IEnumerable<Prediction> predictions)
+        public static void DrawPredictions(IEnumerable<Prediction> predictions, Rectangle? targetArea = null)
         {
             IntPtr desktopDC = GetDC(IntPtr.Zero);
             using (Graphics graphics = Graphics.FromHdc(desktopDC))
             {
                 foreach (var prediction in predictions)
                 {
-                    DrawPrediction(graphics, prediction);
+                    DrawPrediction(graphics, prediction, targetArea);
                 }
             }
             ReleaseDC(IntPtr.Zero, desktopDC);
@@ -39,6 +41,7 @@ namespace Aimmy2.Other
         {
             var pen = new Pen(Color.FromArgb((int)(255 * opacity), color.R, color.G, color.B), borderThickness);
             var graphicsPath = new System.Drawing.Drawing2D.GraphicsPath();
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
             cornerRadius = Math.Max(cornerRadius, 0.1f);
 
@@ -58,6 +61,7 @@ namespace Aimmy2.Other
         private static void DrawText(Graphics graphics, string text, Rectangle rect, Font font, MediaColor color, float opacity) => DrawText(graphics, text, rect, font, color.ToDrawingColor(), opacity);
         private static void DrawText(Graphics graphics, string text, Rectangle rect, Font font, Color color, float opacity)
         {
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             var brush = new SolidBrush(Color.FromArgb((int)(255 * opacity), color.R, color.G, color.B));
             var textSize = graphics.MeasureString(text, font);
             graphics.DrawString(text, font, brush, rect.X + (rect.Width - textSize.Width) / 2, rect.Y - textSize.Height - 2);
@@ -67,6 +71,7 @@ namespace Aimmy2.Other
         private static void Draw(Graphics graphics, PointF start, PointF end, System.Windows.Media.Color color, float thickness, float opacity = 1)
         {
             var pen = new Pen(Color.FromArgb((int)(255 * opacity), color.R, color.G, color.B), thickness);
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             graphics.DrawLine(pen, start, end);
             pen.Dispose();
         }
@@ -74,6 +79,7 @@ namespace Aimmy2.Other
         private static void Draw(Graphics graphics, RectangleF rect, Color color, float thickness)
         {
             var pen = new Pen(color, thickness);
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             graphics.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height);
             pen.Dispose();
         }
@@ -83,14 +89,21 @@ namespace Aimmy2.Other
         }
 
 
-        private static void DrawPrediction(Graphics graphics, Prediction prediction)
+        private static void DrawPrediction(Graphics graphics, Prediction prediction, Rectangle? targetArea)
         {
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             var rect = prediction.TranslatedRectangle;
             var config = AppConfig.Current;
             var color = config.ColorState.DetectedPlayerColor;
             var opacity = config.SliderSettings.Opacity;
             var borderThickness = config.SliderSettings.BorderThickness;
             var font = new Font("Consolas", config.SliderSettings.AIConfidenceFontSize);
+
+            if (targetArea.HasValue)
+            {
+                rect.X += targetArea.Value.Left;
+                rect.Y += targetArea.Value.Top;
+            }
 
             Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)opacity, (float)borderThickness);
 
@@ -104,8 +117,10 @@ namespace Aimmy2.Other
             {
                 var centerX = rect.X + rect.Width / 2;
                 var bottomY = rect.Y + rect.Height;
-                var centerScreen = new PointF(WinAPICaller.ScreenWidth / 2, WinAPICaller.ScreenHeight);
-                Draw(graphics, centerScreen, new PointF(centerX, bottomY), color, 2);
+
+                PointF tracerStart = targetArea?.GetBottomCenter() ?? Screen.PrimaryScreen!.Bounds.GetBottomCenter();
+
+                Draw(graphics, tracerStart, new PointF(centerX, bottomY), color, 2);
             }
 
             if (config.ToggleState.ShowTriggerHeadArea)

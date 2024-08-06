@@ -9,6 +9,7 @@ public class DropdownState: BaseSettings
     private DetectionAreaType _detectionAreaType = DetectionAreaType.ClosestToCenterScreen;
     private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Center;
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
+    private OverlayDrawingMethod _overlayDrawingMethod;
 
     public string GamepadProcess
     {
@@ -26,6 +27,12 @@ public class DropdownState: BaseSettings
     {
         get => _triggerCheck;
         set => SetField(ref _triggerCheck, value);
+    }
+
+    public OverlayDrawingMethod OverlayDrawingMethod    
+    {
+        get => _overlayDrawingMethod;
+        set => SetField(ref _overlayDrawingMethod, value);
     }
 
     public PredictionMethod PredictionMethod

@@ -10,7 +10,7 @@ using Nextended.Core.Extensions;
 
 public class AIManager : IDisposable
 {
-    private readonly IScreenCapture _screenCapture;
+    private readonly ICapture _screenCapture;
     private readonly IPredictionLogic _predictionLogic;
     private readonly IList<IAction> _actions;
     private bool _isAiLoopRunning;
@@ -18,14 +18,35 @@ public class AIManager : IDisposable
 
     public bool IsModelLoaded { get; private set; } = true;
 
-    public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
-    {}
-    
-    public AIManager(IScreenCapture screenCapture, IPredictionLogic predictionLogic, IList<IAction> actions)
+    //public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
+    //{ }
+
+    public AIManager(string modelPath) : this(CreateScreenCapture(RecordTarget.Process(26720)), new PredictionLogic(modelPath), BaseAction.AllActions())
+    { }
+
+
+    public AIManager(string modelPath, RecordTarget target) : this(CreateScreenCapture(target), new PredictionLogic(modelPath), BaseAction.AllActions())
+    { }
+
+    private static ICapture CreateScreenCapture(RecordTarget target)
+    {
+        return target.TargetType switch
+        {
+            RecordTargetType.Screen => target.ProcessOrScreenId.HasValue ? new ScreenCapture(target.ProcessOrScreenId.Value) : new ScreenCapture(),
+            RecordTargetType.Process => new ProcessCapture(target.ProcessOrScreenId.Value),
+            _ => throw new ArgumentException("Unsupported RecordTargetType"),
+        };
+    }
+
+    public AIManager(ICapture screenCapture, IPredictionLogic predictionLogic, IList<IAction> actions)
     {
         _screenCapture = screenCapture;
         _predictionLogic = predictionLogic;
-        _actions = actions.Apply(a => a.PredictionLogic = predictionLogic).ToList();
+        _actions = actions.Apply(a =>
+        {
+            a.PredictionLogic = predictionLogic;
+            a.ImageCapture = screenCapture;
+        }).ToList();
 
         NotifyLoaded();
 

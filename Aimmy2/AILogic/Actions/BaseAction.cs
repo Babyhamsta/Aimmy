@@ -12,6 +12,7 @@ public abstract class BaseAction: IAction
 
     protected virtual bool Active => AppConfig.Current.ToggleState.GlobalActive;
     public IPredictionLogic PredictionLogic { get; set; }
+    public ICapture ImageCapture { get; set; }
 
     public static IList<IAction> AllActions()
     {

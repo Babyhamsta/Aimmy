@@ -60,21 +60,21 @@ namespace Class
 
         #region Functions
 
-        // https://stackoverflow.com/questions/254197/how-can-i-get-the-active-screen-dimensions
-        public void GetScreenWidth(Window MW)
-        {
-            var hwnd = new WindowInteropHelper(MW).EnsureHandle();
-            var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        //// https://stackoverflow.com/questions/254197/how-can-i-get-the-active-screen-dimensions
+        //public void GetScreenWidth(Window MW)
+        //{
+        //    var hwnd = new WindowInteropHelper(MW).EnsureHandle();
+        //    var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 
-            if (monitor != IntPtr.Zero)
-            {
-                var monitorInfo = new NativeMonitorInfo();
-                GetMonitorInfo(monitor, monitorInfo);
+        //    if (monitor != IntPtr.Zero)
+        //    {
+        //        var monitorInfo = new NativeMonitorInfo();
+        //        GetMonitorInfo(monitor, monitorInfo);
 
-                ScreenWidth = monitorInfo.Monitor.Right - monitorInfo.Monitor.Left;
-                ScreenHeight = monitorInfo.Monitor.Bottom - monitorInfo.Monitor.Top;
-            }
-        }
+        //        ScreenWidth = monitorInfo.Monitor.Right - monitorInfo.Monitor.Left;
+        //        ScreenHeight = monitorInfo.Monitor.Bottom - monitorInfo.Monitor.Top;
+        //    }
+        //}
 
         public static System.Drawing.Point GetCursorPosition()
         {
