@@ -33,6 +33,9 @@ namespace Class
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetCursorPos(out POINT lpPoint);
 
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, ref RECT lpRect);
+
         #endregion P/Invoke signatures
 
         #region Structures
@@ -42,6 +45,15 @@ namespace Class
         {
             public int X;
             public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
         }
 
         #endregion Structures
@@ -68,7 +80,6 @@ namespace Class
         {
             if (GetCursorPos(out POINT lpPoint))
             {
-                //                 return new System.Drawing.Point(Convert.ToInt16(lpPoint.X / scalingFactorX), Convert.ToInt16(lpPoint.Y / scalingFactorY));
                 return new System.Drawing.Point(lpPoint.X, lpPoint.Y);
             }
             else
@@ -76,6 +87,16 @@ namespace Class
                 // Handle the case when GetCursorPos fails
                 throw new Exception("Failed to get cursor position.");
             }
+        }
+
+        public static RECT GetWindowRectangle(IntPtr hWnd)
+        {
+            RECT rect = new RECT();
+            if (!GetWindowRect(hWnd, ref rect))
+            {
+                throw new Exception("Failed to get window rectangle.");
+            }
+            return rect;
         }
 
         #endregion Functions

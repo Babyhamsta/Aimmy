@@ -144,6 +144,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="AILogic\Contracts\" />
 	  <Folder Include="Types\" />
 	</ItemGroup>
 

@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Aimmy2.Types;
-using Nextended.Core.Extensions;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using System.Reflection;

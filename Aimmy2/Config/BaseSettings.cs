@@ -82,6 +82,8 @@ public abstract class BaseSettings : INotifyPropertyChanged
         var res = name.Replace(" ", "").Replace(":", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace("\\", "").Replace("?", "").Replace("!", "").Replace("'", "").Replace("\"", "").Replace(";", "").Replace(",", "").Replace(".", "").Replace("[", "").Replace("]", "").Replace("{", "").Replace("}", "").Replace("|", "").Replace("=", "").Replace("+", "").Replace("-", "").Replace("*", "").Replace("&", "").Replace("^", "").Replace("%", "").Replace("$", "").Replace("#", "").Replace("@", "").Replace("~", "").Replace("`", "").Replace("<", "").Replace(">", "").Replace(" ", "");
         return res;
     }
+
+    private Dictionary<string, object> _propertyValues = new();
     // TODO: Remove reflection indexer
     public object? this[string propertyName]
     {
@@ -89,14 +91,17 @@ public abstract class BaseSettings : INotifyPropertyChanged
         {
             var name = PrepareName(propertyName);
             PropertyInfo? property = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-            if (property == null) throw new ArgumentException($"Property '{propertyName}' not found on '{GetType().Name}'");
+            if (property == null)
+                return _propertyValues[propertyName];
             return property.GetValue(this);
         }
         set
         {
             var name = PrepareName(propertyName);
             PropertyInfo? property = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-            if (property == null) throw new ArgumentException($"Property '{propertyName}' not found on '{GetType().Name}'");
+            if (property == null)
+                _propertyValues[propertyName] = value;
+            else
             property.SetValue(this, value);
         }
     }

@@ -164,6 +164,12 @@ public partial class MainWindow
     private void LoadGlobalUI()
     {
         TopCenterGrid.RemoveAll();
+        //TopCenterGrid.AddToggleWithKeyBind("Global Active", toggle =>
+        //{
+        //    toggle.BindTo(() => AppConfig.Current.ToggleState.GlobalActive);
+        //    toggle.Changed += (s, e) => SetActive(e.Value);
+        //}, bindingManager);
+
         TopCenterGrid.AddToggle("Global Active", toggle =>
         {
             toggle.Changed += (s, e) => SetActive(e.Value);
@@ -177,9 +183,6 @@ public partial class MainWindow
     public void SetActive(bool active)
     {
         AppConfig.Current.ToggleState.GlobalActive = active;
-        if (FileManager.AIManager != null)
-            FileManager.AIManager.HeadRelativeRect = RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea);
-
         var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.DefaultPalette;
         var themeActive = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
         ApplicationConstants.Theme = active ? themeActive : theme;

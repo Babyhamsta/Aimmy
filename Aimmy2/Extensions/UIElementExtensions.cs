@@ -174,6 +174,29 @@ public static class UIElementExtensions
         return element;
     }
 
+    internal static T AddToggleWithKeyBind<T>(this T panel, string title, Action<AToggle>? cfg = null, InputBindingManager? bindingManager = null) where T : IAddChild, new()
+    {
+        var toggle = panel.AddToggle(title, cfg);
+        var code = "XXX";
+        panel.AddKeyChanger(
+            code,
+            () => code, bindingManager, changer =>
+            {
+                bindingManager.StartListeningForBinding(code);
+                Action<string, string>? bindingSetHandler = null;
+                bindingSetHandler = (bindingId, key) =>
+                {
+                    if (bindingId == code)
+                    {
+                        toggle.ToggleState();
+                    }
+                };
+
+                bindingManager.OnBindingSet += bindingSetHandler;
+            } );
+        return panel;
+    }
+
 
     public static AToggle AddToggle(this IAddChild panel, string title, Action<AToggle>? cfg = null)
     {

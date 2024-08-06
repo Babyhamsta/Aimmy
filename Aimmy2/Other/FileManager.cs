@@ -10,6 +10,9 @@ using Aimmy2.Config;
 using Visuality;
 using static Aimmy2.Other.GithubManager;
 using System.Windows.Input;
+using Aimmy2.AILogic.Actions;
+using Aimmy2.AILogic.Contracts;
+using Microsoft.ML.OnnxRuntime;
 
 namespace Other
 {
@@ -103,9 +106,14 @@ namespace Other
             // Let the AI finish up
             await Task.Delay(150);
 
+
+
+
             // Reload AIManager with new model
             AIManager?.Dispose();
+            //AIManager = new LegacyAIManager(modelPath, RecordTarget.Process(49480));
             AIManager = new AIManager(modelPath);
+
 
             // TODO: Remove reflection
             // Restore original values
