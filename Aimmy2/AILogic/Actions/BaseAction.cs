@@ -11,6 +11,7 @@ public abstract class BaseAction: IAction
     public abstract Task ExecuteAsync(Prediction[] predictions);
 
     protected virtual bool Active => AppConfig.Current.ToggleState.GlobalActive;
+    public IPredictionLogic PredictionLogic { get; set; }
 
     public static IList<IAction> AllActions()
     {

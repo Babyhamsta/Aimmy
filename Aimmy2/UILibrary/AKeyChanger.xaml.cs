@@ -26,9 +26,18 @@ namespace Aimmy2.UILibrary
             SetContent(keybind);
         }
 
+        public bool HasKeySet { get; private set; }
+
+        public bool ShowTitle
+        {
+            get => Dispatcher.Invoke(() => KeyChangerTitle.Visibility == Visibility.Visible);
+            set => Dispatcher.Invoke(() => KeyChangerTitle.Visibility = value ? Visibility.Visible : Visibility.Collapsed);
+        }
+
         public void SetContent(string keybind)
         {
-            if(GamepadReader.GamepadEventArgs.IsGamepadKey(keybind))
+            HasKeySet = !string.IsNullOrWhiteSpace(keybind);
+            if (GamepadReader.GamepadEventArgs.IsGamepadKey(keybind))
             {
                 KeyNotifierLabel.Content = GamepadReader.GamepadEventArgs.GetButtonName(keybind);
                 GamepadInfo.Visibility = System.Windows.Visibility.Visible;
@@ -48,6 +57,11 @@ namespace Aimmy2.UILibrary
         private void ContextMenu_OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             e.Handled = InUpdateMode;
+        }
+
+        public static string CodeFor(string title)
+        {
+            return "DYN_" + title.Replace(" ", "_").ToUpper();
         }
     }
 }

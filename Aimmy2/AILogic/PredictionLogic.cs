@@ -95,8 +95,11 @@ public class PredictionLogic : IPredictionLogic
         }
     }
 
+
     public async Task<IEnumerable<Prediction>> Predict(Bitmap frame, Rectangle detectionBox)
     {
+        int maxResultCount = 1;
+
         if (frame == null || _onnxModel == null) return [];
         
         float[] inputArray = frame.ToFloatArray();
@@ -122,9 +125,9 @@ public class PredictionLogic : IPredictionLogic
 
         var tree = new KDTree<double, Prediction>(2, kdPoints.ToArray(), kdPredictions.ToArray(), Normalizer.SquaredDouble);
 
-        var centerPoint = new double[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 };
-        var allNearest = tree.NearestNeighbors(centerPoint, kdPredictions.Count).Select(n => n.Item2).ToArray();
-
+        var centerPoint = new[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 };
+        var allNearest = tree.NearestNeighbors(centerPoint, Math.Min(kdPredictions.Count, maxResultCount)).Select(n => n.Item2).ToArray();
+        
         foreach (var prediction in allNearest)
         {
             float translatedXMin = prediction.Rectangle.X + detectionBox.Left;

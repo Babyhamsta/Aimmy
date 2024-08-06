@@ -83,26 +83,27 @@ public abstract class BaseSettings : INotifyPropertyChanged
         return res;
     }
 
-    private Dictionary<string, object> _propertyValues = new();
+    public Dictionary<string, object> PropertyValues { get; set; }
+
     // TODO: Remove reflection indexer
     public object? this[string propertyName]
     {
         get
         {
+            PropertyValues ??= new();
             var name = PrepareName(propertyName);
             PropertyInfo? property = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-            if (property == null)
-                return _propertyValues[propertyName];
-            return property.GetValue(this);
+            return property == null ? PropertyValues.GetValueOrDefault(propertyName) : property.GetValue(this);
         }
         set
         {
+            PropertyValues ??= new();
             var name = PrepareName(propertyName);
             PropertyInfo? property = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
             if (property == null)
-                _propertyValues[propertyName] = value;
+                PropertyValues[propertyName] = value;
             else
-            property.SetValue(this, value);
+                property.SetValue(this, value);
         }
     }
 

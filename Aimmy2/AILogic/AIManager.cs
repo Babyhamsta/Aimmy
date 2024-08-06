@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows;
 using Aimmy2;
 using Aimmy2.AILogic;
@@ -7,6 +6,7 @@ using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
 using Class;
+using Nextended.Core.Extensions;
 
 public class AIManager : IDisposable
 {
@@ -25,20 +25,18 @@ public class AIManager : IDisposable
     {
         _screenCapture = screenCapture;
         _predictionLogic = predictionLogic;
-        _actions = actions;
+        _actions = actions.Apply(a => a.PredictionLogic = predictionLogic).ToList();
 
-        REMOVE_ME_LATER();
+        NotifyLoaded();
 
         _isAiLoopRunning = true;
         _aiLoopThread = new Thread(AiLoop);
         _aiLoopThread.Start();
     }
 
-    private void REMOVE_ME_LATER()
+    private void NotifyLoaded()
     {
-        // TODO: Remove this method
         IsModelLoaded = true;
-
         var w = Application.Current.MainWindow as MainWindow;
         w.Dispatcher.BeginInvoke(new Action(() =>
         {
@@ -71,7 +69,7 @@ public class AIManager : IDisposable
     public void Dispose()
     {
         _isAiLoopRunning = false;
-        if (_aiLoopThread != null && _aiLoopThread.IsAlive)
+        if (_aiLoopThread is { IsAlive: true })
         {
             if (!_aiLoopThread.Join(TimeSpan.FromSeconds(1)))
             {

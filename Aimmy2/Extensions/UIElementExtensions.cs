@@ -174,25 +174,28 @@ public static class UIElementExtensions
         return element;
     }
 
-    internal static T AddToggleWithKeyBind<T>(this T panel, string title, Action<AToggle>? cfg = null, InputBindingManager? bindingManager = null) where T : IAddChild, new()
+    internal static T AddToggleWithKeyBind<T>(this T panel, string title, InputBindingManager bindingManager, Action<AToggle>? cfg = null) where T : IAddChild, new()
     {
         var toggle = panel.AddToggle(title, cfg);
-        var code = "XXX";
+        var code = AKeyChanger.CodeFor(title);
+        var keyCodeValue = AppConfig.Current.BindingSettings[code]?.ToString();
         panel.AddKeyChanger(
             code,
-            () => code, bindingManager, changer =>
+            () => keyCodeValue ?? "None", bindingManager, changer =>
             {
-                bindingManager.StartListeningForBinding(code);
-                Action<string, string>? bindingSetHandler = null;
-                bindingSetHandler = (bindingId, key) =>
+                if (keyCodeValue != null)
                 {
-                    if (bindingId == code)
+                    bindingManager.SetupDefault(code, keyCodeValue);
+                }
+
+                changer.ShowTitle = false;
+                bindingManager.OnBindingPressed += (key) =>
+                {
+                    if (changer.HasKeySet && key == code)
                     {
                         toggle.ToggleState();
                     }
                 };
-
-                bindingManager.OnBindingSet += bindingSetHandler;
             } );
         return panel;
     }

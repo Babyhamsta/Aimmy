@@ -31,7 +31,7 @@
                        Margin="0,0,76,0" />
 
                 <Border HorizontalAlignment="Right"
-                        Margin="0,5,10,6"
+                        Margin="5,5,10,6"
                         BorderBrush="#3FFFFFFF"
                         BorderThickness="1"
                         CornerRadius="5">
