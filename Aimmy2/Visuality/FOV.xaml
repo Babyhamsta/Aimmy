@@ -20,6 +20,7 @@
         <Grid x:Name="FOVStrictEnclosure"
               Width="640"
               Height="640"
+              Visibility="{Binding Path=ToggleState.GlobalActive, Converter={StaticResource boolToVis}}"
               HorizontalAlignment="Left"
               VerticalAlignment="Top">
             <Ellipse x:Name="Circle"

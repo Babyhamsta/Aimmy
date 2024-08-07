@@ -34,11 +34,22 @@ namespace Visuality
         public async Task UpdateStrictEnclosure()
         {
             await Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                var cursorPosition = WinAPICaller.GetCursorPosition();
+                
+                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - Area.Left : Area.Width / 2;
+                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - Area.Top : Area.Height / 2;
+
+                var centerX = Area.Left + targetX;
+                var centerY = Area.Top + targetY;
+
                 FOVStrictEnclosure.Margin = new Thickness(
-                    Convert.ToInt16(Area.Width / 2 / WinAPICaller.scalingFactorX) - 320,
-                    Convert.ToInt16(Area.Height / 2 / WinAPICaller.scalingFactorY) - 320,
-                    0, 0));
+                    Convert.ToInt16(centerX / WinAPICaller.scalingFactorX) - 320,
+                    Convert.ToInt16(centerY / WinAPICaller.scalingFactorY) - 320,
+                    0, 0);
+            });
         }
+
 
         public static void Create()
         {

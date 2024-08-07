@@ -5,6 +5,7 @@ using Aimmy2.AILogic;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
+using Aimmy2.Models;
 using Class;
 using Nextended.Core.Extensions;
 using Visuality;
@@ -22,7 +23,8 @@ public class AIManager : IDisposable
     //public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
     //{ }
 
-    public AIManager(string modelPath) : this(CreateScreenCapture(RecordTarget.Process(62208)), new PredictionLogic(modelPath), BaseAction.AllActions())
+    public AIManager(string modelPath) : 
+        this(CreateScreenCapture(RecordTarget.Process(new ProcessModel { Title = AppConfig.Current.DropdownState.GamepadProcess })), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
 
 
@@ -70,15 +72,16 @@ public class AIManager : IDisposable
 
     private async void AiLoop()
     {
-
         while (_isAiLoopRunning)
         {
             if (AppConfig.Current.ToggleState.GlobalActive)
             {
                 var area = _screenCapture.GetCaptureArea();
-                FOV.Instance.Area = area;
-                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().X : area.Width / 2;
-                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().Y : area.Height / 2;
+              
+                var cursorPosition = WinAPICaller.GetCursorPosition();
+                
+                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
+                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
 
                 Rectangle detectionBox = new(targetX - PredictionLogic.IMAGE_SIZE / 2, targetY - PredictionLogic.IMAGE_SIZE / 2, PredictionLogic.IMAGE_SIZE, PredictionLogic.IMAGE_SIZE);
                 var frame = _screenCapture.Capture(detectionBox);
@@ -89,6 +92,7 @@ public class AIManager : IDisposable
             await Task.Delay(1);
         }
     }
+
 
     public void Dispose()
     {

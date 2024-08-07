@@ -16,6 +16,11 @@ public class OverlayAction : BaseAction
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
+        if (AppConfig.Current.ToggleState.FOV)
+        {
+            FOV.Instance.Area = ImageCapture.GetCaptureArea();
+            _ = FOV.Instance.UpdateStrictEnclosure();
+        }
         if (Active)
         {
             switch (AppConfig.Current.DropdownState.OverlayDrawingMethod)
