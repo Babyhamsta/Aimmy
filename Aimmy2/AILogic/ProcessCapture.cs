@@ -24,10 +24,6 @@ public class ProcessCapture : ICapture
         // Get window dimensions
         var windowRect = WinAPICaller.GetWindowRectangle(handle);
 
-        var windowHeight = windowRect.Bottom - windowRect.Top;
-        var windowWidth = windowRect.Right - windowRect.Left;
-        WinAPICaller.ScreenWidth = windowWidth;
-        WinAPICaller.ScreenHeight = windowHeight;
 
         // Adjust detectionBox to window dimensions
         detectionBox.X += windowRect.Left;

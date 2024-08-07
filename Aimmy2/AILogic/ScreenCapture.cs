@@ -24,8 +24,6 @@ public class ScreenCapture : ICapture
 
     public Bitmap Capture(Rectangle detectionBox)
     {
-        WinAPICaller.ScreenWidth = _screen.Bounds.Width;
-        WinAPICaller.ScreenHeight = _screen.Bounds.Height;
 
         if (_graphics == null || _screenCaptureBitmap == null || _screenCaptureBitmap.Width != detectionBox.Width || _screenCaptureBitmap.Height != detectionBox.Height)
         {

@@ -40,8 +40,6 @@ public partial class MainWindow
 
     private InputBindingManager? bindingManager;
     private FileManager fileManager;
-    private static FOV FOVWindow;
-    private static DetectedPlayerWindow DPWindow;
     private static GithubManager githubManager = new();
     public AntiRecoilManager arManager = new();
 
@@ -95,8 +93,7 @@ public partial class MainWindow
         CurrentScrollViewer = FindName("AimMenu") as ScrollViewer;
         if (CurrentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
 
-        AppConfig.Current.DetectedPlayerOverlay = DPWindow = new();
-        AppConfig.Current.FOVWindow = FOVWindow = new();
+        FOV.Create();
 
         fileManager = new FileManager(ModelListBox, SelectedModelNotifier, ConfigsListBox, SelectedConfigNotifier);
 
@@ -220,9 +217,7 @@ public partial class MainWindow
         FileManager.AIManager?.Dispose();
 
 
-        FOVWindow.Close();
-        DPWindow.Close();
-
+        FOV.Instance?.Close();
 
         if (AppConfig.Current.DropdownState.MouseMovementMethod == MouseMovementMethod.LGHUB) LGMouse.Close();
 
@@ -300,8 +295,8 @@ public partial class MainWindow
         {
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
                 AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
-                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualWidth, AppConfig.Current.SliderSettings.FOVSize);
-                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualHeight, AppConfig.Current.SliderSettings.FOVSize);
+                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.FOVSize);
+                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.FOVSize);
                 break;
             // Anti Recoil
             case nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind):
@@ -342,8 +337,8 @@ public partial class MainWindow
 
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
                 AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
-                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualWidth, AppConfig.Current.SliderSettings.DynamicFOVSize);
-                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOVWindow.Circle, FOVWindow.Circle.ActualHeight, AppConfig.Current.SliderSettings.DynamicFOVSize);
+                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.DynamicFOVSize);
+                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.DynamicFOVSize);
                 break;
 
 
@@ -422,11 +417,7 @@ public partial class MainWindow
                 if (v == DetectionAreaType.ClosestToCenterScreen)
                 {
                     await Task.Delay(100);
-                    await Application.Current.Dispatcher.BeginInvoke(() =>
-                        FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
-                            Convert.ToInt16(WinAPICaller.ScreenWidth / 2 / WinAPICaller.scalingFactorX) - 320,
-                            Convert.ToInt16(WinAPICaller.ScreenHeight / 2 / WinAPICaller.scalingFactorY) - 320,
-                            0, 0));
+                    await FOV.Instance.UpdateStrictEnclosure();
                 }
             });
 
@@ -821,13 +812,7 @@ public partial class MainWindow
     #endregion Fancy UI Calculations
 
     #region Window Handling
-
-    private static void ShowHideDPWindow()
-    {
-        if (!AppConfig.Current.ToggleState.ShowDetectedPlayer) DPWindow.Hide();
-        else DPWindow.Show();
-    }
-
+    
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         var updateManager = new UpdateManager();

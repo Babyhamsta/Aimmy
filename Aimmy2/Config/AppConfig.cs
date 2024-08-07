@@ -2,9 +2,8 @@
 using System.IO;
 using System.Text.Json;
 using System.Windows;
-using Accord.IO;
 using Aimmy2.Types;
-using Visuality;
+
 
 namespace Aimmy2.Config;
 
@@ -20,9 +19,7 @@ public class AppConfig : BaseSettings
     
     public string LastLoadedConfig = "N/A";
     public string SuggestedModelName => SliderSettings.SuggestedModel;
-    public DetectedPlayerWindow? DetectedPlayerOverlay;
-    public FOV? FOVWindow;
-
+    
     public string ThemeName { get; set; } = ThemePalette.DefaultPalette.Name;
     public string ActiveThemeName { get; set; } = ThemePalette.GreenPalette.Name;
     public BindingSettings BindingSettings { get; set; } = new BindingSettings();

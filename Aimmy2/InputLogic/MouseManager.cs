@@ -1,23 +1,19 @@
+using System.Drawing;
 using Aimmy2.Class;
 using Aimmy2.Config;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
-using Class;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
 using MouseMovementLibraries.SendInputSupport;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.VisualBasic.CompilerServices;
 using Point = System.Drawing.Point;
 
 namespace InputLogic
 {
     internal class MouseManager
     {
-
-        private static readonly double ScreenWidth = WinAPICaller.ScreenWidth;
-        private static readonly double ScreenHeight = WinAPICaller.ScreenHeight;
 
         private static DateTime LastClickTime = DateTime.MinValue;
         private static int LastAntiRecoilClickTime = 0;
@@ -216,15 +212,15 @@ namespace InputLogic
             LastAntiRecoilClickTime = DateTime.UtcNow.Millisecond;
         }
 
-        public static void MoveCrosshair(int detectedX, int detectedY)
+        public static void MoveCrosshair(int detectedX, int detectedY, Rectangle area)
         {
-            int halfScreenWidth = (int)ScreenWidth / 2;
-            int halfScreenHeight = (int)ScreenHeight / 2;
+            int halfScreenWidth = area.Width / 2;
+            int halfScreenHeight = area.Height / 2;
 
             int targetX = detectedX - halfScreenWidth;
             int targetY = detectedY - halfScreenHeight;
 
-            double aspectRatioCorrection = ScreenWidth / ScreenHeight;
+            double aspectRatioCorrection = area.Width / area.Height;
 
             int MouseJitter = (int)AppConfig.Current.SliderSettings.MouseJitter;
             int jitterX = MouseRandom.Next(-MouseJitter, MouseJitter);

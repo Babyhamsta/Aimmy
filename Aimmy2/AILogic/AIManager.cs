@@ -7,6 +7,7 @@ using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
 using Class;
 using Nextended.Core.Extensions;
+using Visuality;
 
 public class AIManager : IDisposable
 {
@@ -16,12 +17,12 @@ public class AIManager : IDisposable
     private bool _isAiLoopRunning;
     private Thread _aiLoopThread;
 
-    public bool IsModelLoaded { get; private set; } = true;
+    public bool IsModelLoaded { get; private set; }
 
     //public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
     //{ }
 
-    public AIManager(string modelPath) : this(CreateScreenCapture(RecordTarget.Process(26720)), new PredictionLogic(modelPath), BaseAction.AllActions())
+    public AIManager(string modelPath) : this(CreateScreenCapture(RecordTarget.Process(62208)), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
 
 
@@ -69,15 +70,17 @@ public class AIManager : IDisposable
 
     private async void AiLoop()
     {
+
         while (_isAiLoopRunning)
         {
             if (AppConfig.Current.ToggleState.GlobalActive)
             {
-                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().X : WinAPICaller.ScreenWidth / 2;
-                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().Y : WinAPICaller.ScreenHeight / 2;
+                var area = _screenCapture.GetCaptureArea();
+                FOV.Instance.Area = area;
+                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().X : area.Width / 2;
+                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? WinAPICaller.GetCursorPosition().Y : area.Height / 2;
 
                 Rectangle detectionBox = new(targetX - PredictionLogic.IMAGE_SIZE / 2, targetY - PredictionLogic.IMAGE_SIZE / 2, PredictionLogic.IMAGE_SIZE, PredictionLogic.IMAGE_SIZE);
-                //var detectionBox = new Rectangle(_screenWidth / 2 - 320, _screenHeight / 2 - 320, 640, 640);
                 var frame = _screenCapture.Capture(detectionBox);
 
                 var predictions = (await _predictionLogic.Predict(frame, detectionBox)).ToArray();

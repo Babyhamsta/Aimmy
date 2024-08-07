@@ -1,4 +1,5 @@
-﻿using AILogic;
+﻿using System.Drawing;
+using AILogic;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
 using Class;
@@ -85,22 +86,23 @@ public class AimingAction : BaseAction
                                                         || AppConfig.Current.ToggleState.AimAssist && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.AimKeybind))
                                                         || AppConfig.Current.ToggleState.AimAssist && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind))))
         {
-            float scaleX = WinAPICaller.ScreenWidth / 640f;
-            float scaleY = WinAPICaller.ScreenHeight / 640f;
+            var area = ImageCapture.GetCaptureArea();
+            float scaleX = area.Width / 640f;
+            float scaleY = area.Height / 640f;
 
             CalculateCoordinates(closestPrediction, scaleX, scaleY);
             if (AppConfig.Current.ToggleState.Predictions)
             {
-                HandlePredictions(kalmanPrediction, closestPrediction, detectedX, detectedY);
+                HandlePredictions(kalmanPrediction, closestPrediction, area);
             }
             else
             {
-                MouseManager.MoveCrosshair(detectedX, detectedY);
+                MouseManager.MoveCrosshair(detectedX, detectedY, area);
             }
         }
     }
 
-    private void HandlePredictions(KalmanPrediction kalmanPrediction, Prediction closestPrediction, int detectedX, int detectedY)
+    private void HandlePredictions(KalmanPrediction kalmanPrediction, Prediction closestPrediction, Rectangle area )
     {
         var predictionMethod = AppConfig.Current.DropdownState.PredictionMethod;
         switch (predictionMethod)
@@ -116,7 +118,7 @@ public class AimingAction : BaseAction
                 kalmanPrediction.UpdateKalmanFilter(detection);
                 var predictedPosition = kalmanPrediction.GetKalmanPosition();
 
-                MouseManager.MoveCrosshair(predictedPosition.X, predictedPosition.Y);
+                MouseManager.MoveCrosshair(predictedPosition.X, predictedPosition.Y, area);
                 break;
 
             case PredictionMethod.Shall0:
@@ -126,7 +128,7 @@ public class AimingAction : BaseAction
                 ShalloePredictionV2.xValues = ShalloePredictionV2.xValues.TakeLast(5).ToList();
                 ShalloePredictionV2.yValues = ShalloePredictionV2.yValues.TakeLast(5).ToList();
 
-                MouseManager.MoveCrosshair(ShalloePredictionV2.GetSPX(), detectedY);
+                MouseManager.MoveCrosshair(ShalloePredictionV2.GetSPX(), detectedY, area);
 
                 PrevX = detectedX;
                 PrevY = detectedY;
@@ -143,7 +145,7 @@ public class AimingAction : BaseAction
                 wtfpredictionManager.UpdateDetection(wtfdetection);
                 var wtfpredictedPosition = wtfpredictionManager.GetEstimatedPosition();
 
-                MouseManager.MoveCrosshair(wtfpredictedPosition.X, detectedY);
+                MouseManager.MoveCrosshair(wtfpredictedPosition.X, detectedY, area);
                 break;
         }
     }

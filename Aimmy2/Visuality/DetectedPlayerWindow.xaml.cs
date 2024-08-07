@@ -26,9 +26,6 @@ namespace Visuality
             InitializeComponent();
             AppConfig.BindToDataContext(this);
             Title = "";
-
-            DetectedTracers.X1 = (WinAPICaller.ScreenWidth / 2) / WinAPICaller.scalingFactorX;
-            DetectedTracers.Y1 = WinAPICaller.ScreenHeight / WinAPICaller.scalingFactorY;
         }
         
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

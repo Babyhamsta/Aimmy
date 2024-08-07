@@ -19,11 +19,6 @@ namespace Class
         public static float scalingFactorX = GraphicsThing.DpiX / (float)96;
         public static float scalingFactorY = GraphicsThing.DpiY / (float)96;
 
-        public static int ScreenWidth = Screen.PrimaryScreen!.Bounds.Width;
-        public static int ScreenHeight = Screen.PrimaryScreen!.Bounds.Height;
-
-        //public static int ScreenWidth = Convert.ToInt16(Screen.PrimaryScreen!.Bounds.Width / scalingFactorX);
-        //public static int ScreenHeight = Convert.ToInt16(Screen.PrimaryScreen!.Bounds.Height / scalingFactorY);
 
         #endregion Variables
 
@@ -60,21 +55,6 @@ namespace Class
 
         #region Functions
 
-        //// https://stackoverflow.com/questions/254197/how-can-i-get-the-active-screen-dimensions
-        //public void GetScreenWidth(Window MW)
-        //{
-        //    var hwnd = new WindowInteropHelper(MW).EnsureHandle();
-        //    var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-
-        //    if (monitor != IntPtr.Zero)
-        //    {
-        //        var monitorInfo = new NativeMonitorInfo();
-        //        GetMonitorInfo(monitor, monitorInfo);
-
-        //        ScreenWidth = monitorInfo.Monitor.Right - monitorInfo.Monitor.Left;
-        //        ScreenHeight = monitorInfo.Monitor.Bottom - monitorInfo.Monitor.Top;
-        //    }
-        //}
 
         public static System.Drawing.Point GetCursorPosition()
         {
