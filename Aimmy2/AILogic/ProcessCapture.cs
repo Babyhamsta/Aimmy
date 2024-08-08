@@ -11,8 +11,15 @@ public class ProcessCapture : ICapture
 {
     private readonly int _processId;
 
+    public ProcessCapture(Process? process) : this(process?.Id ?? 0)
+    {}
+
     public ProcessCapture(int processId)
     {
+        if(processId == 0)
+        {
+            throw new ArgumentException("Process not running");
+        }
         _processId = processId;
     }
 

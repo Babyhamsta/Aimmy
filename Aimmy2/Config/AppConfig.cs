@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using Aimmy2.AILogic;
 using Aimmy2.Types;
 
 
@@ -18,6 +19,7 @@ public class AppConfig : BaseSettings
     public string LastLoadedModel { get; set; } = "N/A";
     
     public string LastLoadedConfig = "N/A";
+    private CaptureSource _captureSource = AILogic.CaptureSource.MainScreen();
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     
     public string ThemeName { get; set; } = ThemePalette.DefaultPalette.Name;
@@ -31,7 +33,11 @@ public class AppConfig : BaseSettings
     public AntiRecoilSettings AntiRecoilSettings { get; set; } = new AntiRecoilSettings();
     public FileLocationState FileLocationState { get; set; } = new FileLocationState();
 
-    
+    public CaptureSource CaptureSource
+    {
+        get => _captureSource;
+        set => SetField(ref _captureSource, value);
+    }
 
 
     public static AppConfig Load(string path = DefaultConfigPath)
@@ -70,6 +76,7 @@ public class AppConfig : BaseSettings
 
     public void Save(string? path = null)
     {
+        var cs = CaptureSource;
         path ??= Path ?? DefaultConfigPath;
         Save<AppConfig>(path);
     }

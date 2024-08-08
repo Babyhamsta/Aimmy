@@ -10,6 +10,7 @@ using Class;
 using Nextended.Core.Extensions;
 using Visuality;
 
+
 public class AIManager : IDisposable
 {
     private readonly ICapture _screenCapture;
@@ -20,25 +21,28 @@ public class AIManager : IDisposable
 
     public bool IsModelLoaded { get; private set; }
 
-    //public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
-    //{ }
-
-    public AIManager(string modelPath) : 
-        this(CreateScreenCapture(RecordTarget.Process(new ProcessModel { Title = AppConfig.Current.DropdownState.GamepadProcess })), new PredictionLogic(modelPath), BaseAction.AllActions())
+    public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
+    { }
+    
+    public AIManager(string modelPath, CaptureSource target) : this(CreateScreenCapture(target), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
 
-
-    public AIManager(string modelPath, RecordTarget target) : this(CreateScreenCapture(target), new PredictionLogic(modelPath), BaseAction.AllActions())
-    { }
-
-    private static ICapture CreateScreenCapture(RecordTarget target)
+    private static ICapture CreateScreenCapture(CaptureSource target)
     {
-        return target.TargetType switch
+        try
         {
-            RecordTargetType.Screen => target.ProcessOrScreenId.HasValue ? new ScreenCapture(target.ProcessOrScreenId.Value) : new ScreenCapture(),
-            RecordTargetType.Process => new ProcessCapture(target.ProcessOrScreenId.Value),
-            _ => throw new ArgumentException("Unsupported RecordTargetType"),
-        };
+            return target.TargetType switch
+            {
+                CaptureTargetType.Screen => target.ProcessOrScreenId.HasValue ? new ScreenCapture(target.ProcessOrScreenId.Value) : new ScreenCapture(),
+                CaptureTargetType.Process => new ProcessCapture(ProcessModel.FindProcessById(target.ProcessOrScreenId ?? 0) ?? ProcessModel.FindProcessByTitle(target.Title)),
+                _ => throw new ArgumentException("Unsupported RecordTargetType"),
+            };
+        }
+        catch (Exception e)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Error: {e.Message}", 5000).Show()));
+            throw;
+        }
     }
 
     public AIManager(ICapture screenCapture, IPredictionLogic predictionLogic, IList<IAction> actions)
@@ -51,21 +55,21 @@ public class AIManager : IDisposable
             a.ImageCapture = screenCapture;
         }).ToList();
 
-        NotifyLoaded();
+        NotifyLoaded(true);
 
         _isAiLoopRunning = true;
         _aiLoopThread = new Thread(AiLoop);
         _aiLoopThread.Start();
     }
 
-    private void NotifyLoaded()
+    private void NotifyLoaded(bool loaded)
     {
-        IsModelLoaded = true;
+        IsModelLoaded = loaded;
         var w = Application.Current.MainWindow as MainWindow;
         w.Dispatcher.BeginInvoke(new Action(() =>
         {
             if (AppConfig.Current.ToggleState.GlobalActive)
-                w.SetActive(true);
+                w.SetActive(loaded);
             w.CallPropertyChanged(nameof(w.IsModelLoaded));
         }));
     }
@@ -77,9 +81,9 @@ public class AIManager : IDisposable
             if (AppConfig.Current.ToggleState.GlobalActive)
             {
                 var area = _screenCapture.GetCaptureArea();
-              
+
                 var cursorPosition = WinAPICaller.GetCursorPosition();
-                
+
                 var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
                 var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
 
@@ -96,6 +100,7 @@ public class AIManager : IDisposable
 
     public void Dispose()
     {
+        IsModelLoaded = false;
         _isAiLoopRunning = false;
         if (_aiLoopThread is { IsAlive: true })
         {

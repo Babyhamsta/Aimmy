@@ -161,6 +161,16 @@ public partial class MainWindow
     private void LoadGlobalUI()
     {
         TopCenterGrid.RemoveAll();
+        TopCenterGrid.Add(new CaptureSourceSelect(), select =>
+        {
+            select.Selected += (sender, source) =>
+            {
+                FileManager.AIManager?.Dispose();
+                FileManager.AIManager = null;
+                FileManager.CurrentlyLoadingModel = false;
+                LoadLastModel();
+            };
+        });
         //TopCenterGrid.AddToggleWithKeyBind("Global Active", toggle =>
         //{
         //    toggle.BindTo(() => AppConfig.Current.ToggleState.GlobalActive);

@@ -34,6 +34,10 @@ public class OverlayAction : BaseAction
                     break;
             }
         }
+        else
+        {
+            DisableOverlay();
+        }
 
         return Task.CompletedTask;
     }
@@ -43,7 +47,7 @@ public class OverlayAction : BaseAction
     private void DrawWithWpf(Prediction[] predictions)
     {
         var prediction = predictions.MinBy(p => p.Confidence);
-        if (prediction == null || !Active)
+        if (prediction == null)
         {
             DisableOverlay();
         }

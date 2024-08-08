@@ -1,0 +1,110 @@
+﻿<UserControl x:Class="Aimmy2.UILibrary.CaptureSourceSelect"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
+             xmlns:local="clr-namespace:Aimmy2.UILibrary"
+             mc:Ignorable="d"
+             d:DesignWidth="282.5"
+             d:DesignHeight="50">
+    <Grid>
+  
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button 
+                Margin="0 0 10 0"
+             Background="Transparent"
+             BorderBrush="Transparent"
+             Click="MonitorBtnClick" Padding="5" ToolTip="Select Monitor to Capture">
+                <StackPanel Orientation="Horizontal">
+                    <Border Margin="0 0 0 1" BorderBrush="{x:Null}">
+                        <TextBlock Foreground="{Binding ScreenForeground}" TextWrapping="Wrap" Text="Monitor" VerticalAlignment="Center"/>
+                    </Border>
+                    <Viewbox Margin="10 0 0 0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Path Data="M10.8,21.500014L22.3,21.500014 22.3,24.500016 24.7,24.500016 24.7,26.700018 8.4000001,26.700018 8.4000001,24.500016 10.8,24.500016z M1.9000006,1.8999996L1.9000006,17.600011 30.1,17.600011 30.1,1.8999996z M0,0L32,0 32,19.500013 0,19.500013z" Stretch="Uniform" Fill="{Binding ScreenForeground}" Width="32" Height="32" Margin="0,0,0,0" RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <TransformGroup>
+                                        <TransformGroup.Children>
+                                            <RotateTransform Angle="0" />
+                                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                                        </TransformGroup.Children>
+                                    </TransformGroup>
+                                </Path.RenderTransform>
+                            </Path>
+
+                            <Grid Margin="10 0 0 0" Grid.Column="1">
+                                <Path Data="M16,0L23.998993,10.740019 32,21.478999 16,21.478999 0,21.478999 8.0010071,10.740019z" Stretch="Uniform" Fill="{Binding ScreenForeground}" Width="16" Height="16" Margin="0,0,0,0" RenderTransformOrigin="0.5,0.5">
+                                    <Path.RenderTransform>
+                                        <TransformGroup>
+                                            <TransformGroup.Children>
+                                                <RotateTransform Angle="0" />
+                                                <ScaleTransform ScaleX="1" ScaleY="-1" />
+                                            </TransformGroup.Children>
+                                        </TransformGroup>
+                                    </Path.RenderTransform>
+                                </Path>
+                            </Grid>
+                        </Grid>
+                    </Viewbox>
+                </StackPanel>
+
+            </Button>
+
+            <Button 
+                Background="Transparent"
+                BorderBrush="Transparent"
+                Margin="0 0 10 0"
+
+              Click="ProcessBtnClick" Grid.Column="1" Padding="5" ToolTip="Select Application Window to Capture">
+                <StackPanel Orientation="Horizontal">
+                    <Border Margin="0 0 0 1" BorderBrush="{x:Null}">
+                        <TextBlock Foreground="{Binding ProcessForeground}" TextWrapping="Wrap" Text="Window" VerticalAlignment="Center"/>
+                    </Border>
+                    <Viewbox Margin="10 0 0 0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Path Data="M17.415009,11.589005L25.104004,16.893005 23.071014,18.276001 25.715027,21.865005 24.007019,23.122009 21.31601,19.469009 19.366028,20.794006z M1.3740234,8.4840088C1.2410278,8.4840088,1.131012,8.5920105,1.131012,8.727005L1.131012,25.697006C1.131012,25.831009,1.2410278,25.939011,1.3740234,25.939011L30.707001,25.939011C30.841003,25.939011,30.950012,25.831009,30.950012,25.697006L30.950012,8.727005C30.950012,8.5920105,30.841003,8.4840088,30.707001,8.4840088z M1.4170227,5.7770081C1.2820129,5.7770081,1.1720276,5.8860016,1.1720276,6.0200043L1.1720276,7.2320099C1.1720276,7.3659973,1.2820129,7.473999,1.4170227,7.473999L30.745026,7.473999C30.881012,7.473999,30.991028,7.3659973,30.991028,7.2320099L30.991028,6.0200043C30.991028,5.8860016,30.881012,5.7770081,30.745026,5.7770081z M28.364014,1.576004C28.029022,1.576004,27.758026,1.8460083,27.758026,2.1820068L27.758026,3.2720032C27.758026,3.6080017,28.029022,3.8789978,28.364014,3.8789978L29.252014,3.8789978C29.588013,3.8789978,29.859009,3.6080017,29.859009,3.2720032L29.859009,2.1820068C29.859009,1.8460083,29.588013,1.576004,29.252014,1.576004z M24.485016,1.576004C24.150024,1.576004,23.879028,1.8460083,23.879028,2.1820068L23.879028,3.2720032C23.879028,3.6080017,24.150024,3.8789978,24.485016,3.8789978L25.374023,3.8789978C25.709015,3.8789978,25.981018,3.6080017,25.981018,3.2720032L25.981018,2.1820068C25.981018,1.8460083,25.709015,1.576004,25.374023,1.576004z M20.606018,1.576004C20.271027,1.576004,20,1.8460083,20,2.1820068L20,3.2720032C20,3.6080017,20.271027,3.8789978,20.606018,3.8789978L21.495026,3.8789978C21.830017,3.8789978,22.10202,3.6080017,22.10202,3.2720032L22.10202,2.1820068C22.10202,1.8460083,21.830017,1.576004,21.495026,1.576004z M1.3330078,0L30.667023,0C31.404022,0,32,0.5960083,32,1.3330078L32,26.141998C32,26.878006,31.404022,27.473999,30.667023,27.473999L1.3330078,27.473999C0.59701538,27.473999,0,26.878006,0,26.141998L0,1.3330078C0,0.5960083,0.59701538,0,1.3330078,0z" Stretch="Uniform" Fill="{Binding ProcessForeground}" Width="32" Height="32" Margin="0,0,0,0" RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <TransformGroup>
+                                        <TransformGroup.Children>
+                                            <RotateTransform Angle="0" />
+                                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                                        </TransformGroup.Children>
+                                    </TransformGroup>
+                                </Path.RenderTransform>
+                            </Path>
+
+                            <Grid Margin="10 0 0 0" Grid.Column="1">
+                                <Path Data="M16,0L23.998993,10.740019 32,21.478999 16,21.478999 0,21.478999 8.0010071,10.740019z" Stretch="Uniform" Fill="{Binding ProcessForeground}" Width="16" Height="16" Margin="0,0,0,0" RenderTransformOrigin="0.5,0.5">
+                                    <Path.RenderTransform>
+                                        <TransformGroup>
+                                            <TransformGroup.Children>
+                                                <RotateTransform Angle="0" />
+                                                <ScaleTransform ScaleX="1" ScaleY="-1" />
+                                            </TransformGroup.Children>
+                                        </TransformGroup>
+                                    </Path.RenderTransform>
+                                </Path>
+                            </Grid>
+                        </Grid>
+                    </Viewbox>
+                </StackPanel>
+
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

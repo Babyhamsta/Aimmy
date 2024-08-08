@@ -102,6 +102,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="UILibrary\CaptureSourceSelect.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
 	  <Compile Update="UILibrary\ACredit.xaml.cs">
 	    <SubType>Code</SubType>
 	  </Compile>

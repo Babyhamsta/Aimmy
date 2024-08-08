@@ -65,7 +65,7 @@
                            FontSize="14"
                            FontFamily="{StaticResource Atkinson Hyperlegible}" />
 
-                    <StackPanel IsEnabled="{Binding IsModelLoaded}" Orientation="Horizontal" HorizontalAlignment="Center" Width="350" x:Name="TopCenterGrid">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" x:Name="TopCenterGrid">
 
                     </StackPanel>
 
@@ -230,7 +230,7 @@
 
                 </Grid>
                 <ScrollViewer x:Name="AimMenu"
-                              IsEnabled="{Binding Path=IsModelLoaded}"
+                              
                               Margin="50,50,0,0"
                               VerticalScrollBarVisibility="Auto"
                               PanningMode="VerticalOnly">
@@ -240,7 +240,7 @@
                             <ColumnDefinition></ColumnDefinition>
                         </Grid.ColumnDefinitions>
                         <Grid Grid.ColumnSpan="2" HorizontalAlignment="Center" Visibility="{Binding Path=IsNotModelLoaded, Converter={StaticResource boolToVis }}">
-                            <TextBlock Foreground="Red">Please load model first</TextBlock>
+                            <TextBlock Foreground="Red">Please load model first and select a valid capture source</TextBlock>
                         </Grid>
                         <StackPanel x:Name="ASP1"
                                     Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"

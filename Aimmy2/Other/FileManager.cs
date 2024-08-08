@@ -107,12 +107,8 @@ namespace Other
             await Task.Delay(150);
 
 
-
-
-            // Reload AIManager with new model
             AIManager?.Dispose();
-            //AIManager = new LegacyAIManager(modelPath, RecordTarget.Process(49480));
-            AIManager = new AIManager(modelPath);
+            AIManager = new AIManager(modelPath, AppConfig.Current.CaptureSource);
 
 
             // TODO: Remove reflection
