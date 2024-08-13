@@ -1,6 +1,8 @@
 ﻿using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
+using Aimmy2.InputLogic;
 using InputLogic;
+using Nefarius.ViGEm.Client.Targets.Xbox360;
 
 namespace Aimmy2.AILogic.Actions;
 
@@ -26,12 +28,28 @@ public class AutoTriggerAction: BaseAction
         return Task.CompletedTask;
     }
 
+    public override Task OnPause()
+    {
+        if(_autoTriggerCts != null)
+        {
+            _autoTriggerCts.Cancel();
+            _autoTriggerCts = null;
+        }
+
+        if (MouseManager.IsLeftDown)
+        {
+            MouseManager.LeftUp();
+        }
+        return base.OnPause();
+    }
+
+
     private async Task AutoTrigger(Prediction prediction)
     {
         if (AppConfig.Current.ToggleState.AutoTrigger)
         {
             var delay = TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.AutoTriggerDelay);
-            if (AppConfig.Current.ToggleState.AutoTriggerCharged)
+            if (AppConfig.Current.ToggleState.AutoTriggerCharged && TriggerKeyUnsetOrHold())
             {
                 // JUST FOR TESTING
                 if (!MouseManager.IsLeftDown && _autoTriggerCts == null)

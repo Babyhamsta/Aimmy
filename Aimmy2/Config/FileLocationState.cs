@@ -1,10 +1,19 @@
-﻿namespace Aimmy2.Config;
+﻿using Aimmy2.InputLogic.HidHide;
+
+namespace Aimmy2.Config;
 
 public class FileLocationState : BaseSettings
 {
     private string _ddxoftDllLocation = "";
     private string _gun1Config = "";
     private string _gun2Config = "";
+    private string _hidHidePath = HidHideHelper.GetHidHideDefaultPath();
+
+    public string HidHidePath
+    {
+        get => _hidHidePath;
+        set => SetField(ref _hidHidePath, value);
+    }
 
     public string DdxoftDLLLocation
     {

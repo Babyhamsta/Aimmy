@@ -1,25 +1,23 @@
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Class;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
 using Aimmy2.InputLogic;
+using Aimmy2.InputLogic.HidHide;
 using Aimmy2.Models;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.Other;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
-using Class;
 using InputLogic;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
@@ -38,6 +36,7 @@ public partial class MainWindow
 {
     #region Main Variables
 
+    private bool _uiCreated;
     private InputBindingManager? bindingManager;
     private FileManager fileManager;
     private static GithubManager githubManager = new();
@@ -64,7 +63,12 @@ public partial class MainWindow
         AppConfig.ConfigLoaded += (s, e) => CreateUI();
         Console.WriteLine("Init UI");
 
-        GamepadManager.Init();
+        try
+        {
+            GamepadManager.Init();
+        }
+        catch
+        {}
 
         Config = AppConfig.Load();
 
@@ -87,7 +91,7 @@ public partial class MainWindow
 
     private void CreateUI()
     {
-        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.DefaultPalette;
+        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
         ApplicationConstants.Theme = theme;
 
         CurrentScrollViewer = FindName("AimMenu") as ScrollViewer;
@@ -107,12 +111,15 @@ public partial class MainWindow
             bindingManager.OnBindingPressed -= BindingOnKeyPressed;
             bindingManager.OnBindingReleased -= BindingOnKeyReleased;
         }
-        
+
         bindingManager = new InputBindingManager();
         bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind),
             AppConfig.Current.BindingSettings.AimKeybind);
         bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey),
             AppConfig.Current.BindingSettings.TriggerKey);
+
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.RapidFireKey),
+            AppConfig.Current.BindingSettings.RapidFireKey);
 
         bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ActiveToggleKey),
             AppConfig.Current.BindingSettings.ActiveToggleKey);
@@ -141,6 +148,7 @@ public partial class MainWindow
 
         bindingManager.OnBindingPressed += BindingOnKeyPressed;
         bindingManager.OnBindingReleased += BindingOnKeyReleased;
+        _uiCreated = true;
     }
 
     private void LoadLastModel()
@@ -190,7 +198,7 @@ public partial class MainWindow
     public void SetActive(bool active)
     {
         AppConfig.Current.ToggleState.GlobalActive = active;
-        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.DefaultPalette;
+        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
         var themeActive = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
         ApplicationConstants.Theme = active ? themeActive : theme;
     }
@@ -232,8 +240,7 @@ public partial class MainWindow
         if (AppConfig.Current.DropdownState.MouseMovementMethod == MouseMovementMethod.LGHUB) LGMouse.Close();
 
         AppConfig.Current.Save();
-
-
+        GamepadManager.Dispose();
         Application.Current.Shutdown();
     }
 
@@ -253,19 +260,20 @@ public partial class MainWindow
         if (sender is Button clickedButton && !CurrentlySwitching && CurrentMenu != clickedButton.Tag.ToString())
         {
             CurrentlySwitching = true;
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(350), MenuHighlighter, MenuHighlighter.Margin,
-                clickedButton.Margin);
+            var buttonIndx = MenuButtons.Children.IndexOf(clickedButton);
+            var margin = buttonIndx * Menu1B.Height;
+            Animator.ObjectShift(TimeSpan.FromMilliseconds(350), MenuHighlighter, MenuHighlighter.Margin, new Thickness(0, margin, 0, 0));
             await SwitchScrollPanels(FindName(clickedButton.Tag.ToString()) as ScrollViewer ??
                                      throw new NullReferenceException("Scrollpanel is null"));
             CurrentMenu = clickedButton.Tag.ToString()!;
         }
     }
 
-    private async Task SwitchScrollPanels(ScrollViewer MovingScrollViewer)
+    private async Task SwitchScrollPanels(ScrollViewer movingScrollViewer)
     {
-        MovingScrollViewer.Visibility = Visibility.Visible;
-        Animator.Fade(MovingScrollViewer);
-        Animator.ObjectShift(TimeSpan.FromMilliseconds(350), MovingScrollViewer, MovingScrollViewer.Margin,
+        movingScrollViewer.Visibility = Visibility.Visible;
+        Animator.Fade(movingScrollViewer);
+        Animator.ObjectShift(TimeSpan.FromMilliseconds(350), movingScrollViewer, movingScrollViewer.Margin,
             new Thickness(50, 50, 0, 0));
 
         Animator.FadeOut(CurrentScrollViewer!);
@@ -274,7 +282,7 @@ public partial class MainWindow
         await Task.Delay(350);
 
         CurrentScrollViewer.Visibility = Visibility.Collapsed;
-        CurrentScrollViewer = MovingScrollViewer;
+        CurrentScrollViewer = movingScrollViewer;
         CurrentlySwitching = false;
     }
 
@@ -412,7 +420,7 @@ public partial class MainWindow
         AimAssist.AddToggle("Enable Model Switch Keybind").BindTo(() => AppConfig.Current.ToggleState.EnableModelSwitchKeybind);
         AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), () => keybind.ModelSwitchKeybind, bindingManager);
         AimAssist.AddSeparator();
-        AimAssist.Visibility = GetVisibilityFor("AimAssist");
+        AimAssist.Visibility = GetVisibilityFor(nameof(AimAssist));
 
         #endregion Aim Assist
 
@@ -446,9 +454,19 @@ public partial class MainWindow
         AimConfig.AddSlider("EMA Smoothening", "Amount", 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.EMASmoothening);
 
         AimConfig.AddSeparator();
-        AimConfig.Visibility = GetVisibilityFor("AimConfig");
+        AimConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
 
         #endregion Config
+
+        #region Rapid
+
+        RapidFire.AddTitle("Rapid Fire", true);
+        RapidFire.AddToggle("Rapid Fire").BindTo(() => AppConfig.Current.ToggleState.RapidFire);
+        RapidFire.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.RapidFireKey), () => keybind.RapidFireKey, bindingManager);
+        RapidFire.AddSeparator();
+        RapidFire.Visibility = GetVisibilityFor(nameof(RapidFire));
+
+        #endregion
 
         #region Trigger Bot
 
@@ -470,9 +488,9 @@ public partial class MainWindow
                     b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter;
                 }
             };
-            b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter; 
+            b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter;
             b.ToolTip = "Specify the area of the Head when this interaction center the trigger will be executed";
-        }).Reader.Click += (s, e) => 
+        }).Reader.Click += (s, e) =>
             new EditHeadArea(AppConfig.Current.DropdownState.HeadArea).Show();
 
 
@@ -483,15 +501,15 @@ public partial class MainWindow
             {
                 if (args.PropertyName == nameof(Config.BindingSettings.TriggerKey))
                 {
-                    slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey); 
+                    slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey);
                 }
             };
-            slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey); 
+            slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey);
             slider.ToolTip = "The minimum time the trigger key must be held down before the trigger is executed";
         }).BindTo(() => AppConfig.Current.SliderSettings.TriggerKeyMin);
-        TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
+        TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.00, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
         TriggerBot.AddSeparator();
-        TriggerBot.Visibility = GetVisibilityFor("TriggerBot");
+        TriggerBot.Visibility = GetVisibilityFor(nameof(TriggerBot));
 
         #endregion Trigger Bot
 
@@ -503,11 +521,11 @@ public partial class MainWindow
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), "Oem6", bindingManager);
         AntiRecoil.AddSlider("Hold Time", "Milliseconds", 1, 1, 1, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.HoldTime);
         AntiRecoil.AddButton("Record Fire Rate").Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
-        AntiRecoil.AddSlider("Fire Rate", "Milliseconds", 1, 1, 1, 5000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.FireRate); 
+        AntiRecoil.AddSlider("Fire Rate", "Milliseconds", 1, 1, 1, 5000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.FireRate);
         AntiRecoil.AddSlider("Y Recoil (Up/Down)", "Move", 1, 1, -1000, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.YRecoil);
         AntiRecoil.AddSlider("X Recoil (Left/Right)", "Move", 1, 1, -1000, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.XRecoil);
         AntiRecoil.AddSeparator();
-        AntiRecoil.Visibility = GetVisibilityFor("AntiRecoil");
+        AntiRecoil.Visibility = GetVisibilityFor(nameof(AntiRecoil));
 
         #endregion Anti Recoil
 
@@ -539,7 +557,7 @@ public partial class MainWindow
         ARConfig.AddButton("Load Gun 2 Config").Reader.Click +=
             (s, e) => LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun2Config, true);
         ARConfig.AddSeparator();
-        ARConfig.Visibility = GetVisibilityFor("ARConfig");
+        ARConfig.Visibility = GetVisibilityFor(nameof(ARConfig));
 
         #endregion Anti Recoil Config
 
@@ -556,7 +574,7 @@ public partial class MainWindow
         FOVConfig.AddSlider("FOV Opacity", "FOV Opacity", 0.1, 0.1, 0, 1).BindTo(() => AppConfig.Current.SliderSettings.FOVOpacity);
 
         FOVConfig.AddSeparator();
-        FOVConfig.Visibility = GetVisibilityFor("FOVConfig");
+        FOVConfig.Visibility = GetVisibilityFor(nameof(FOVConfig));
 
         #endregion FOV Config
 
@@ -564,7 +582,7 @@ public partial class MainWindow
 
         ESPConfig.AddTitle("ESP Config", true);
         ESPConfig.AddToggle("Show Detected Player").BindTo(() => AppConfig.Current.ToggleState.ShowDetectedPlayer);
-        ESPConfig.AddToggle("Show Trigger Head Area").BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea); 
+        ESPConfig.AddToggle("Show Trigger Head Area").BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea);
         ESPConfig.AddToggle("Show AI Confidence").BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
         ESPConfig.AddToggle("Show Tracers").BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
 
@@ -574,35 +592,206 @@ public partial class MainWindow
 
 
         ESPConfig.AddSlider("AI Confidence Font Size", "Size", 1, 1, 1, 30).BindTo(() => AppConfig.Current.SliderSettings.AIConfidenceFontSize);
-        
+
         ESPConfig.AddSlider("Corner Radius", "Radius", 1, 1, 0, 100).BindTo(() => AppConfig.Current.SliderSettings.CornerRadius);
 
         ESPConfig.AddSlider("Border Thickness", "Thickness", 0.1, 1, 0.1, 10).BindTo(() => AppConfig.Current.SliderSettings.BorderThickness);
 
-        ESPConfig.AddSlider("Opacity", "Opacity", 0.1, 0.1, 0, 1).BindTo(() => AppConfig.Current.SliderSettings.Opacity); 
+        ESPConfig.AddSlider("Opacity", "Opacity", 0.1, 0.1, 0, 1).BindTo(() => AppConfig.Current.SliderSettings.Opacity);
 
         ESPConfig.AddSeparator();
-        ESPConfig.Visibility = GetVisibilityFor("ESPConfig");
+        ESPConfig.Visibility = GetVisibilityFor(nameof(ESPConfig));
 
         #endregion ESP Config
     }
 
     private void LoadGamepadSettingsMenu()
     {
-        GamepadSettingsConfig.RemoveAll();
-        GamepadSettingsConfig.AddTitle("Gamepad Settings");
-        GamepadSettingsConfig.AddCredit("Target Process",
-            "In order to use the Gamepad to send actions or AIM you need to select the process where the commands should be send to");
-        GamepadSettingsConfig.Add<AProcessPicker>(picker =>
+        void Reload()
         {
-            picker.SelectedProcessModel = new ProcessModel { Title = AppConfig.Current.DropdownState.GamepadProcess };
-            picker.PropertyChanged += (sender, e) =>
+            if (_uiCreated)
             {
-                if (e.PropertyName == nameof(picker.SelectedProcessModel))
-                    AppConfig.Current.DropdownState.GamepadProcess = picker.SelectedProcessModel.Title;
-            };
+                _uiCreated = false;
+                LoadGamepadSettingsMenu();
+                _uiCreated = true;
+            }
+        }
+
+        string error = "";
+        try
+        {
+            GamepadManager.Init();
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+        }
+        ButtonGamepadSettings.Foreground = !string.IsNullOrWhiteSpace(error) || !GamepadManager.CanSend ? Brushes.Red : Brushes.White;
+        GamepadSettingsConfig.RemoveAll();
+        GamepadSettingsConfig.AddTitle($"Gamepad Settings", false);
+
+        GamepadSettingsConfig.AddDropdown("Gamepad Send Command mode", AppConfig.Current.DropdownState.GamepadSendMode, v =>
+        {
+            AppConfig.Current.DropdownState.GamepadSendMode = v;
+            Reload();
         });
+
+        if (!string.IsNullOrEmpty(error))
+        {
+            GamepadSettingsConfig.AddCredit("Status",
+                "Error: " + error, credit => credit.Description.Foreground = Brushes.Red);
+        }
+
+        if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.None)
+        {
+            GamepadSettingsConfig.AddCredit("None",
+                "If you don't need sending Gamepad Commands it make sense to disable it to decrease CPU usage");
+        }
+        else if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.ViGEm)
+        {
+            GamepadSettingsConfig.AddCredit("",
+                "Virtual Gamepad with ViGEm\r\n" +
+                "In order to use the Gamepad to send actions or AIM you need to ensure you have installed the ViGEm Bus Driver fom https://vigembusdriver.com/\r\n" +
+                "Then a Virtual Xbox360 Controller will be created and your current controller will be synced with the virtual one. Please then ensure you use the virtual device in your game");
+            if (!GamepadManager.CanSend)
+            {
+                GamepadSettingsConfig.AddButton("Goto vigembusdriver.com", b =>
+                {
+                    b.Reader.Click += (s, e) =>
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "https://vigembusdriver.com",
+                            UseShellExecute = true
+                        });
+                    };
+                });
+            }
+            else
+            {
+                GamepadSettingsConfig.AddCredit("Status",
+                    "GREAT, It looks like you have installed all necessary software for it.");
+            }
+        }
+        else if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.VJoy)
+        {
+            GamepadSettingsConfig.AddCredit("",
+                "Virtual Gamepad with vJoy\r\n" +
+                "In order to use the Gamepad with vJoy you need to install vJoy from https://sourceforge.net/projects/vjoystick/\r\n" +
+                "Then a Virtual Xbox360 Controller will be created and your current controller will be synced with the virtual one. Please then ensure you use the virtual device in your game");
+            if (!GamepadManager.CanSend)
+            {
+                GamepadSettingsConfig.AddButton("Install vJoy", b =>
+                {
+                    b.Reader.Click += (s, e) =>
+                    {
+                        var fileName = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "Resources", "vJoySetup.exe");
+                        if (File.Exists(fileName))
+                        {
+                            var p = Process.Start(new ProcessStartInfo
+                            {
+                                FileName = fileName,
+                            });
+                            p.Exited += (sender, args) => Reload();
+                        }
+                    };
+                });
+            }
+            else
+            {
+                GamepadSettingsConfig.AddCredit("Status",
+                    "GREAT, It looks like you have installed all necessary software for it.");
+            }
+        }
+        else if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.XInputHook)
+        {
+            GamepadSettingsConfig.AddCredit("Notice",
+                "In order to use XInputEmulation you need to ensure this tool is started with Admin Privileges");
+            GamepadSettingsConfig.Add<AProcessPicker>(picker =>
+            {
+                picker.SelectedProcessModel = new ProcessModel { Title = AppConfig.Current.DropdownState.GamepadProcess };
+                picker.PropertyChanged += (sender, e) =>
+                {
+                    if (e.PropertyName == nameof(picker.SelectedProcessModel))
+                    {
+                        AppConfig.Current.DropdownState.GamepadProcess = picker.SelectedProcessModel.Title;
+                        Reload();
+                    }
+                };
+            });
+        }
+
         GamepadSettingsConfig.AddSeparator();
+
+        if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.VJoy ||
+            AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.ViGEm)
+        {
+            GamepadSettingsConfig.AddTitle($"Hide Physical Controller", false);
+            GamepadSettingsConfig.AddCredit("If you are not able to select the controller in your game you can hide it's HID",
+                "With HidHide you can Hide your Physical Controller and we can do this automatically for you");
+
+            GamepadSettingsConfig.AddToggle("Automatically hide and reactivate physical Controller", toggle =>
+            {
+                toggle.IsEnabled = File.Exists(HidHideHelper.GetHidHidePath());
+                toggle.Changed += (s, e) => Reload();
+            }).BindTo(() => AppConfig.Current.ToggleState.AutoHideController);
+
+            GamepadSettingsConfig.AddFileLocator("HidHide Path", "HidHideCLI.exe (HidHideCLI.exe)|HidHideCLI.exe", HidHideHelper.GetHidHidePath(), cfg:
+                locator =>
+                {
+                    locator.FileSelected += (sender, args) => Reload();
+                });
+
+
+            if (!File.Exists(HidHideHelper.GetHidHidePath()))
+            {
+                GamepadSettingsConfig.AddButton("Install HidHide", b =>
+                {
+                    b.Reader.Click += (s, e) =>
+                    {
+                        var fileName =
+                            Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName),
+                                "Resources", "HidHide_1.5.230_x64.exe");
+                        if (File.Exists(fileName))
+                        {
+                            var p = Process.Start(fileName);
+                            p.Exited += (sender, args) => Reload();
+                        }
+                    };
+                });
+            }
+            else
+            {
+                GamepadSettingsConfig.AddButton("Launch HidHide UI", b =>
+                {
+                    b.Reader.Click += (s, e) =>
+                    {
+                        var fileName = Path.Combine(Path.GetDirectoryName(HidHideHelper.GetHidHidePath()), "HidHideClient.exe");
+                        if (File.Exists(fileName))
+                            Process.Start(fileName);
+                    };
+                });
+            }
+
+            GamepadSettingsConfig.AddSeparator();
+
+            GamepadSettingsConfig.AddButton("Show and Test Controller", b =>
+            {
+                b.Reader.Click += (s, e) =>
+                {
+                   
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = "/c joy.cpl",
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+                    Process.Start(startInfo);
+                };
+            });
+        }
+
     }
 
     private void LoadSettingsMenu()
@@ -613,7 +802,7 @@ public partial class MainWindow
         SettingsConfig.AddDropdown("Theme", ApplicationConstants.Theme, ThemePalette.All, palette =>
         {
             ApplicationConstants.Theme = palette;
-            if(Config != null)
+            if (Config != null)
                 Config.ThemeName = palette.Name;
         });
         var themeOnActive = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
@@ -654,20 +843,23 @@ public partial class MainWindow
             }
         };
 
-        SettingsConfig.AddSlider("Gamepad Minimum LT", "LT", 0.1, 0.1, 0.1, 1).BindTo(() => AppConfig.Current.SliderSettings.GamepadMinimumLT); 
+        SettingsConfig.AddSlider("Gamepad Minimum LT", "LT", 0.1, 0.1, 0.1, 1).BindTo(() => AppConfig.Current.SliderSettings.GamepadMinimumLT);
         SettingsConfig.AddSlider("Gamepad Minimum RT", "RT", 0.1, 0.1, 0.1, 1).BindTo(() => AppConfig.Current.SliderSettings.GamepadMinimumRT);
 
-        SettingsConfig.AddToggle("Mouse Background Effect").BindTo(() => AppConfig.Current.ToggleState.MouseBackgroundEffect); 
+        SettingsConfig.AddCredit(string.Empty, "When fire (click action) is executed a random value for waiting from press to release is used.\r\nHere you can control the maximum time for this random value");
+        SettingsConfig.AddSlider("Fire max delay", "Seconds", 0.01, 0.1, 0.00, 2).BindTo(() => AppConfig.Current.SliderSettings.FirePressDelay);
+
+        SettingsConfig.AddToggle("Mouse Background Effect").BindTo(() => AppConfig.Current.ToggleState.MouseBackgroundEffect);
         SettingsConfig.AddToggle("UI TopMost").BindTo(() => AppConfig.Current.ToggleState.UITopMost);
         SettingsConfig.AddButton("Save Config").Reader.Click += (s, e) => new ConfigSaver().ShowDialog();
 
         SettingsConfig.AddSeparator();
 
         // X/Y Percentage Adjustment Enabler
-        
+
         XYPercentageEnablerMenu.AddTitle("X/Y Percentage Adjustment", true);
         XYPercentageEnablerMenu.AddToggle("X Axis Percentage Adjustment").BindTo(() => AppConfig.Current.ToggleState.XAxisPercentageAdjustment);
-        XYPercentageEnablerMenu.AddToggle("Y Axis Percentage Adjustment").BindTo(() => AppConfig.Current.ToggleState.YAxisPercentageAdjustment); 
+        XYPercentageEnablerMenu.AddToggle("Y Axis Percentage Adjustment").BindTo(() => AppConfig.Current.ToggleState.YAxisPercentageAdjustment);
         XYPercentageEnablerMenu.AddSeparator();
 
         // ddxoft Menu
@@ -822,7 +1014,7 @@ public partial class MainWindow
     #endregion Fancy UI Calculations
 
     #region Window Handling
-    
+
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         var updateManager = new UpdateManager();

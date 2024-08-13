@@ -17,7 +17,7 @@ namespace InputLogic
 
         private static DateTime LastClickTime = DateTime.MinValue;
         private static int LastAntiRecoilClickTime = 0;
-
+        private static Random _random = new Random();
         private const uint MOUSEEVENTF_WHEEL = 0x0800;
         private const int WHEEL_DELTA = 120; 
 
@@ -163,12 +163,19 @@ namespace InputLogic
             _leftDown = false;
         }
 
+        public static int GetRandomDelay()
+        {
+            var ts = TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.FirePressDelay);
+            var ms = ts.TotalMilliseconds;
+            int randomMs = _random.Next(0, (int)ms);
+            return randomMs;
+        }
+
         public static async Task DoTriggerClick()
         {
-            const int clickDelayMilliseconds = 20;
-
+            var randomMs = GetRandomDelay();
             LeftDown();
-            await Task.Delay(clickDelayMilliseconds);
+            await Task.Delay(randomMs);
             LeftUp();
 
             LastClickTime = DateTime.UtcNow;

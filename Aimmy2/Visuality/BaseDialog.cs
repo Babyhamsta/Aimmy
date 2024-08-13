@@ -47,7 +47,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     private string GetSettingsFilePath()
     {
         var dialogType = GetType().Name;
-        var folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ApplicationConstants.ApplicationName);
+        var folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AI-M");
         Directory.CreateDirectory(folderPath);
         return Path.Combine(folderPath, $"{dialogType}_WindowSettings.bin");
     }

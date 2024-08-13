@@ -1,0 +1,2146 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EasyHook</name>
+    </assembly>
+    <members>
+        <member name="T:EasyHook.COMClassInfo">
+            <summary>
+            <para>A helper class for determining the address of COM object functions for hooking given a COM class id (CLSID) and COM interface id (IID), or COM class type and COM interface type.</para>
+            </summary>
+            <example>
+            The following three examples result in the same output:
+            <code>
+            // 1. Use imported Class and Interface Types
+            COMClassInfo cci1 = new COMClassInfo(typeof(CLSID_DirectInputDevice8), typeof(IID_IDirectInputDevice8W), "GetCapabilities");
+            // 2. Use Guid from class and interface types
+            COMClassInfo cci2 = new COMClassInfo(typeof(CLSID_DirectInputDevice8).GUID, typeof(IID_IDirectInputDevice8W).GUID, 3);
+            // 3. Use class and interface Guids directly (no need to have class and interface types defined)
+            COMClassInfo cci3 = new COMClassInfo(new Guid("25E609E5-B259-11CF-BFC7-444553540000"), new Guid("54D41081-DC15-4833-A41B-748F73A38179"), 3);
+            
+            // Will output False if dinput8.dll is not already loaded
+            Console.WriteLine(cci1.IsModuleLoaded());
+            cci1.Query();
+            cci2.Query();
+            cci3.Query();
+            // Will output True as dinput8.dll will be loaded by .Query() if not already
+            Console.WriteLine(cci1.IsModuleLoaded());
+            
+            // Output the function pointers we queried
+            Console.WriteLine(cci1.FunctionPointers[0]);
+            Console.WriteLine(cci2.FunctionPointers[0]);
+            Console.WriteLine(cci3.FunctionPointers[0]);
+            
+            ...
+            
+            [ComVisible(true)]
+            [Guid("25E609E5-B259-11CF-BFC7-444553540000")]
+            public class CLSID_DirectInputDevice8
+            {
+            }
+            
+            [ComVisible(true)]
+            [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+            [Guid("54D41081-DC15-4833-A41B-748F73A38179")]
+            public interface IID_IDirectInputDevice8W
+            {
+                /*** IDirectInputDevice8W methods ***/
+                int GetCapabilities(IntPtr deviceCaps); // fourth method due to IUnknown methods QueryInterface, AddRef and Release
+                // other methods...
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:EasyHook.COMClassInfo.#ctor(System.Type,System.Type,System.String[])">
+            <summary>
+            Creates a new COMClassInfo using the COM class and interface types. The function names to retrieve the addresses for should be provided as strings
+            </summary>
+            <param name="classtype">The COM object's class type</param>
+            <param name="interfacetype">The COM object's interface type</param>
+            <param name="methodNames">The methods to retrieve addresses for</param>
+        </member>
+        <member name="M:EasyHook.COMClassInfo.#ctor(System.Guid,System.Guid,System.Int32[])">
+            <summary>
+            Creates a new COMClassInfo instance using the COM class and interface Guids. The function indexes to retrieve the addresses for as defined by the order of the methods in the COM interface.
+            </summary>
+            <param name="clsid">The class id (CLSID) of the COM object</param>
+            <param name="iid">The interface id (IID) of the COM interface. This interface MUST inherit from IUnknown.</param>
+            <param name="vTableIndexes">One or more method indexes to retrieve the address for. Index 0 == QueryInterface, 1 == AddRef, 2 == Release, 3 == first method and so on, i.e. the order that the methods appear in the interface's C++ header file.</param>
+        </member>
+        <member name="P:EasyHook.COMClassInfo.MethodPointers">
+            <summary>
+            Will contain the method addresses after a call to <see cref="M:EasyHook.COMClassInfo.Query"/>. The index corresponds to the order method names / indexes are passed into <see cref="M:EasyHook.COMClassInfo.#ctor(System.Type,System.Type,System.String[])"/> or <see cref="M:EasyHook.COMClassInfo.#ctor(System.Guid,System.Guid,System.Int32[])"/>.
+            </summary>
+        </member>
+        <member name="P:EasyHook.COMClassInfo.LibraryOfFunction">
+            <summary>
+            Retrieve the module for the COM class. Only available after a call to <see cref="M:EasyHook.COMClassInfo.Query"/>.
+            </summary>
+        </member>
+        <member name="M:EasyHook.COMClassInfo.Query">
+            <summary>
+            Query the COM class for the specified method addresses. If not already loaded the COM module will be loaded.
+            </summary>
+            <returns>True if the COM class exists, False otherwise.</returns>
+            <exception cref="T:System.AccessViolationException">Thrown if the method index extends beyond the interface and into protected memory.</exception>
+            <exception cref="T:System.ArgumentException">If the provided interface type is not an interface, or the class type is not visible to COM.</exception>
+            <exception cref="T:System.InvalidCastException">Thrown if the class instance does not support the specified interface.</exception>
+        </member>
+        <member name="M:EasyHook.COMClassInfo.IsModuleLoaded">
+            <summary>
+            Determines if the module containing the COM class is already loaded
+            </summary>
+            <returns>True if the module is loaded, otherwise False</returns>
+        </member>
+        <member name="T:EasyHook.Config">
+            <summary>
+            Currently only provides a mechanism to register assemblies in the GAC.
+            </summary>
+            <remarks>
+  The following demonstrates how to use <see cref="T:EasyHook.RemoteHooking" /> and <see cref="T:EasyHook.Config" />:
+  <code>
+    using System;
+    using System.Collections.Generic;
+    using System.Runtime.Remoting;
+    using System.Text;
+    using System.IO;
+    using EasyHook;
+
+    namespace FileMon
+    {
+        public class FileMonInterface : MarshalByRefObject
+        {
+            public void IsInstalled(Int32 InClientPID)
+            {
+                Console.WriteLine("FileMon has been installed in target {0}.\r\n", InClientPID);
+            }
+
+            public void OnCreateFile(Int32 InClientPID, String[] InFileNames)
+            {
+                for (int i = 0; i &lt; InFileNames.Length; i++)
+                {
+                    Console.WriteLine(InFileNames[i]);
+                }
+            }
+
+            public void ReportException(Exception InInfo)
+            {
+                Console.WriteLine("The target process has reported an error:\r\n" + InInfo.ToString());
+            }
+
+            public void Ping()
+            {
+            }
+        }
+
+        class Program
+        {
+            static String ChannelName = null;
+
+            static void Main(string[] args)
+            {
+                try
+                {
+                    Config.Register(
+                        "A FileMon like demo application.",
+                        "FileMon.exe",
+                        "FileMonInject.dll");
+
+                    RemoteHooking.IpcCreateServer&lt;FileMonInterface&gt;(ref ChannelName, WellKnownObjectMode.SingleCall);
+
+                    RemoteHooking.Inject(
+                        Int32.Parse(args[0]),
+                        "FileMonInject.dll",
+                        "FileMonInject.dll",
+                        ChannelName);
+                
+                    Console.ReadLine();
+                }
+                catch (Exception ExtInfo)
+                {
+                    Console.WriteLine("There was an error while connecting to target:\r\n{0}", ExtInfo.ToString());
+                }
+            }
+        }
+    }
+  </code>
+</remarks>
+        </member>
+        <member name="P:EasyHook.Config.DependencyPath">
+            <summary>
+            The path where dependant files, like EasyHook(32|64)Svc.exe are stored.
+            Defaults to no path being specified.
+            </summary>
+        </member>
+        <member name="P:EasyHook.Config.HelperLibraryLocation">
+            <summary>
+            The path where helper files, like EasyHook(32|64).dll are stored.
+            Defaults to the location of the assembly containing the Config type
+            </summary>
+        </member>
+        <member name="M:EasyHook.Config.GetProcessPath">
+            <summary>
+            Get the directory name of the current process, ending with a backslash.
+            </summary>
+            <returns>Directory name of the current process</returns>
+        </member>
+        <member name="M:EasyHook.Config.GetSvcExecutableName">
+            <summary>
+            Get the name of the EasyHook SVC executable.
+            Automatically determine whether to use the 64-bit or the 32-bit version.
+            </summary>
+            <returns>Executable name</returns>
+        </member>
+        <member name="M:EasyHook.Config.GetWOW64BypassExecutableName">
+            <summary>
+            Get the name of the EasyHook SVC executable to use for WOW64 bypass.
+            If this process is 64-bit, return the 32-bit service executable and vice versa.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EasyHook.Config.GetDependantSvcExecutableName">
+            <summary>
+            Get the EasyHook SVC executable name with the custom dependency path prepended.
+            </summary>
+            <returns>Full path to the executable</returns>
+        </member>
+        <member name="M:EasyHook.Config.Register(System.String,System.String[])">
+            <summary>
+            REQUIRES ADMIN PRIVILEGES. Installs EasyHook and all given user NET assemblies into the GAC and
+            ensures that all references are cleaned up if the installing application
+            is shutdown. Cleanup does not depend on the calling application...
+            </summary>
+            <remarks>
+            <para>
+            ATTENTION: There are some problems when debugging processes whose libraries
+            are added to the GAC. Visual Studio won't start the debug session! There is
+            only one chance for you to workaround this issue if you want to install
+            libraries AND debug them simultanously. This is simply to debug only one process
+            which is the default setting of Visual Studio. Because the libraries are added
+            to the GAC AFTER Visual Studio has initialized the debug session, there won't be
+            any conflicts; at least so far...
+            </para><para>
+            In debug versions of EasyHook, you may also check the "Application" event log, which holds additional information
+            about the GAC registration, after calling this method. In general this method works
+            transactionally. This means if something goes wrong, the GAC state of all related libraries
+            won't be violated!
+            </para><para>
+            The problem with NET assemblies is that the CLR only searches the GAC and
+            directories starting with the application base directory for assemblies.
+            To get injected assemblies working either all of them have to be located 
+            under the target base directory (which is not suitable in most cases) or
+            reside in the GAC. 
+            </para><para>
+            EasyHook provides a way to automatically register all of its own assemblies
+            and custom ones temporarily in the GAC. It also ensures
+            that all of these assemblies are removed if the installing process exists. 
+            So you don't need to care about and may write applications according to
+            the XCOPY standard. If your application ships with an installer, you may
+            statically install all of your assemblies and the ones of EasyHook into the
+            GAC. In this case just don't call <see cref="M:EasyHook.Config.Register(System.String,System.String[])"/>. 
+            </para><para>
+            Of course EasyHook does also take care of multiple processes using the same
+            injection libraries. So if two processes are sharing some of those DLLs,
+            a stable reference counter ensures that the libraries are kept in the GAC
+            if one process is terminated while the other continues running and so continues
+            holding a proper GAC reference.
+            </para><para>
+            Please note that in order to add your library to the GAC, it has to be a valid
+            NET assembly and expose a so called "Strong Name". Assemblies without a strong
+            name will be rejected by this method!
+            </para>
+            </remarks>
+            <param name="InDescription">
+            A description under which the installed files should be referenced. 
+            </param>
+            <param name="InUserAssemblies">
+            A list of user assemblies as relative or absolute paths. 
+            </param>
+            <exception cref="T:System.IO.FileNotFoundException">
+            At least one of the files specified could not be found!
+            </exception>
+            <exception cref="T:System.BadImageFormatException">
+            Unable to load at least one of the given files for reflection. 
+            </exception>
+            <exception cref="T:System.ArgumentException">
+            At least one of the given files does not have a strong name.
+            </exception>
+        </member>
+        <member name="T:EasyHook.LocalHook">
+            <summary>
+            This class will provide various static members to be used with local hooking and
+            is also the instance class of a hook.
+            </summary>
+            <remarks>
+  The following demonstrates how to use <see cref="T:EasyHook.LocalHook" />:
+  <code>
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Runtime.InteropServices;
+using EasyHook;
+
+namespace FileMonInject
+{
+    public class Main : EasyHook.IEntryPoint
+    {
+        FileMon.FileMonInterface Interface;
+        LocalHook CreateFileHook;
+        Stack&lt;String&gt; Queue = new Stack&lt;String&gt; ();
+
+        public Main(
+            RemoteHooking.IContext InContext,
+            String InChannelName)
+        {
+            // connect to host...
+            Interface = RemoteHooking.IpcConnectClient&lt;FileMon.FileMonInterface&gt;(InChannelName);
+            
+            // validate connection...
+            Interface.Ping();
+        }
+
+        public void Run(
+            RemoteHooking.IContext InContext,
+            String InChannelName)
+        {
+            // install hook...
+            try
+            {
+                CreateFileHook = LocalHook.Create(
+                    LocalHook.GetProcAddress("kernel32.dll", "CreateFileW"),
+                    new DCreateFile(CreateFile_Hooked),
+                    this);
+                
+                CreateFileHook.ThreadACL.SetExclusiveACL(new Int32[] { 0 });
+            }
+            catch (Exception ExtInfo)
+            {
+                Interface.ReportException(ExtInfo);
+
+                return;
+            }
+
+            Interface.IsInstalled(RemoteHooking.GetCurrentProcessId());
+
+            RemoteHooking.WakeUpProcess();
+
+            // wait for host process termination...
+            try
+            {
+                while (true)
+                {
+                    Thread.Sleep(500);
+
+                    // transmit newly monitored file accesses...
+                    if (Queue.Count &gt; 0)
+                    {
+                        String[] Package = null;
+
+                        lock (Queue)
+                        {
+                            Package = Queue.ToArray();
+
+                            Queue.Clear();
+                        }
+
+                        Interface.OnCreateFile(RemoteHooking.GetCurrentProcessId(), Package);
+                    }
+                    else
+                        Interface.Ping();
+                }
+            }
+            catch
+            {
+                // Ping() will raise an exception if host is unreachable
+            }
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall,
+            CharSet = CharSet.Unicode,
+            SetLastError = true)]
+        delegate IntPtr DCreateFile(
+            String InFileName,
+            UInt32 InDesiredAccess,
+            UInt32 InShareMode,
+            IntPtr InSecurityAttributes,
+            UInt32 InCreationDisposition,
+            UInt32 InFlagsAndAttributes,
+            IntPtr InTemplateFile);
+
+        // just use a P-Invoke implementation to get native API access from C# (this step is not necessary for C++.NET)
+        [DllImport("kernel32.dll",
+            CharSet = CharSet.Unicode,
+            SetLastError = true,
+            CallingConvention = CallingConvention.StdCall)]
+        static extern IntPtr CreateFile(
+            String InFileName,
+            UInt32 InDesiredAccess,
+            UInt32 InShareMode,
+            IntPtr InSecurityAttributes,
+            UInt32 InCreationDisposition,
+            UInt32 InFlagsAndAttributes,
+            IntPtr InTemplateFile);
+
+        // this is where we are intercepting all file accesses!
+        static IntPtr CreateFile_Hooked(
+            String InFileName,
+            UInt32 InDesiredAccess,
+            UInt32 InShareMode,
+            IntPtr InSecurityAttributes,
+            UInt32 InCreationDisposition,
+            UInt32 InFlagsAndAttributes,
+            IntPtr InTemplateFile)
+        {
+            
+            try
+            {
+                Main This = (Main)HookRuntimeInfo.Callback;
+
+                lock (This.Queue)
+                {
+                    This.Queue.Push("[" + RemoteHooking.GetCurrentProcessId() + ":" + 
+                        RemoteHooking.GetCurrentThreadId() +  "]: \"" + InFileName + "\"");
+                }
+            }
+            catch
+            {
+            }
+
+            // call original API...
+            return CreateFile(
+                InFileName,
+                InDesiredAccess,
+                InShareMode,
+                InSecurityAttributes,
+                InCreationDisposition,
+                InFlagsAndAttributes,
+                InTemplateFile);
+        }
+    }
+}
+
+  </code>
+</remarks>
+        </member>
+        <member name="M:EasyHook.LocalHook.EnableRIPRelocation">
+            <summary>
+            RIP relocation is disabled by default. If you want to enable it,
+            just call this method which will attach a debugger to the current
+            process. There may be circumstances under which this might fail
+            and this is why it is not done by default. On 32-Bit system this
+            method will always succeed and do nothing...
+            </summary>
+        </member>
+        <member name="M:EasyHook.LocalHook.GetThreadIdByHandle(System.IntPtr)">
+            <summary>
+            Tries to get the underlying thread ID for a given handle.
+            </summary>
+            <remarks>
+            This is not always possible. The handle has to be opened with <c>THREAD_QUERY_INFORMATION</c>
+            access. 
+            </remarks>
+            <param name="InThreadHandle">A valid thread handle.</param>
+            <returns>A valid thread ID associated with the given thread handle.</returns>
+            <exception cref="T:System.AccessViolationException">
+            The given handle was not opened with <c>THREAD_QUERY_INFORMATION</c> access.</exception>
+            <exception cref="T:System.ArgumentException">
+            The handle is invalid. 
+            </exception>
+            <exception cref="T:System.NotSupportedException">
+            Should never occur and just notifies you that a handle to thread ID conversion is not
+            available on the current platform.
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.GetProcessIdByHandle(System.IntPtr)">
+            <summary>
+            Tries to get the underlying process ID for a given handle.
+            </summary>
+            <remarks>
+            This is not always possible. The handle has to be opened with <c>PROCESS_QUERY_INFORMATION</c>
+            access. 
+            </remarks>
+            <param name="InProcessHandle">A valid process handle.</param>
+            <returns>A valid process ID associated with the given process handle.</returns>
+            <exception cref="T:System.AccessViolationException">
+            The given handle was not opened with <c>PROCESS_QUERY_INFORMATION</c> access.</exception>
+            <exception cref="T:System.ArgumentException">
+            The handle is invalid. 
+            </exception>
+            <exception cref="T:System.NotSupportedException">
+            Should never occur and just notifies you that a handle to thread ID conversion is not
+            available on the current platform.
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.GetNameByHandle(System.IntPtr)">
+            <summary>
+            Reads the kernel object name for a given windows usermode handle.
+            Executes in approx. 100 micro secounds.
+            </summary>
+            <remarks><para>
+            This allows you to translate a handle back to the associated filename for example.
+            But keep in mind that such names are only valid for kernel service routines, like
+            <c>NtCreateFile</c>. You won't have success when calling <c>CreateFile</c> on such
+            object names! The regular windows user mode API has some methods that will allow
+            you to convert such kernelmode names back into usermode names. I know this because I did it
+            some years ago but I've already forgotten how it has to be done! I can only give you
+            some hints: <c>FindFirstVolume()</c>, <c>FindFirstVolumeMountPoint()</c>,
+            <c>QueryDosDevice()</c>, <c>GetVolumePathNamesForVolumeName()</c>
+            </para>
+            <param name="InHandle">A valid usermode handle.</param>
+            </remarks>
+            <returns>The kernel object name associated with the given handle.</returns>
+            <exception cref="T:System.ArgumentException">
+            The given handle is invalid or could not be accessed for unknown reasons.
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.Finalize">
+            <summary>
+            Ensures that each instance is always terminated with <see cref="M:EasyHook.LocalHook.Dispose"/>.
+            </summary>
+        </member>
+        <member name="P:EasyHook.LocalHook.Callback">
+            <summary>
+            The callback passed to <see cref="M:EasyHook.LocalHook.Create(System.IntPtr,System.Delegate,System.Object)"/>.
+            </summary>
+        </member>
+        <member name="P:EasyHook.LocalHook.ThreadACL">
+            <summary>
+            Returns the thread ACL associated with this hook. Refer to <see cref="M:EasyHook.LocalHook.IsThreadIntercepted(System.Int32)"/>
+            for more information about access negotiation.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">
+            The underlying hook is already disposed.
+            </exception>
+        </member>
+        <member name="P:EasyHook.LocalHook.HookBypassAddress">
+            <summary>
+            Returns the trampoline bypass address associated with this hook.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">
+            The underlying hook has been disposed.
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.IsThreadIntercepted(System.Int32)">
+            <summary>
+            Checks whether a given thread ID will be intercepted by the underlying hook.
+            </summary>
+            <remarks>
+            <para>
+            This method provides an interface to the internal negotiation algorithm.
+            You may use it to check whether your ACL provides expected results.
+            </para><para>
+            The following is a pseudo code of how this method is implemented:
+            <code>
+            if(InThreadID == 0)
+                InThreadID = GetCurrentThreadId();
+            
+            if(GlobalACL.Contains(InThreadID))
+            {
+                if(LocalACL.Contains(InThreadID))
+            	{
+            		if(LocalACL.IsExclusive)
+            			return false;
+            	}
+            	else
+            	{
+            		if(GlobalACL.IsExclusive)
+            			return false;
+            
+            		if(!LocalACL.IsExclusive)
+            			return false;
+            	}
+            }
+            else
+            {
+            	if(LocalACL.Contains(InThreadID))
+            	{
+            		if(LocalACL.IsExclusive)
+            			return false;
+            	}
+            	else
+            	{
+            		if(!GlobalACL.IsExclusive)
+            			return false;
+            
+            		if(!LocalACL.IsExclusive)
+            			return false;
+            	}
+            }
+            
+            return true;
+            </code>
+            </para>
+            </remarks>
+            <param name="InThreadID">A native OS thread ID; or zero if you want to check the current thread.</param>
+            <returns><c>true</c> if the thread is intercepted, <c>false</c> otherwise.</returns>
+            <exception cref="T:System.ObjectDisposedException">
+            The underlying hook is already disposed.
+            </exception>
+        </member>
+        <member name="P:EasyHook.LocalHook.GlobalThreadACL">
+            <summary>
+            Returns the gloabl thread ACL associated with ALL hooks. Refer to <see cref="M:EasyHook.LocalHook.IsThreadIntercepted(System.Int32)"/>
+            for more information about access negotiation.
+            </summary>
+        </member>
+        <member name="M:EasyHook.LocalHook.Dispose">
+            <summary>
+            If you want to immediately uninstall a hook, the only way is to dispose it. A disposed
+            hook is guaranteed to never invoke your handler again but may still consume
+            memory even for process life-time! 
+            </summary>
+            <remarks>
+            As we are living in a manged world, you don't have to dispose a hook because the next 
+            garbage collection will do it for you, assuming that your code does not reference it
+            anymore. But there are times when you want to uninstall it excplicitly, with no delay.
+            If you dispose a disposed or not installed hook, nothing will happen!
+            </remarks>
+        </member>
+        <member name="M:EasyHook.LocalHook.Create(System.IntPtr,System.Delegate,System.Object)">
+            <summary>
+            Installs a managed hook. After this you'll have to activate it by setting a proper <see cref="P:EasyHook.LocalHook.ThreadACL"/>.
+            </summary>
+            <remarks>
+            <para>
+            Note that not all entry points are hookable! In general methods like <c>CreateFileW</c>
+            won't cause any trouble. But there might be methods that are not hookable because their
+            entry point machine code is not eligable to be hooked. You should test all hooks on
+            common environments like "Windows XP x86/x64 SP2/SP3" and "Windows Vista x86/x64 (SP1)".
+            This is the only way to ensure that your application will work well on most machines.
+            </para><para>
+            Your handler delegate has to use the <see cref="T:System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute"/> and
+            shall map to the same native method signature, otherwise the application will crash! The best
+            way is to use predefined delegates used in related P-Invoke implementations usually found with Google.
+            If you know how to write such native delegates you won't need internet resources of course.
+            I recommend using C++.NET which allows you to just copy the related windows API to your managed
+            class and thread it as delegate without any changes. This will also speed up the whole thing
+            because no unnecessary marshalling is required! C++.NET is also better in most cases because you
+            may access the whole native windows API from managed code without any effort what significantly eases
+            writing of hook handlers.
+            </para>
+            <para>
+            The given delegate is automatically prevented from being garbage collected until the hook itself
+            is collected...
+            </para>
+            </remarks>
+            <param name="InTargetProc">A target entry point that should be hooked.</param>
+            <param name="InNewProc">A handler with the same signature as the original entry point
+            that will be invoked for every call that has passed the Fiber Deadlock Barrier and various integrity checks.</param>
+            <param name="InCallback">An uninterpreted callback that will later be available through <see cref="P:EasyHook.HookRuntimeInfo.Callback"/>.</param>
+            <returns>
+            A handle to the newly created hook.
+            </returns>
+            <exception cref="T:System.OutOfMemoryException">
+            Not enough memory available to complete the operation. On 64-Bit this may also indicate
+            that no memory can be allocated within a 31-Bit boundary around the given entry point.
+            </exception>
+            <exception cref="T:System.ArgumentException">
+            The given function pointer does not map to executable memory (valid machine code) or 
+            you passed <c>null</c> as delegate.
+            </exception>
+            <exception cref="T:System.NotSupportedException">
+            The given entry point contains machine code that can not be hooked.
+            </exception>
+            <exception cref="T:System.InsufficientMemoryException">
+            The maximum amount of hooks has been installed. This is currently set to MAX_HOOK_COUNT (1024).
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.CreateUnmanaged(System.IntPtr,System.IntPtr,System.IntPtr)">
+            <summary>
+            Installs an unmanaged hook. After this you'll have to activate it by setting a proper <see cref="P:EasyHook.LocalHook.ThreadACL"/>.
+            <see cref="T:EasyHook.HookRuntimeInfo"/> WON'T be supported! Refer to the native "LhBarrierXxx" APIs to
+            access unmanaged hook runtime information.
+            </summary>
+            <remarks>
+            <para>
+            Note that not all entry points are hookable! In general methods like <c>CreateFileW</c>
+            won't cause any trouble. But there may be methods that are not hookable because their
+            entry point machine code is not eligable to be hooked. You should test all hooks on
+            common environments like "Windows XP x86/x64 SP1/SP2/SP3" and "Windows Vista x86/x64 (SP1)".
+            This is the only way to ensure that your application will work well on most machines.
+            </para><para>
+            Unmanaged hooks will require a native DLL which handles the requests. This way
+            you will get a high-performance interface, because
+            a switch from unmanaged to managed code seems to be rather time consuming without doing anything
+            useful (at least nothing visible); so a hook omitting this switch will be handled one or two
+            orders of magnitudes faster until finally your handler gains execution. But as a managed hook is still executed
+            within at last 1000 nano-seconds, even the "slow" managed implementation will be fast enough in most
+            cases. With C++.NET you would be able to provide such native high-speed hooks for frequently
+            called API methods, while still using managed ones for usual API methods, within a single assembly!
+            A pure unmanaged, empty hook executes in approx. 70 nano-seconds, which is incredible fast
+            considering the thread deadlock barrier and thread ACL negotiation that are already included in this benchmark!
+            </para>
+            </remarks>
+            <param name="InTargetProc">A target entry point that should be hooked.</param>
+            <param name="InNewProc">A handler with the same signature as the original entry point
+            that will be invoked for every call that has passed the Thread Deadlock Barrier and various integrity checks.</param>
+            <param name="InCallback">An uninterpreted callback that will later be available through <c>LhBarrierGetCallback()</c>.</param>
+            <returns>
+            A handle to the newly created hook.
+            </returns>
+            <exception cref="T:System.OutOfMemoryException">
+            Not enough memory available to complete the operation. On 64-Bit this may also indicate
+            that no memory can be allocated within a 31-Bit boundary around the given entry point.
+            </exception>
+            <exception cref="T:System.ArgumentException">
+            The given function pointer does not map to executable memory (valid machine code) or 
+            you passed <c>null</c> as delegate.
+            </exception>
+            <exception cref="T:System.NotSupportedException">
+            The given entry point contains machine code that can not be hooked.
+            </exception>
+            <exception cref="T:System.InsufficientMemoryException">
+            The maximum amount of hooks has been installed. This is currently set to MAX_HOOK_COUNT (1024).
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.GetProcAddress(System.String,System.String)">
+            <summary>
+            Will return the address for a given DLL export symbol. The specified
+            module has to be loaded into the current process space and also export
+            the given method.
+            </summary>
+            <remarks>
+            If you wonder how to get native entry points in a managed environment,
+            this is the anwser. You will only be able to hook native code from a managed
+            environment if you have access to a method like this, returning the native
+            entry point. Please note that you will also hook any managed code, which
+            of course ultimately relies on the native windows API!
+            </remarks>
+            <param name="InModule">A system DLL name like "kernel32.dll" or a full qualified path to any DLL.</param>
+            <param name="InSymbolName">An exported symbol name like "CreateFileW".</param>
+            <returns>The entry point for the given API method.</returns>
+            <exception cref="T:System.DllNotFoundException">
+            The given module is not loaded into the current process.
+            </exception>
+            <exception cref="T:System.MissingMethodException">
+            The given module does not export the desired method.
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.GetProcDelegate``1(System.String,System.String)">
+            <summary>
+            Will return a delegate for a given DLL export symbol. The specified
+            module has to be loaded into the current process space and also export
+            the given method.
+            </summary>
+            <remarks><para>
+            This method is usually not useful to hook something but it allows you
+            to dynamically load native API methods into your managed environment instead
+            of using the static P-Invoke approach provided by <see cref="T:System.Runtime.InteropServices.DllImportAttribute"/>.
+            </para></remarks>
+            <typeparam name="TDelegate">A delegate using the <see cref="T:System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute"/> and
+            exposing the same method signature as the specified native symbol.</typeparam>
+            <param name="InModule">A system DLL name like "kernel32.dll" or a full qualified path to any DLL.</param>
+            <param name="InSymbolName">An exported symbol name like "CreateFileW".</param>
+            <returns>The managed delegate wrapping around the given native symbol.</returns>
+            <exception cref="T:System.DllNotFoundException">
+            The given module is not loaded into the current process.
+            </exception>
+            <exception cref="T:System.MissingMethodException">
+            The given module does not export the given method.
+            </exception>
+        </member>
+        <member name="M:EasyHook.LocalHook.Release">
+            <summary>
+            Processes any pending hook removals. Warning! This method can be quite slow (1 second) under certain circumstances.
+            </summary>
+            <see cref="M:EasyHook.NativeAPI.LhWaitForPendingRemovals"/>
+        </member>
+        <member name="T:EasyHook.InjectionLoader.HostConnectionData">
+            <summary>
+            Wraps the data needed for the connection to the host.
+            </summary>
+        </member>
+        <member name="P:EasyHook.InjectionLoader.HostConnectionData.State">
+            <summary>
+            Gets the state of the current <see cref="T:EasyHook.InjectionLoader.HostConnectionData"/>.
+            </summary>
+        </member>
+        <member name="P:EasyHook.InjectionLoader.HostConnectionData.UnmanagedInfo">
+            <summary>
+            Gets the unmanaged data containing the pointer to the memory block containing <see cref="P:EasyHook.InjectionLoader.HostConnectionData.RemoteInfo"/>;
+            </summary>
+        </member>
+        <member name="M:EasyHook.InjectionLoader.HostConnectionData.LoadData(System.IntPtr)">
+            <summary>
+            Loads <see cref="T:EasyHook.InjectionLoader.HostConnectionData"/> from the <see cref="T:System.IntPtr"/> specified.
+            </summary>
+            <param name="unmanagedInfoPointer"></param>
+        </member>
+        <member name="T:EasyHook.InjectionLoader.AllowAllAssemblyVersionsDeserializationBinder">
+            <summary>
+            When not using the GAC, the BinaryFormatter fails to recognise the InParam
+            when attempting to deserialise. 
+            
+            A custom DeserializationBinder works around this (see http://spazzarama.com/2009/06/25/binary-deserialize-unable-to-find-assembly/)
+            </summary>
+        </member>
+        <member name="M:EasyHook.InjectionLoader.LoadUserLibrary(System.String,System.String,System.Object[],EasyHook.HelperServiceInterface)">
+            <summary>
+            Loads the user library (trying the strong name first, then the file name),
+            creates an instance for the <see cref="T:EasyHook.IEntryPoint"/> specified in the library
+            and invokes the Run() method specified in that instance.
+            </summary>
+            <param name="userLibraryStrongName">The assembly strong name provided by the user, located in the global assembly cache.</param>
+            <param name="userLibraryFileName">The assembly file name provided by the user to be loaded.</param>
+            <param name="paramArray">Array of parameters to use with the constructor and with the Run() method. Note that all but the first parameter should be binary encoded.</param>
+            <param name="helperServiceInterface"><see cref="T:EasyHook.HelperServiceInterface"/> to use for reporting to the host side.</param>
+            <returns>The exit code to be returned by the main() method.</returns>
+        </member>
+        <member name="M:EasyHook.InjectionLoader.FindEntryPoint(System.String,System.String)">
+            <summary>
+            Finds the <see cref="T:EasyHook.IEntryPoint"/> in the specified <see cref="T:System.Reflection.Assembly"/>.
+            </summary>
+            <exception cref="T:System.EntryPointNotFoundException">
+            An <see cref="T:System.EntryPointNotFoundException"/> is thrown if the given user library does not export a proper type implementing
+            the <see cref="T:EasyHook.IEntryPoint"/> interface.
+            </exception>
+            <param name="userAssemblyStrongName">The strong name of the assembly provided by the user.</param>
+            <param name="userAssemblyFileName">The file name of the assembly provided by the user.</param>
+            <returns>The <see cref="T:System.Type"/> functioning as <see cref="T:EasyHook.IEntryPoint"/> for the user provided <see cref="T:System.Reflection.Assembly"/>.</returns>
+        </member>
+        <member name="M:EasyHook.InjectionLoader.FindMatchingMethod(System.Type,System.String,System.Object[])">
+            <summary>
+            Finds a user defined Run() method in the specified <see cref="T:System.Type"/> matching the specified <paramref name="paramArray"/>.
+            </summary>
+            <param name="methodName">Name of the method to search.</param>
+            <param name="objectType"><see cref="T:System.Type"/> to extract the method from.</param>
+            <param name="paramArray">Array of parameters to match to the method's defined parameters.</param>
+            <returns><see cref="T:System.Reflection.MethodInfo"/> for the matching method, if any.</returns>
+        </member>
+        <member name="M:EasyHook.InjectionLoader.InitializeInstance(System.Type,System.Object[])">
+            <summary>
+            Initializes an instance from the specified <see cref="T:System.Type"/> using the specified <paramref name="parameters"/>.
+            </summary>
+            <param name="objectType"></param>
+            <param name="parameters"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EasyHook.InjectionLoader.MethodMatchesParameters(System.Reflection.MethodBase,System.Object[])">
+            <summary>
+            Returns whether the specified <paramref name="paramArray"/> can be used as parameters when invoking the specified <paramref name="method"/>.
+            </summary>
+            <param name="method"></param>
+            <param name="paramArray"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EasyHook.InjectionLoader.ConstructMissingMethodExceptionMessage(System.String,System.Object[])">
+            <summary>
+            Constructs a message for a <see cref="T:System.MissingMethodException"/> containing more specific information about the expected paramaters.
+            </summary>
+            <param name="methodName">Name of the missing method.</param>
+            <param name="paramArray">Array of the expected parameters.</param>
+            <returns></returns>
+        </member>
+        <member name="T:EasyHook.HookAccessControl">
+            <summary>
+            Provides a managed interface to the native thread ACLs.
+            </summary>
+            <remarks>
+            Refer to the official guide to learn more about why thread ACLs are useful. 
+            They can be used to exclude/include dedicated threads from interception or to dynamically
+            apply different kind of hooks to different threads. Even if you could do this
+            in managed code, it is not that easy to implement and also EasyHook evaluates
+            those ACLs in unmanaged code. So if any thread is not intercepted, it will never
+            enter the manged environment what will speed up things about orders of magnitudes.
+            </remarks>
+        </member>
+        <member name="P:EasyHook.HookAccessControl.IsExclusive">
+            <summary>
+            Is this ACL an exclusive one? Refer to <see cref="M:EasyHook.HookAccessControl.SetExclusiveACL(System.Int32[])"/> for more information.
+            </summary>
+        </member>
+        <member name="P:EasyHook.HookAccessControl.IsInclusive">
+            <summary>
+            Is this ACL an inclusive one? Refer to <see cref="M:EasyHook.HookAccessControl.SetInclusiveACL(System.Int32[])"/> for more information.
+            </summary>
+        </member>
+        <member name="M:EasyHook.HookAccessControl.SetInclusiveACL(System.Int32[])">
+            <summary>
+            Sets an inclusive ACL. This means all threads that are enumerated through <paramref name="InACL"/>
+            are intercepted while all others are NOT. Of course this will overwrite the existing ACL.
+            </summary>
+            <remarks>
+            Please note that this is not necessarily the final
+            negotiation result. Refer to <see cref="M:EasyHook.LocalHook.IsThreadIntercepted(System.Int32)"/> for more information.
+            In general inclusive ACLs will restrict exclusive ACLs while local ACLs will overwrite the
+            global ACL.
+            </remarks>
+            <param name="InACL">Threads to be explicitly included in negotiation.</param>
+            <exception cref="T:System.ArgumentException">
+            The limit of 128 access entries is exceeded!
+            </exception>
+        </member>
+        <member name="M:EasyHook.HookAccessControl.SetExclusiveACL(System.Int32[])">
+            <summary>
+            Sets an exclusive ACL. This means all threads that are enumerated through <paramref name="InACL"/>
+            are NOT intercepted while all others are. Of course this will overwrite the existing ACL.
+            </summary>
+            <remarks>
+            Please note that this is not necessarily the final
+            negotiation result. Refer to <see cref="M:EasyHook.LocalHook.IsThreadIntercepted(System.Int32)"/> for more information.
+            In general inclusive ACLs will restrict exclusive ACLs while local ACLs will overwrite the
+            global ACL.
+            </remarks>
+            <param name="InACL">Threads to be explicitly included in negotiation.</param>
+            <exception cref="T:System.ArgumentException">
+            The limit of 128 access entries is exceeded!
+            </exception>
+        </member>
+        <member name="M:EasyHook.HookAccessControl.GetEntries">
+            <summary>
+            Creates a copy of the internal thread list associated with this ACL. You may freely
+            modify it without affecting the internal entries.
+            </summary>
+            <returns>
+            A copy of the internal thread entries.
+            </returns>
+        </member>
+        <member name="T:EasyHook.HookRuntimeInfo">
+            <summary>
+            This class is intended to be used within hook handlers,
+            to access associated runtime information.
+            </summary>
+            <remarks>
+            Other hooking libraries on the market require that you keep track of
+            such information yourself, what can be a burden.
+            </remarks>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.IsHandlerContext">
+            <summary>
+            Is the current thread within a valid hook handler? This is only the case
+            if your handler was called through the hooked entry point...
+            Executes in max. one micro secound.
+            </summary>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.Callback">
+            <summary>
+            The user callback initially passed to either <see cref="M:EasyHook.LocalHook.Create(System.IntPtr,System.Delegate,System.Object)"/> or <see cref="M:EasyHook.LocalHook.CreateUnmanaged(System.IntPtr,System.IntPtr,System.IntPtr)"/>.
+            Executes in max. one micro secound.
+            </summary>
+            <exception cref="T:System.NotSupportedException"> The current thread is not within a valid hook handler. </exception>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.Handle">
+            <summary>
+            The hook handle initially returned by either <see cref="M:EasyHook.LocalHook.Create(System.IntPtr,System.Delegate,System.Object)"/> or <see cref="M:EasyHook.LocalHook.CreateUnmanaged(System.IntPtr,System.IntPtr,System.IntPtr)"/>.
+            Executes in max. one micro secound.
+            </summary>
+            <exception cref="T:System.NotSupportedException"> The current thread is not within a valid hook handler. </exception>
+        </member>
+        <member name="M:EasyHook.HookRuntimeInfo.UpdateUnmanagedModuleList">
+            <summary>
+            Allows you to explicitly update the unmanaged module list which is required for
+            <see cref="P:EasyHook.HookRuntimeInfo.CallingUnmanagedModule"/>, <see cref="P:EasyHook.HookRuntimeInfo.UnmanagedStackTrace"/> and <see cref="M:EasyHook.HookRuntimeInfo.PointerToModule(System.IntPtr)"/>. 
+            Normally this is not necessary, but if you hook a process that frequently loads/unloads modules, you
+            may call this method in a <c>LoadLibrary</c> hook to always operate on the latest module list.
+            </summary>
+        </member>
+        <member name="M:EasyHook.HookRuntimeInfo.PointerToModule(System.IntPtr)">
+            <summary>
+            Retrives the unmanaged module that contains the given pointer. If no module can be
+            found, <c>null</c> is returned. This method will automatically update the unmanaged
+            module list from time to time.
+            Executes in less than one micro secound.
+            </summary>
+            <param name="InPointer"></param>
+            <returns></returns>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.CallingUnmanagedModule">
+            <summary>
+            Determines the first unmanaged module on the current call stack. This is always the module
+            that invoked the hook. 
+            Executes in max. 15 micro secounds.
+            </summary>
+            <remarks>
+            The problem is that if the calling module is a NET assembly
+            and invokes the hook through a P-Invoke binding, you will get
+            "mscorwks.dll" as calling module and not the NET assembly. This is only an example 
+            but I think you got the idea. To solve this issue, refer to <see cref="P:EasyHook.HookRuntimeInfo.UnmanagedStackTrace"/>
+            and <see cref="P:EasyHook.HookRuntimeInfo.ManagedStackTrace"/>!
+            </remarks>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.CallingManagedModule">
+            <summary>
+            Determines the first managed module on the current call stack. This is always the module
+            that invoked the hook. 
+            Executes in max. 40 micro secounds.
+            </summary>
+            <remarks>
+            Imagine your hook targets CreateFile. A NET assembly will now invoke this hook through
+            FileStream, for example. But because System.IO.FileStream invokes the hook, you will
+            get "System.Core" as calling module and not the desired assembly.
+            To solve this issue, refer to <see cref="P:EasyHook.HookRuntimeInfo.UnmanagedStackTrace"/>
+            and <see cref="P:EasyHook.HookRuntimeInfo.ManagedStackTrace"/>!
+            </remarks>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.ReturnAddress">
+            <summary>
+            Returns the address where execution is continued, after you hook has
+            been completed. This is always the instruction behind the hook invokation.
+            Executes in max. one micro secound.
+            </summary>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.AddressOfReturnAddress">
+            <summary>
+            A stack address pointing to <see cref="P:EasyHook.HookRuntimeInfo.ReturnAddress"/>.
+            Executes in max. one micro secound.
+            </summary>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.UnmanagedStackTrace">
+            <summary>
+            Creates a call stack trace of the unmanaged code path that finally
+            lead to your hook. To detect whether the desired module is within the
+            call stack you will have to walk through the whole list!
+            Executes in max. 20 micro secounds.
+            </summary>
+            <remarks>
+            This method is not supported on Windows 2000 and will just return the
+            calling unmanaged module wrapped in an array on that platform.
+            </remarks>
+        </member>
+        <member name="P:EasyHook.HookRuntimeInfo.ManagedStackTrace">
+            <summary>
+            Creates a call stack trace of the managed code path that finally
+            lead to your hook. To detect whether the desired module is within the
+            call stack you will have to walk through the whole list!
+            Executes in max. 80 micro secounds.
+            </summary>
+        </member>
+        <member name="T:EasyHook.IEntryPoint">
+            <summary>
+            EasyHook will search in the injected user library for a class which implements
+            this interface. You should only have one class exposing this interface, otherwise
+            it is undefined which one will be chosen. See remarks for more details on how you should create this class.
+            </summary>
+            <remarks>
+            <para>
+            To implement this interface is not the only thing to do. The related class shall implement
+            two methods. The first one is a constructor <c>ctor(IContext, ...)</c> which will let you initialize
+            your library. You should immediately complete this call and only connect to your host
+            application for further error reporting. This initialization method allows you to redirect
+            all unhandled exceptions to your host application automatically. So even if all things in
+            your library initialization would fail, you may still report exceptions! Such
+            unhandled exceptions will be thrown by <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/> in your host. But
+            make sure that you are using serializable exception objects only as all standard NET ones are,
+            but not all custom ones. Otherwise you will only intercept a general exception with no specific
+            information attached.
+            </para><para>
+            The second one is <c>Run(IContext, ...)</c> and should only exit/return when you want to unload your injected library. 
+            Unhandled exceptions WON'T be redirected automatically and are likely to crash the target process. As you are expected 
+            to connect to your host in the <c>ctor()</c>, you are now also expected to report errors by yourself.
+            </para><para>
+            The parameter list described by <c>(IContext, ...)</c> will always contain a <see cref="T:EasyHook.RemoteHooking.IContext"/>
+            instance as the first parameter. All further parameters will depend on the arguments passed to <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/>
+            at your injection host. <c>ctor()</c> and <c>Run()</c> must have the same custom parameter list
+            as composed by the one passed to <c>Inject()</c>. Otherwise an exception will be thrown. For example
+            if you call <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/> with <c>Inject(..., ..., ..., ..., "MyString1", "MyString2")</c>, you
+            have supplied a custom argument list of the format <c>String, String</c> to <c>Inject</c>. This list
+            will be converted to an object array and serialized. The injected library stub will later
+            deserialize this array and pass it to <c>ctor()</c> and <c>Run()</c>, both expected to have
+            a signature of <c>IContext, String, String</c> in our case. So <c>Run</c> will now be called with
+            <c>(IContext, "MyString1", "MyString2")</c>.
+            </para><para>
+            You should avoid using static fields or properties within such a class, as this might lead to
+            bugs in your code when multiple library instances are injected into the same target!
+            </para>
+            </remarks>
+        </member>
+        <member name="T:EasyHook.InjectionOptions">
+            <summary>
+            All supported options that will influence the way your library is injected.
+            </summary>
+        </member>
+        <member name="F:EasyHook.InjectionOptions.Default">
+            <summary>
+            Default injection procedure.
+            </summary>
+        </member>
+        <member name="F:EasyHook.InjectionOptions.NoService">
+            <summary>
+            Use of services is not permitted.
+            </summary>
+        </member>
+        <member name="F:EasyHook.InjectionOptions.NoWOW64Bypass">
+            <summary>
+            Use of WOW64 bypass is not permitted.
+            </summary>
+        </member>
+        <member name="F:EasyHook.InjectionOptions.DoNotRequireStrongName">
+            <summary>
+            Allow injection without a strong name (e.g. no GAC registration). This option requires that the full path to injected assembly be provided
+            </summary>
+        </member>
+        <member name="T:EasyHook.RemoteHooking">
+            <summary>
+            Provides all things related to library injection, inter-process-communication (IPC) and
+            helper routines for common remote tasks.
+            </summary>
+            <remarks>
+  The following demonstrates how to use <see cref="T:EasyHook.RemoteHooking" /> and <see cref="T:EasyHook.Config" />:
+  <code>
+    using System;
+    using System.Collections.Generic;
+    using System.Runtime.Remoting;
+    using System.Text;
+    using System.IO;
+    using EasyHook;
+
+    namespace FileMon
+    {
+        public class FileMonInterface : MarshalByRefObject
+        {
+            public void IsInstalled(Int32 InClientPID)
+            {
+                Console.WriteLine("FileMon has been installed in target {0}.\r\n", InClientPID);
+            }
+
+            public void OnCreateFile(Int32 InClientPID, String[] InFileNames)
+            {
+                for (int i = 0; i &lt; InFileNames.Length; i++)
+                {
+                    Console.WriteLine(InFileNames[i]);
+                }
+            }
+
+            public void ReportException(Exception InInfo)
+            {
+                Console.WriteLine("The target process has reported an error:\r\n" + InInfo.ToString());
+            }
+
+            public void Ping()
+            {
+            }
+        }
+
+        class Program
+        {
+            static String ChannelName = null;
+
+            static void Main(string[] args)
+            {
+                try
+                {
+                    Config.Register(
+                        "A FileMon like demo application.",
+                        "FileMon.exe",
+                        "FileMonInject.dll");
+
+                    RemoteHooking.IpcCreateServer&lt;FileMonInterface&gt;(ref ChannelName, WellKnownObjectMode.SingleCall);
+
+                    RemoteHooking.Inject(
+                        Int32.Parse(args[0]),
+                        "FileMonInject.dll",
+                        "FileMonInject.dll",
+                        ChannelName);
+                
+                    Console.ReadLine();
+                }
+                catch (Exception ExtInfo)
+                {
+                    Console.WriteLine("There was an error while connecting to target:\r\n{0}", ExtInfo.ToString());
+                }
+            }
+        }
+    }
+  </code>
+</remarks>
+        </member>
+        <member name="T:EasyHook.RemoteHooking.IContext">
+            <summary>
+            A context contains some basic information about the environment
+            in which your library main method has been invoked. You will always
+            get an instance of this interface in your library <c>Run</c> method
+            and your library constructor. 
+            </summary>
+        </member>
+        <member name="P:EasyHook.RemoteHooking.IContext.HostPID">
+            <summary>
+            Returns the process ID of the host that has injected this library.
+            </summary>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.WakeUpProcess">
+            <summary>
+            If the library was injected with <see cref="M:EasyHook.RemoteHooking.CreateAndInject(System.String,System.String,System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Int32@,System.Object[])"/>, this will
+            finally start the current process. You should call this method in the library
+            <c>Run()</c> method after all hooks have been installed.
+            </summary>
+        </member>
+        <member name="P:EasyHook.RemoteHooking.IsAdministrator">
+            <summary>
+            <c>true</c> if we are running with administrative privileges, <c>false</c> otherwise.
+            </summary>
+            <remarks>
+            Due to UAC on Windows Vista, this property in general will be <c>false</c> even if the user is in
+            the builtin-admin group. As you can't hook without administrator privileges you
+            should just set the UAC level of your application to <c>requireAdministrator</c>.
+            </remarks>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.IpcCreateServer``1(System.String@,System.Runtime.Remoting.WellKnownObjectMode,``0,System.Security.Principal.WellKnownSidType[])">
+            <summary>
+            Creates a globally reachable, managed IPC-Port.
+            </summary>
+            <remarks>
+            Because it is something tricky to get a port working for any constellation of
+            target processes, I decided to write a proper wrapper method. Just keep the returned
+            <see cref="T:System.Runtime.Remoting.Channels.Ipc.IpcChannel"/> alive, by adding it to a global list or static variable,
+            as long as you want to have the IPC port open.
+            </remarks>
+            <typeparam name="TRemoteObject">
+            A class derived from <see cref="T:System.MarshalByRefObject"/> which provides the
+            method implementations this server should expose.
+            </typeparam>
+            <param name="InObjectMode">
+            <see cref="F:System.Runtime.Remoting.WellKnownObjectMode.SingleCall"/> if you want to handle each call in an new
+            object instance, <see cref="F:System.Runtime.Remoting.WellKnownObjectMode.Singleton"/> otherwise. The latter will implicitly
+            allow you to use "static" remote variables.
+            </param>
+            <param name="RefChannelName">
+            Either <c>null</c> to let the method generate a random channel name to be passed to 
+            <see cref="M:EasyHook.RemoteHooking.IpcConnectClient``1(System.String)"/> or a predefined one. If you pass a value unequal to 
+            <c>null</c>, you shall also specify all SIDs that are allowed to connect to your channel!
+            </param>
+            <param name="ipcInterface">Provide a TRemoteObject object to be made available as a well known type on the server end of the channel.</param>
+            <param name="InAllowedClientSIDs">
+            If no SID is specified, all authenticated users will be allowed to access the server
+            channel by default. You must specify an SID if <paramref name="RefChannelName"/> is unequal to <c>null</c>.
+            </param>
+            <returns>
+            An <see cref="T:System.Runtime.Remoting.Channels.Ipc.IpcChannel"/> that shall be keept alive until the server is not needed anymore.
+            </returns>
+            <exception cref="T:System.Security.HostProtectionException">
+            If a predefined channel name is being used, you are required to specify a list of well known SIDs
+            which are allowed to access the newly created server.
+            </exception>
+            <exception cref="T:System.Runtime.Remoting.RemotingException">
+            The given channel name is already in use.
+            </exception>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.IpcCreateServer``1(System.String@,System.Runtime.Remoting.WellKnownObjectMode,System.Security.Principal.WellKnownSidType[])">
+            <summary>
+            Creates a globally reachable, managed IPC-Port.
+            </summary>
+            <remarks>
+            Because it is something tricky to get a port working for any constellation of
+            target processes, I decided to write a proper wrapper method. Just keep the returned
+            <see cref="T:System.Runtime.Remoting.Channels.Ipc.IpcChannel"/> alive, by adding it to a global list or static variable,
+            as long as you want to have the IPC port open.
+            </remarks>
+            <typeparam name="TRemoteObject">
+            A class derived from <see cref="T:System.MarshalByRefObject"/> which provides the
+            method implementations this server should expose.
+            </typeparam>
+            <param name="InObjectMode">
+            <see cref="F:System.Runtime.Remoting.WellKnownObjectMode.SingleCall"/> if you want to handle each call in an new
+            object instance, <see cref="F:System.Runtime.Remoting.WellKnownObjectMode.Singleton"/> otherwise. The latter will implicitly
+            allow you to use "static" remote variables.
+            </param>
+            <param name="RefChannelName">
+            Either <c>null</c> to let the method generate a random channel name to be passed to 
+            <see cref="M:EasyHook.RemoteHooking.IpcConnectClient``1(System.String)"/> or a predefined one. If you pass a value unequal to 
+            <c>null</c>, you shall also specify all SIDs that are allowed to connect to your channel!
+            </param>
+            <param name="InAllowedClientSIDs">
+            If no SID is specified, all authenticated users will be allowed to access the server
+            channel by default. You must specify an SID if <paramref name="RefChannelName"/> is unequal to <c>null</c>.
+            </param>
+            <returns>
+            An <see cref="T:System.Runtime.Remoting.Channels.Ipc.IpcChannel"/> that shall be keept alive until the server is not needed anymore.
+            </returns>
+            <exception cref="T:System.Security.HostProtectionException">
+            If a predefined channel name is being used, you are required to specify a list of well known SIDs
+            which are allowed to access the newly created server.
+            </exception>
+            <exception cref="T:System.Runtime.Remoting.RemotingException">
+            The given channel name is already in use.
+            </exception>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.IpcConnectClient``1(System.String)">
+            <summary>
+            Connects to a globally reachable, managed IPC port.
+            </summary>
+            <remarks>
+            All requests have to be made through the returned object instance.
+            Please note that even if you might think that managed IPC is quiet slow,
+            this is not usually the case. Internally a mechanism is being used to
+            directly continue execution within the server process, so that even if 
+            your thread does nothing while dispatching the request, no CPU time is lost,
+            because the server thread seemlessly takes over exection. And to be true,
+            the rare conditions in which you will need high-speed IPC ports are not
+            worth the effort to break with NET's exciting IPC capabilities. In times
+            of Quad-Cores, managed marshalling isn't that slow anymore.
+            </remarks>
+            <typeparam name="TRemoteObject">
+            An object derived from <see cref="T:System.MarshalByRefObject"/> which provides the
+            method implementations this server should provide. Note that only calls through the
+            returned object instance will be redirected to the server process! ATTENTION: Static fields
+            and members are always processed locally only...
+            </typeparam>
+            <param name="InChannelName">
+            The name of the channel to connect to, usually obtained with <see cref="M:EasyHook.RemoteHooking.IpcCreateServer``1(System.String@,System.Runtime.Remoting.WellKnownObjectMode,``0,System.Security.Principal.WellKnownSidType[])"/>.
+            </param>
+            <returns>
+            An remote object instance which member accesses will be redirected to the server.
+            </returns>
+            <exception cref="T:System.ArgumentException">
+            Unable to create remote object or invalid channel name...
+            </exception>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])">
+            <summary>
+            Injects the given user library into the target process. No memory leaks are left
+            in the target, even if injection fails for unknown reasons. 
+            </summary>
+            <remarks>
+            <para>
+            There are two possible user library paths. The first one should map to
+            a 32-bit library, and the second one should map to 64-bit library. If your
+            code has been compiled for "AnyCPU", like it's the default for C#, you may
+            even specify one library path for both parameters. Please note that your
+            library including all of it's dependencies must be registered in the
+            Global Assembly Cache (GAC). Refer to <see cref="M:EasyHook.Config.Register(System.String,System.String[])"/> for more
+            information about how to get them there.
+            </para><para>
+            If you inject a library into any target process please keep in mind that
+            your working directory will be switched. EasyHook will automatically add
+            the directory of the injecting application as first directory of the target's PATH environment
+            variable. So make sure that all required dependencies are either located
+            within the injecting application's directory, a system directory or any directory already
+            contained in the PATH variable.
+            </para> <para>
+            EasyHook provides extensive error information during injection. Any kind of failure is
+            being caught and thrown as an exception by this method. If for example your library
+            does not expose a class implementing <see cref="T:EasyHook.IEntryPoint"/>, an exception will be
+            raised in the target process during injection. The exception will be redirected to this method
+            and you can catch it in a try-catch statement around <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/>.
+            </para> <para>
+            You will often have to pass parameters to your injected library. <see cref="T:System.Runtime.Remoting.Channels.Ipc.IpcChannel"/> 
+            names are common, but also any other kind of data can be passed. You may add a custom list
+            of objects marked with the <see cref="T:System.SerializableAttribute"/>. All common NET classes
+            will be serializable by default, but if you are using your own classes you might have to provide
+            serialization by yourself. The custom parameter list will be passed unchanged to your injected
+            library entry points <c>Run</c> and <c>construcotr</c>. Verify that all required type libraries to deserialize
+            your parameter list are either registered in the GAC or otherwise accessible to your library by being in the same path.
+            </para><para>
+            It is supported to inject code into 64-bit processes from within 32-bit processes and
+            vice versa. It is also supported to inject code into other terminal sessions. Of course
+            this will require additional processes and services to be created, but as they are managed
+            internally, you won't notice them! There will be some delay when injecting the first library.
+            </para><para>
+            Even if it would technically be possible to inject a library for debugging purposes into
+            the current process, it will throw an exception. This is because it heavily depends on
+            your injected library whether the current process will be damaged. Any kind of communication
+            may lead into deadlocks if you hook the wrong APIs. Just use the capability of Visual Studio
+            to debug more than one process simultanously which will allow you to debug your library
+            as if it would be injected into the current process without running into any side-effects.
+            </para>
+            <para>
+            The given exceptions are those which are thrown by EasyHook code. The NET framework might throw
+            any other exception not listed here. Don't rely on the exception type. If you passed valid parameters,
+            the only exceptions you should explicitly check for are <see cref="T:System.NotSupportedException"/> and
+            <see cref="T:System.AccessViolationException"/>. All others
+            shall be caught and treated as bad environment or invalid parameter error.
+            </para>
+            </remarks>
+            <param name="InTargetPID">
+            The target process ID.
+            </param>
+            <param name="InOptions">
+            A valid combination of options.
+            </param>
+            <param name="InLibraryPath_x86">
+            A partially qualified assembly name or a relative/absolute file path of the 32-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\MyAssembly.dll". 
+            </param>
+            <param name="InLibraryPath_x64">
+            A partially qualified assembly name or a relative/absolute file path of the 64-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\MyAssembly.dll". 
+            </param>
+            <param name="InPassThruArgs">
+            A serializable list of parameters being passed to your library entry points <c>Run()</c> and
+            constructor (see <see cref="T:EasyHook.IEntryPoint"/>).
+            </param>
+            <exception cref="T:System.InvalidOperationException">
+            It is unstable to inject libraries into the same process. This exception is disabled in DEBUG mode.
+            </exception>
+            <exception cref="T:System.AccessViolationException">
+            Access to target process denied or the current user is not an administrator.
+            </exception>
+            <exception cref="T:System.ArgumentException">
+            The given process does not exist or unable to serialize/deserialize one or more pass thru arguments.
+            </exception>
+            <exception cref="T:System.IO.FileNotFoundException">
+            The given user library could not be found.
+            </exception>
+            <exception cref="T:System.OutOfMemoryException">
+            Unable to allocate unmanaged memory in current or target process.
+            </exception>
+            <exception cref="T:System.NotSupportedException">
+            It is not supported to inject into the target process. This is common on Windows Vista and Server 2008.
+            </exception>
+            <exception cref="T:System.TimeoutException">
+            Unable to wait for user library to be initialized. Check your library's <see cref="T:EasyHook.IEntryPoint"/> constructor.
+            </exception>
+            <exception cref="T:System.EntryPointNotFoundException">
+            The given user library does not export a class implementing the <see cref="T:EasyHook.IEntryPoint"/> interface.
+            </exception>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.Inject(System.Int32,System.String,System.String,System.Object[])">
+            <summary>
+            See <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/> for more information.
+            </summary>
+            <param name="InTargetPID">
+            The target process ID.
+            </param>
+            <param name="InLibraryPath_x86">
+            A partially qualified assembly name or a relative/absolute file path of the 32-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\MyAssembly.dll". 
+            </param>
+            <param name="InLibraryPath_x64">
+            A partially qualified assembly name or a relative/absolute file path of the 64-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\MyAssembly.dll". 
+            </param>
+            <param name="InPassThruArgs">
+            A serializable list of parameters being passed to your library entry points <c>Run()</c> and
+            constructor (see <see cref="T:EasyHook.IEntryPoint"/>).
+            </param>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.IsX64Process(System.Int32)">
+            <summary>
+            Determines if the target process is 64-bit or not. This will work only
+            if the current process has <c>PROCESS_QUERY_INFORMATION</c> access to the target. 
+            </summary>
+            <remarks>
+            A typical mistake is to enumerate processes under system privileges and 
+            calling this method later when required. This won't work in most cases because
+            you'll also need system privileges to run this method on processes in other sessions!
+            </remarks>
+            <param name="InTargetPID">The PID of the target process.</param>
+            <returns><c>true</c> if the given process is 64-bit, <c>false</c> otherwise.</returns>
+            <exception cref="T:System.AccessViolationException">
+            The given process is not accessible.
+            </exception>
+            <exception cref="T:System.ArgumentException">
+            The given process does not exist.
+            </exception>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.GetProcessIdentity(System.Int32)">
+            <summary>
+            Returns the <see cref="T:System.Security.Principal.WindowsIdentity"/> of the user the target process belongs to.
+            You need <c>PROCESS_QUERY_INFORMATION</c> access to the target.
+            </summary>
+            <param name="InTargetPID">An accessible target process ID.</param>
+            <returns>The identity of the target owner.</returns>
+            <exception cref="T:System.AccessViolationException">
+            The given process is not accessible.
+            </exception>
+            <exception cref="T:System.ArgumentException">
+            The given process does not exist.
+            </exception>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.GetCurrentProcessId">
+            <summary>
+            Returns the current native system process ID.
+            </summary>
+            <returns>The native system process ID.</returns>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.GetCurrentThreadId">
+            <summary>
+            Returns the current native system thread ID. 
+            </summary>
+            <remarks>
+            Even if currently each dedicated managed
+            thread (not a thread from a <see cref="T:System.Threading.ThreadPool"/>) exactly maps to one native
+            system thread, this behavior may change in future versions. 
+            If you would like to have unintercepted threads, you should make sure that they are
+            dedicated ones, e.g. derived from <see cref="T:System.Threading.Thread"/>.
+            </remarks>
+            <returns>The native system thread ID.</returns>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.ExecuteAsService``1(System.String,System.Object[])">
+            <summary>
+            Will execute the given static method under system privileges. 
+            </summary>
+            <remarks>
+            <para>
+            For some tasks it is necessary to have unrestricted access to the windows API.
+            For example if you want to enumerate all running processes in all sessions. But
+            keep in mind that you only can access these information within the given static
+            method and only if it is called through this service.
+            </para><para>
+            To accomplish this task, your assembly is loaded into a system service which
+            executes the given static method in a remoted manner. This implies that the
+            return type shall be marked with <see cref="T:System.SerializableAttribute" />. All
+            handles or other process specific things obtained in the service, will be invalid 
+            in your application after the call is completed! Also the service will use
+            a new instance of your class, so you should only rely on the given parameters
+            and avoid using any external variables.. Your method shall be threaded as isolated!
+            </para><para>
+            The next thing to mention is that all assemblies required for executing the method
+            shall either be in the GAC or in the directory of the related EasyHook-Library.
+            Otherwise the service won't be able to use your assembly!
+            </para><para>
+            All unhandled exceptions will be rethrown by the local <see cref="M:EasyHook.RemoteHooking.ExecuteAsService``1(System.String,System.Object[])" />.
+            </para>
+            </remarks>
+            <typeparam name="TClass">A class containing the given static method.</typeparam>
+            <param name="InMethodName">A public static method exposed by the given public class.</param>
+            <param name="InParams">A list of serializable parameters being passed to your static method.</param>
+            <returns>The same value your method is returning or <c>null</c> if a <c>void</c> method is called.</returns>
+            <exception cref="T:System.AccessViolationException">
+            The current user is not an administrator.
+            </exception>
+            <example>
+  <code>
+private static void OnProcessUpdate(Object InCallback)
+{
+    ProcessTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+    try
+    {
+        ProcessInfo[] Array = (ProcessInfo[])RemoteHooking.ExecuteAsService&lt;Form1&gt;("EnumProcesses");
+        SortedDictionary&lt;String, ProcessInfo&gt; Result = new SortedDictionary&lt;string, ProcessInfo&gt;();
+
+        // sort by name...
+        lock (ProcessList)
+        {
+            ActivePIDList.Clear();
+
+            for (int i = 0; i &lt; Array.Length; i++)
+            {
+                Result.Add(System.IO.Path.GetFileName(Array[i].FileName) + "____" + i, Array[i]);
+
+                ActivePIDList.Add(Array[i].Id);
+            }
+
+            Result.Values.CopyTo(Array, 0);
+
+            ProcessList.Clear();
+
+            ProcessList.AddRange(Array);
+        }
+    }
+    catch (AccessViolationException)
+    {
+        MessageBox.Show("This is an administrative task!", "Permission denied...", MessageBoxButtons.OK);
+
+        Process.GetCurrentProcess().Kill();
+    }
+    finally
+    {
+        ProcessTimer.Change(5000, 5000);
+    }
+}
+
+[Serializable]
+public class ProcessInfo
+{
+    public String FileName;
+    public Int32 Id;
+    public Boolean Is64Bit;
+    public String User;
+}
+
+public static ProcessInfo[] EnumProcesses()
+{
+    List&lt;ProcessInfo&gt; Result = new List&lt;ProcessInfo&gt;();
+    Process[] ProcList = Process.GetProcesses();
+
+    for (int i = 0; i &lt; ProcList.Length; i++)
+    {
+        Process Proc = ProcList[i];
+
+        try
+        {
+            ProcessInfo Info = new ProcessInfo();
+
+            Info.FileName = Proc.MainModule.FileName;
+            Info.Id = Proc.Id;
+            Info.Is64Bit = RemoteHooking.IsX64Process(Proc.Id);
+            Info.User = RemoteHooking.GetProcessIdentity(Proc.Id).Name;
+
+            Result.Add(Info);
+        }
+        catch
+        {
+        }
+    }
+
+    return Result.ToArray();
+}
+  </code>
+</example>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.CreateAndInject(System.String,System.String,System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Int32@,System.Object[])">
+            <summary>
+            Creates a new process which is started suspended until you call <see cref="M:EasyHook.RemoteHooking.WakeUpProcess"/>
+            from within your injected library <c>Run()</c> method. This allows you to hook the target
+            BEFORE any of its usual code is executed. In situations where a target has debugging and
+            hook preventions, you will get a chance to block those mechanisms for example...
+            </summary>
+            <remarks>
+            <para>
+            Please note that this method might fail when injecting into managed processes, especially
+            when the target is using the CLR hosting API and takes advantage of AppDomains. For example,
+            the Internet Explorer won't be hookable with this method. In such a case your only options
+            are either to hook the target with the unmanaged API or to hook it after (non-supended) creation 
+            with the usual <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/> method.
+            </para>
+            <para>
+            See <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/> for more information. The exceptions listed here are additional
+            to the ones listed for <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/>.
+            </para>
+            </remarks>
+            <param name="InEXEPath">
+            A relative or absolute path to the desired executable.
+            </param>
+            <param name="InCommandLine">
+            Optional command line parameters for process creation.
+            </param>
+            <param name="InProcessCreationFlags">
+            Internally CREATE_SUSPENDED is already passed to CreateProcess(). With this
+            parameter you can add more flags like DETACHED_PROCESS, CREATE_NEW_CONSOLE or
+            whatever!
+            </param>
+            <param name="InOptions">
+            A valid combination of options.
+            </param>
+            <param name="InLibraryPath_x86">
+            A partially qualified assembly name or a relative/absolute file path of the 32-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\\MyAssembly.dll". 
+            </param>
+            <param name="InLibraryPath_x64">
+            A partially qualified assembly name or a relative/absolute file path of the 64-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\\MyAssembly.dll". 
+            </param>
+            <param name="OutProcessId">
+            The process ID of the newly created process.
+            </param>
+            <param name="InPassThruArgs">
+            A serializable list of parameters being passed to your library entry points <c>Run()</c> and
+            constructor (see <see cref="T:EasyHook.IEntryPoint"/>).
+            </param>
+            <exception cref="T:System.ArgumentException">
+            The given EXE path could not be found.
+            </exception>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.CreateAndInject(System.String,System.String,System.Int32,System.String,System.String,System.Int32@,System.Object[])">
+            <summary>
+            Creates a new process which is started suspended until you call <see cref="M:EasyHook.RemoteHooking.WakeUpProcess"/>
+            from within your injected library <c>Run()</c> method. This allows you to hook the target
+            BEFORE any of its usual code is executed. In situations where a target has debugging and
+            hook preventions, you will get a chance to block those mechanisms for example...
+            </summary>
+            <remarks>
+            <para>
+            Please note that this method might fail when injecting into managed processes, especially
+            when the target is using the CLR hosting API and takes advantage of AppDomains. For example,
+            the Internet Explorer won't be hookable with this method. In such a case your only options
+            are either to hook the target with the unmanaged API or to hook it after (non-supended) creation 
+            with the usual <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/> method.
+            </para>
+            <para>
+            See <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/> for more information. The exceptions listed here are additional
+            to the ones listed for <see cref="M:EasyHook.RemoteHooking.Inject(System.Int32,EasyHook.InjectionOptions,System.String,System.String,System.Object[])"/>.
+            </para>
+            </remarks>
+            <param name="InEXEPath">
+            A relative or absolute path to the desired executable.
+            </param>
+            <param name="InCommandLine">
+            Optional command line parameters for process creation.
+            </param>
+            <param name="InProcessCreationFlags">
+            Internally CREATE_SUSPENDED is already passed to CreateProcess(). With this
+            parameter you can add more flags like DETACHED_PROCESS, CREATE_NEW_CONSOLE or
+            whatever!
+            </param>
+            <param name="InLibraryPath_x86">
+            A partially qualified assembly name or a relative/absolute file path of the 32-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\\MyAssembly.dll". 
+            </param>
+            <param name="InLibraryPath_x64">
+            A partially qualified assembly name or a relative/absolute file path of the 64-bit version of your library. 
+            For example "MyAssembly, PublicKeyToken=248973975895496" or ".\Assemblies\\MyAssembly.dll". 
+            </param>
+            <param name="OutProcessId">
+            The process ID of the newly created process.
+            </param>
+            <param name="InPassThruArgs">
+            A serializable list of parameters being passed to your library entry points <c>Run()</c> and
+            constructor (see <see cref="T:EasyHook.IEntryPoint"/>).
+            </param>
+            <exception cref="T:System.ArgumentException">
+            The given EXE path could not be found.
+            </exception>
+        </member>
+        <member name="P:EasyHook.RemoteHooking.IsX64System">
+            <summary>
+            Returns <c>true</c> if the operating system is 64-Bit Windows, <c>false</c> otherwise.
+            </summary>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.InstallSupportDriver">
+            <summary>
+            Installs the EasyHook support driver. After this step you may use
+            <see cref="M:EasyHook.RemoteHooking.InstallDriver(System.String,System.String)"/> to install your kernel mode hooking component.
+            </summary>
+        </member>
+        <member name="M:EasyHook.RemoteHooking.InstallDriver(System.String,System.String)">
+            <summary>
+            Loads the given driver into the kernel and immediately marks it for deletion.
+            The installed driver will be registered with the service control manager under the
+            <paramref name="InDriverName"/> you specify.
+            Please note that you should use <see cref="P:EasyHook.RemoteHooking.IsX64System"/> to find out which
+            driver to load. Even if your process is running on 32-Bit this does not mean,
+            that the OS kernel is running on 32-Bit!
+            </summary>
+            <param name="InDriverPath"></param>
+            <param name="InDriverName"></param>
+        </member>
+        <member name="T:System.GACManagedAccess.IAssemblyCache">
+            <summary>
+            The IAssemblyCache interface is the top-level interface that provides access to the GAC.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.IAssemblyName">
+            <summary>
+            Represents an assembly name. An assembly name includes a predetermined set of name-value pairs. The assembly name is described in detail in the .NET Framework SDK.
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.IAssemblyName.SetProperty(System.GACManagedAccess.AssemblyNamePropertyIds,System.IntPtr,System.Int32)">
+            <summary>
+            The IAssemblyName::SetProperty method adds a name-value pair to the assembly name, or, if a name-value pair with the same name already exists, modifies or deletes the value of a name-value pair.
+            </summary>
+            <param name="PropertyId">The ID that represents the name part of the name-value pair that is to be added or to be modified. Valid property IDs are defined in the ASM_NAME enumeration.</param>
+            <param name="pvProperty">A pointer to a buffer that contains the value of the property.</param>
+            <param name="cbProperty">The length of the pvProperty buffer in bytes. If cbProperty is zero, the name-value pair is removed from the assembly name.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.GACManagedAccess.IAssemblyName.GetProperty(System.GACManagedAccess.AssemblyNamePropertyIds,System.IntPtr,System.Int32@)">
+            <summary>
+            The IAssemblyName::GetProperty method retrieves the value of a name-value pair in the assembly name that specifies the name.
+            </summary>
+            <param name="PropertyId">The ID that represents the name of the name-value pair whose value is to be retrieved. Specified property IDs are defined in the ASM_NAME enumeration.</param>
+            <param name="pvProperty">A pointer to a buffer that is to contain the value of the property.</param>
+            <param name="pcbProperty">The length of the pvProperty buffer, in bytes.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.GACManagedAccess.IAssemblyName.Finalize">
+            <summary>
+            The IAssemblyName::Finalize method freezes an assembly name. Additional calls to IAssemblyName::SetProperty are unsuccessful after this method has been called.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.GACManagedAccess.IAssemblyName.GetDisplayName(System.Text.StringBuilder,System.Int32@,System.Int32)">
+            <summary>
+            The IAssemblyName::GetDisplayName method returns a string representation of the assembly name.
+            </summary>
+            <param name="pDisplayName">A pointer to a buffer that is to contain the display name. The display name is returned in Unicode.</param>
+            <param name="pccDisplayName">The size of the buffer in characters (on input). The length of the returned display name (on return).</param>
+            <param name="displayFlags">One or more of the bits defined in the ASM_DISPLAY_FLAGS enumeration: <see cref="T:System.GACManagedAccess.AssemblyNameDisplayFlags"/></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.GACManagedAccess.IAssemblyEnum">
+            <summary>
+            Enumerates the assemblies in the GAC.
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.IAssemblyEnum.GetNextAssembly(System.IntPtr,System.GACManagedAccess.IAssemblyName@,System.Int32)">
+            <summary>
+            Enumerates the assemblies in the GAC.
+            </summary>
+            <param name="pvReserved">Must be null</param>
+            <param name="ppName">Pointer to a memory location that is to receive the interface pointer to the assembly name of the next assembly that is enumerated.</param>
+            <param name="flags">Must be zero.</param>
+            <returns></returns>
+        </member>
+        <member name="T:System.GACManagedAccess.IInstallReferenceItem">
+            <summary>
+            The IInstallReferenceItem interface represents a reference that has been set on an assembly in the GAC. Instances of IInstallReferenceIteam are returned by the <see cref="T:System.GACManagedAccess.IInstallReferenceEnum"/> interface.
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.IInstallReferenceItem.GetReference(System.IntPtr@,System.Int32,System.IntPtr)">
+            <summary>
+            Returns a FUSION_INSTALL_REFERENCE structure, <see cref="T:System.GACManagedAccess.InstallReference"/>.
+            </summary>
+            <param name="pRefData">A pointer to a FUSION_INSTALL_REFERENCE structure. 
+            The memory is allocated by the GetReference method and is freed when 
+            <see cref="T:System.GACManagedAccess.IInstallReferenceItem"/> is released. Callers must not hold a reference to this 
+            buffer after the IInstallReferenceItem object is released. 
+            To avoid allocation issues with the interop layer, the <see cref="T:System.GACManagedAccess.InstallReference"/> is not marshaled directly - therefore use of out IntPtr</param>
+            <param name="flags"></param>
+            <param name="pvReserced"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.GACManagedAccess.IInstallReferenceEnum">
+            <summary>
+            <para>The IInstllReferenceEnum interface enumerates all references that are set on an assembly in the GAC.</para>
+            <para>Note: references that belong to the assembly are locked for changes while those references are being enumerated.</para>
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.IInstallReferenceEnum.GetNextInstallReferenceItem(System.GACManagedAccess.IInstallReferenceItem@,System.Int32,System.IntPtr)">
+            <summary>
+            Returns the next reference information for an assembly
+            </summary>
+            <param name="ppRefItem">Pointer to a memory location that receives the IInstallReferenceItem pointer.</param>
+            <param name="flags">Must be zero.</param>
+            <param name="pvReserced">Must be null.</param>
+            <returns>Return values are as follows: S_OK: - The next item is returned successfully. S_FALSE: - No more items.</returns>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyCommitFlags">
+            <summary>
+            Install assembly commit flags (mutually exclusive)
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCommitFlags.Default">
+            <summary>
+            If the assembly is already installed in the gAC and the file version numbers of the assembly being installed are the same or later, the files are replaced.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCommitFlags.Force">
+            <summary>
+            The files of an existing assembly are overwritten regardless of their version number.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyCacheUninstallDisposition">
+            <summary>
+            The uninstall action taken
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheUninstallDisposition.Unknown">
+            <summary>
+            Unknown
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheUninstallDisposition.Uninstalled">
+            <summary>
+            The assembly files have been removed from the GAC
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheUninstallDisposition.StillInUse">
+            <summary>
+            An application is using the assembly.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheUninstallDisposition.AlreadyUninstalled">
+            <summary>
+            The assembly does not exist in the GAC
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheUninstallDisposition.DeletePending">
+            <summary>
+            Not used.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheUninstallDisposition.HasInstallReference">
+            <summary>
+            The assembly has not been removed from the GAC because another application reference exists.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheUninstallDisposition.ReferenceNotFound">
+            <summary>
+            The <see cref="T:System.GACManagedAccess.InstallReference"/> that was specified is not found in the GAC.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyCacheFlags">
+            <summary>
+            The ASM_CACHE_FLAGS enumeration used in <see cref="M:System.GACManagedAccess.Utils.CreateAssemblyEnum(System.GACManagedAccess.IAssemblyEnum@,System.IntPtr,System.GACManagedAccess.IAssemblyName,System.GACManagedAccess.AssemblyCacheFlags,System.IntPtr)"/>.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheFlags.ZAP">
+            <summary>
+            Enumerates the cache of precompiled assemblies by using Ngen.exe.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheFlags.GAC">
+            <summary>
+            Enumerates the GAC.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyCacheFlags.DOWNLOAD">
+            <summary>
+            Enumerates the assemblies that have been downloaded on-demand or that have been shadow-copied.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.CreateAssemblyNameObjectFlags">
+            <summary>
+            The CREATE_ASM_NAME_OBJ_FLAGS enumeration, used in <see cref="M:System.GACManagedAccess.Utils.CreateAssemblyNameObject(System.GACManagedAccess.IAssemblyName@,System.String,System.GACManagedAccess.CreateAssemblyNameObjectFlags,System.IntPtr)"/>
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.CreateAssemblyNameObjectFlags.CANOF_DEFAULT">
+            <summary>
+            If this flag is specified, the szAssemblyName parameter is a full assembly name and is parsed to the individual properties. If the flag is not specified, szAssemblyName is the "Name" portion of the assembly name.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.CreateAssemblyNameObjectFlags.CANOF_PARSE_DISPLAY_NAME">
+            <summary>
+            If this flag is specified, certain properties, such as processor architecture, are set to their default values.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyNamePropertyIds">
+            <summary>
+            The ASM_NAME enumeration property ID describes the valid names of the name-value pairs in an assembly name. See the .NET Framework SDK for a description of these properties.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyNameDisplayFlags">
+            <summary>
+            ASM_DISPLAY_FLAGS: <see cref="M:System.GACManagedAccess.IAssemblyName.GetDisplayName(System.Text.StringBuilder,System.Int32@,System.Int32)"/>.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.VERSION">
+            <summary>
+            Includes the version number as part of the display name.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.CULTURE">
+            <summary>
+            Includes the culture.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.PUBLIC_KEY_TOKEN">
+            <summary>
+             Includes the public key token.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.PUBLIC_KEY">
+            <summary>
+             Includes the public key.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.CUSTOM">
+            <summary>
+            Includes the custom part of the assembly name.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.PROCESSORARCHITECTURE">
+            <summary>
+            Includes the processor architecture.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.LANGUAGEID">
+            <summary>
+            Includes the language ID.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.AssemblyNameDisplayFlags.ALL">
+            <summary>
+            Include all attributes.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.InstallReference">
+            <summary>
+            The FUSION_INSTALL_REFERENCE structure represents a reference that is made when an application has installed an assembly in the GAC.
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.InstallReference.#ctor(System.Guid,System.String,System.String)">
+            <summary>
+            Create a new InstallReference
+            </summary>
+            <param name="guid">Possible values for the guidScheme field can be one of the following (<see cref="T:System.GACManagedAccess.InstallReferenceGuid"/>):
+                <list type="table">
+                <item>
+                    <term>FUSION_REFCOUNT_MSI_GUID</term>
+                    <description>The assembly is referenced by an application that has been installed by using Windows Installer. The szIdentifier field is set to MSI, and szNonCannonicalData is set to Windows Installer. This scheme must only be used by Windows Installer itself.</description>
+                </item>
+                <item>
+                <term>FUSION_REFCOUNT_UNINSTALL_SUBKEY_GUID</term>
+                <description>The assembly is referenced by an application that appears in Add/Remove Programs. The szIdentifier field is the token that is used to register the application with Add/Remove programs.</description>
+                </item>
+                <item>
+                    <term>FUSION_REFCOUNT_FILEPATH_GUID</term>
+                    <description>The assembly is referenced by an application that is represented by a file in the file system. The szIdentifier field is the path to this file.</description>
+                </item>
+                <item>
+                    <term>FUSION_REFCOUNT_OPAQUE_STRING_GUID</term>
+                    <description>The assembly is referenced by an application that is only represented by an opaque string. The szIdentifier is this opaque string. The GAC does not perform existence checking for opaque references when you remove this.</description>
+                </item>
+                </list>
+            </param>
+            <param name="id">A unique string that identifies the application that installed the assembly.</param>
+            <param name="data">A string that is only understood by the entity that adds the reference. The GAC only stores this string.</param>
+        </member>
+        <member name="P:System.GACManagedAccess.InstallReference.GuidScheme">
+            <summary>
+            The entity that adds the reference.
+            </summary>
+        </member>
+        <member name="P:System.GACManagedAccess.InstallReference.Identifier">
+            <summary>
+            A unique string that identifies the application that installed the assembly.
+            </summary>
+        </member>
+        <member name="P:System.GACManagedAccess.InstallReference.Description">
+            <summary>
+            A string that is only understood by the entity that adds the reference. The GAC only stores this string.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.InstallReference.cbSize">
+            <summary>
+            The size of the structure in bytes.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.InstallReference.flags">
+            <summary>
+            Reserved, must be zero.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.InstallReferenceGuid">
+            <summary>
+            Possible values for the guidScheme for <see cref="T:System.GACManagedAccess.InstallReference"/>.
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.InstallReferenceGuid.IsValidGuidScheme(System.Guid)">
+            <summary>
+            Ensures that the provided Guid is one of the valid reference guids defined in <see cref="T:System.GACManagedAccess.InstallReferenceGuid"/> (excluding <see cref="F:System.GACManagedAccess.InstallReferenceGuid.MsiGuid"/> and <see cref="F:System.GACManagedAccess.InstallReferenceGuid.OsInstallGuid"/>).
+            </summary>
+            <param name="guid">The Guid to validate</param>
+            <returns>True if the Guid is <see cref="F:System.GACManagedAccess.InstallReferenceGuid.UninstallSubkeyGuid"/>, <see cref="F:System.GACManagedAccess.InstallReferenceGuid.FilePathGuid"/>, <see cref="F:System.GACManagedAccess.InstallReferenceGuid.OpaqueGuid"/> or <see cref="F:System.Guid.Empty"/>.</returns>
+        </member>
+        <member name="F:System.GACManagedAccess.InstallReferenceGuid.UninstallSubkeyGuid">
+            <summary>
+            FUSION_REFCOUNT_UNINSTALL_SUBKEY_GUID - The assembly is referenced by an application that appears in Add/Remove Programs. The szIdentifier field is the token that is used to register the application with Add/Remove programs.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.InstallReferenceGuid.FilePathGuid">
+            <summary>
+            FUSION_REFCOUNT_FILEPATH_GUID - The assembly is referenced by an application that is represented by a file in the file system. The szIdentifier field is the path to this file.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.InstallReferenceGuid.OpaqueGuid">
+            <summary>
+            FUSION_REFCOUNT_OPAQUE_STRING_GUID - The assembly is referenced by an application that is only represented by an opaque string. The szIdentifier is this opaque string. The GAC does not perform existence checking for opaque references when you remove this.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.InstallReferenceGuid.MsiGuid">
+            <summary>
+            This GUID cannot be used for installing into GAC. FUSION_REFCOUNT_MSI_GUID - The assembly is referenced by an application that has been installed by using Windows Installer. The szIdentifier field is set to MSI, and szNonCannonicalData is set to Windows Installer. This scheme must only be used by Windows Installer itself.
+            </summary>
+        </member>
+        <member name="F:System.GACManagedAccess.InstallReferenceGuid.OsInstallGuid">
+            <summary>
+            This GUID cannot be used for installing into GAC.
+            </summary>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyCache">
+            <summary>
+            Provides methods to install or remove assemblies from the Global Assembly Cache (GAC)
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCache.InstallAssembly(System.String,System.GACManagedAccess.InstallReference,System.GACManagedAccess.AssemblyCommitFlags)">
+            <summary>
+            Install assembly into GAC
+            </summary>
+            <param name="assemblyPath"></param>
+            <param name="reference"></param>
+            <param name="flags"></param>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCache.InstallAssemblies(System.String[],System.GACManagedAccess.InstallReference,System.GACManagedAccess.AssemblyCommitFlags)">
+            <summary>
+            Install the provided assemblies to GAC
+            </summary>
+            <param name="assemblyPaths"></param>
+            <param name="reference"></param>
+            <param name="flags"></param>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCache.UninstallAssembly(System.String,System.GACManagedAccess.InstallReference,System.GACManagedAccess.AssemblyCacheUninstallDisposition@)">
+            <summary>
+            Uninstall an assembly from the GAC. <paramref name="assemblyName"/> has to be fully specified name. E.g., for v1.0/v1.1 assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx". For v2.0+ assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx, ProcessorArchitecture=xx". If <paramref name="assemblyName"/> is not fully specified, a random matching assembly could be uninstalled.
+            </summary>
+            <param name="assemblyName"></param>
+            <param name="reference"></param>
+            <param name="disp"></param>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCache.UninstallAssemblies(System.String[],System.GACManagedAccess.InstallReference,System.GACManagedAccess.AssemblyCacheUninstallDisposition[]@)">
+            <summary>
+            Uninstall the provided assembly names from the GAC. <paramref name="assemblyNames"/> have to be fully specified names. E.g., for v1.0/v1.1 assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx". For v2.0+ assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx, ProcessorArchitecture=xx". If <paramref name="assemblyNames"/> is not fully specified, a random matching assembly could be uninstalled.
+            </summary>
+            <param name="assemblyNames"></param>
+            <param name="reference"></param>
+            <param name="disp"></param>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCache.QueryAssemblyInfo(System.String)">
+            <summary>
+            Query an assembly in the GAC. <paramref name="assemblyName"/> has to be a fully specified name. E.g., for v1.0/v1.1 assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx". For v2.0+ assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx, ProcessorArchitecture=xx". If <paramref name="assemblyName"/> is not fully specified, a random matching assembly may be found.
+            </summary>
+            <param name="assemblyName"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyCacheEnum">
+            <summary>
+            Enumerate assemblies within the Global Assembly Cache (GAC)
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCacheEnum.#ctor(System.String)">
+            <summary>
+            Enumerate assemblies in the GAC
+            </summary>
+            <param name="assemblyName">null means enumerate all the assemblies</param>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCacheEnum.GetNextAssembly">
+            <summary>
+            Get the next assembly within the enumerator.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:System.GACManagedAccess.AssemblyCacheInstallReferenceEnum">
+            <summary>
+            Enumerate referenced assemblies installed in the global assembly cache.
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCacheInstallReferenceEnum.#ctor(System.String)">
+            <summary>
+            Create enumerator for provided assembly name
+            </summary>
+            <param name="assemblyName"><paramref name="assemblyName"/> has to be a fully specified name. E.g., for v1.0/v1.1 assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx". For v2.0+ assemblies, it should be "name, Version=xx, Culture=xx, PublicKeyToken=xx, ProcessorArchitecture=xx".</param>
+        </member>
+        <member name="M:System.GACManagedAccess.AssemblyCacheInstallReferenceEnum.GetNextReference">
+            <summary>
+            Get next reference
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:System.GACManagedAccess.Utils">
+            <summary>
+            Fusion DllImports
+            </summary>
+        </member>
+        <member name="M:System.GACManagedAccess.Utils.CreateAssemblyEnum(System.GACManagedAccess.IAssemblyEnum@,System.IntPtr,System.GACManagedAccess.IAssemblyName,System.GACManagedAccess.AssemblyCacheFlags,System.IntPtr)">
+            <summary>
+            To obtain an instance of the <see cref="T:System.GACManagedAccess.IAssemblyEnum"/> API, call the CreateAssemblyEnum API
+            </summary>
+            <param name="ppEnum">Pointer to a memory location that contains the IAssemblyEnum pointer.</param>
+            <param name="pUnkReserved">Must be null.</param>
+            <param name="pName">An assembly name that is used to filter the enumeration. Can be null to enumerate all assemblies in the GAC.</param>
+            <param name="flags">Exactly one item from the ASM_CACHE_FLAGS enumeration, <see cref="T:System.GACManagedAccess.AssemblyCacheFlags"/>.</param>
+            <param name="pvReserved">Must be NULL.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.GACManagedAccess.Utils.CreateAssemblyNameObject(System.GACManagedAccess.IAssemblyName@,System.String,System.GACManagedAccess.CreateAssemblyNameObjectFlags,System.IntPtr)">
+            <summary>
+            An instance of <see cref="T:System.GACManagedAccess.IAssemblyName"/> is obtained by calling the CreateAssemblyNameObject API
+            </summary>
+            <param name="ppAssemblyNameObj">Pointer to a memory location that receives the IAssemblyName pointer that is created.</param>
+            <param name="szAssemblyName">A string representation of the assembly name or of a full assembly reference that is determined by dwFlags. The string representation can be null.</param>
+            <param name="flags">Zero or more of the bits that are defined in the CREATE_ASM_NAME_OBJ_FLAGS enumeration, <see cref="T:System.GACManagedAccess.CreateAssemblyNameObjectFlags"/>.</param>
+            <param name="pvReserved">Must be null.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.GACManagedAccess.Utils.CreateAssemblyCache(System.GACManagedAccess.IAssemblyCache@,System.Int32)">
+            <summary>
+            To obtain an instance of the <see cref="T:System.GACManagedAccess.IAssemblyCache"/> API, call the CreateAssemblyCache API
+            </summary>
+            <param name="ppAsmCache">Pointer to return <see cref="T:System.GACManagedAccess.IAssemblyCache"/></param>
+            <param name="reserved">Must be zero.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.GACManagedAccess.Utils.CreateInstallReferenceEnum(System.GACManagedAccess.IInstallReferenceEnum@,System.GACManagedAccess.IAssemblyName,System.Int32,System.IntPtr)">
+            <summary>
+            To obtain an instance of the <see cref="T:System.GACManagedAccess.IInstallReferenceEnum"/> API, call the CreateInstallReferenceEnum API
+            </summary>
+            <param name="ppRefEnum">A pointer to a memory location that receives the IInstallReferenceEnum pointer.</param>
+            <param name="pName">The assembly name for which the references are enumerated.</param>
+            <param name="dwFlags">Must be zero.</param>
+            <param name="pvReserved">Must be null.</param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

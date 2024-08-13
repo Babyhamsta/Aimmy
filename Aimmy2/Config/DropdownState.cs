@@ -10,6 +10,13 @@ public class DropdownState: BaseSettings
     private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Center;
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
     private OverlayDrawingMethod _overlayDrawingMethod;
+    private GamepadSendMode _gamepadSendMode = GamepadSendMode.ViGEm;
+
+    public GamepadSendMode GamepadSendMode
+    {
+        get => _gamepadSendMode;
+        set => SetField(ref _gamepadSendMode, value);
+    }
 
     public string GamepadProcess
     {

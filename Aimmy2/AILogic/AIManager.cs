@@ -5,6 +5,7 @@ using Aimmy2.AILogic;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
+using Aimmy2.InputLogic;
 using Aimmy2.Models;
 using Class;
 using Nextended.Core.Extensions;
@@ -13,13 +14,15 @@ using Visuality;
 
 public class AIManager : IDisposable
 {
-    private readonly ICapture _screenCapture;
-    private readonly IPredictionLogic _predictionLogic;
     private readonly IList<IAction> _actions;
     private bool _isAiLoopRunning;
     private Thread _aiLoopThread;
-
+    private bool _pausedNotified = false;
+    public bool IsRunning => _isAiLoopRunning;
     public bool IsModelLoaded { get; private set; }
+
+    public IPredictionLogic PredictionLogic { get; private set; }
+    public ICapture ImageCapture { get; private set; }
 
     public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
@@ -47,12 +50,11 @@ public class AIManager : IDisposable
 
     public AIManager(ICapture screenCapture, IPredictionLogic predictionLogic, IList<IAction> actions)
     {
-        _screenCapture = screenCapture;
-        _predictionLogic = predictionLogic;
+        ImageCapture = screenCapture;
+        PredictionLogic = predictionLogic;
         _actions = actions.Apply(a =>
         {
-            a.PredictionLogic = predictionLogic;
-            a.ImageCapture = screenCapture;
+            a.AIManager = this;
         }).ToList();
 
         NotifyLoaded(true);
@@ -80,18 +82,29 @@ public class AIManager : IDisposable
         {
             if (AppConfig.Current.ToggleState.GlobalActive)
             {
-                var area = _screenCapture.GetCaptureArea();
+                if(_pausedNotified)
+                {
+                    _pausedNotified = false;
+                    await Task.WhenAll(_actions.Select(a => a.OnResume()));
+                }
+                var area = ImageCapture.GetCaptureArea();
 
                 var cursorPosition = WinAPICaller.GetCursorPosition();
 
                 var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
                 var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
 
-                Rectangle detectionBox = new(targetX - PredictionLogic.IMAGE_SIZE / 2, targetY - PredictionLogic.IMAGE_SIZE / 2, PredictionLogic.IMAGE_SIZE, PredictionLogic.IMAGE_SIZE);
-                var frame = _screenCapture.Capture(detectionBox);
+                Rectangle detectionBox = new(targetX - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, targetY - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE);
+                var frame = ImageCapture.Capture(detectionBox);
 
-                var predictions = (await _predictionLogic.Predict(frame, detectionBox)).ToArray();
+                var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
                 await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
+            }
+            else if (!_pausedNotified)
+            {
+                _pausedNotified = true;
+                await Task.WhenAll(_actions.Select(a => a.OnPause()));
+
             }
             await Task.Delay(1);
         }

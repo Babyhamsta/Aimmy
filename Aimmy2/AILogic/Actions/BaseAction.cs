@@ -6,13 +6,17 @@ namespace Aimmy2.AILogic.Actions;
 
 public abstract class BaseAction: IAction
 {
+    public AIManager AIManager { get; set; }
     public Task Execute(IEnumerable<Prediction> predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
+    public virtual Task OnPause() => Task.CompletedTask;
+
+    public virtual Task OnResume() => Task.CompletedTask;
 
     public abstract Task ExecuteAsync(Prediction[] predictions);
 
     protected virtual bool Active => AppConfig.Current.ToggleState.GlobalActive;
-    public IPredictionLogic PredictionLogic { get; set; }
-    public ICapture ImageCapture { get; set; }
+    public IPredictionLogic PredictionLogic => AIManager.PredictionLogic;
+    public ICapture ImageCapture => AIManager.ImageCapture;
 
     public static IList<IAction> AllActions()
     {

@@ -1,6 +1,8 @@
 ﻿using Gma.System.MouseKeyHook;
 using System.Windows.Forms;
 using Aimmy2.InputLogic;
+using Aimmy2.InputLogic.Contracts;
+using Aimmy2.InputLogic.Gamepad.Interaction;
 
 namespace InputLogic
 {
@@ -69,14 +71,14 @@ namespace InputLogic
                 _mEvents.MouseUp += GlobalHookMouseUp!;
             }
 
-            if (!_gamepadListen && GamepadManager.IsInitialized)
+            if (!_gamepadListen && GamepadManager.CanRead)
             {
                 _gamepadListen = true;
                 GamepadManager.GamepadReader.ButtonEvent += GamepadReader_ButtonEvent;
             }
         }
 
-        private void GamepadReader_ButtonEvent(object? sender, GamepadReader.GamepadEventArgs e)
+        private void GamepadReader_ButtonEvent(object? sender, GamepadEventArgs e)
         {
             if (!e.IsStickEvent)
             {

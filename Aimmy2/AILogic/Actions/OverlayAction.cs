@@ -34,12 +34,14 @@ public class OverlayAction : BaseAction
                     break;
             }
         }
-        else
-        {
-            DisableOverlay();
-        }
 
         return Task.CompletedTask;
+    }
+
+    public override Task OnPause()
+    {
+        DisableOverlay();
+        return base.OnPause();
     }
 
     protected override bool Active => base.Active && AppConfig.Current.ToggleState.ShowDetectedPlayer;
@@ -97,9 +99,14 @@ public class OverlayAction : BaseAction
 
     private void DisableOverlay()
     {
-        Application.Current.Dispatcher.Invoke(() =>
+        try
         {
-            _playerOverlay.Opacity = 0;
-        });
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _playerOverlay.Opacity = 0;
+            });
+        }
+        catch (Exception e)
+        {}
     }
 }

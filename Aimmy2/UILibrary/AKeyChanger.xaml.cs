@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using Aimmy2.InputLogic;
+using Aimmy2.InputLogic.Contracts;
+using Aimmy2.InputLogic.Gamepad.Interaction;
 using Other;
 
 namespace Aimmy2.UILibrary
@@ -37,9 +38,9 @@ namespace Aimmy2.UILibrary
         public void SetContent(string keybind)
         {
             HasKeySet = !string.IsNullOrWhiteSpace(keybind);
-            if (GamepadReader.GamepadEventArgs.IsGamepadKey(keybind))
+            if (GamepadEventArgs.IsGamepadKey(keybind))
             {
-                KeyNotifierLabel.Content = GamepadReader.GamepadEventArgs.GetButtonName(keybind);
+                KeyNotifierLabel.Content = GamepadEventArgs.GetButtonName(keybind);
                 GamepadInfo.Visibility = System.Windows.Visibility.Visible;
             }
             else

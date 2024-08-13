@@ -19,7 +19,7 @@ public class ThemePalette
         return Name;
     }
 
-    public static ThemePalette DefaultPalette = new ThemePalette("Default")
+    public static ThemePalette PurplePalette = new ThemePalette("Purple")
     {
         MainColor = Color.FromArgb(255, 18, 3, 56),
         AccentColor = Color.FromArgb(255, 105, 53, 180),

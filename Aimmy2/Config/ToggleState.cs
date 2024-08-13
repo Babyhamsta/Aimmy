@@ -26,6 +26,14 @@ public class ToggleState : BaseSettings
     private bool _xAxisPercentageAdjustment = false;
     private bool _yAxisPercentageAdjustment = false;
     private bool _autoTriggerCharged;
+    private bool _rapidFire;
+    private bool _autoHideController;
+
+    public bool AutoHideController
+    {
+        get => _autoHideController;
+        set => SetField(ref _autoHideController, value);
+    }
 
     public bool GlobalActive
     {
@@ -80,6 +88,12 @@ public class ToggleState : BaseSettings
     {
         get => _autoTriggerCharged;
         set => SetField(ref _autoTriggerCharged, value);
+    }
+
+    public bool RapidFire
+    {
+        get => _rapidFire;
+        set => SetField(ref _rapidFire, value);
     }
 
     public bool AutoTrigger

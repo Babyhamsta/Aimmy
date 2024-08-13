@@ -23,6 +23,7 @@ public class SliderSettings: BaseSettings
     private double _opacity = 1;
     private double _fovOpacity = 1;
     private double _triggerKeyMin = 0.0;
+    private double _firePressDelay = 0.02;
 
     public string SuggestedModel
     {
@@ -86,6 +87,12 @@ public class SliderSettings: BaseSettings
     {
         get => _triggerKeyMin;
         set => SetField(ref _triggerKeyMin, value);
+    }
+
+    public double FirePressDelay
+    {
+        get => _firePressDelay;
+        set => SetField(ref _firePressDelay, value);
     }
 
     public double AutoTriggerDelay

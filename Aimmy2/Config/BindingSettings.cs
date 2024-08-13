@@ -13,11 +13,18 @@ public class BindingSettings: BaseSettings
     private string _disableAntiRecoilKeybind = "Oem6";
     private string _gun1Key = "D1";
     private string _gun2Key = "D2";
+    private string _rapidFireKey;
 
     public string ActiveToggleKey
     {
         get => _activeToggleKey;
         set => SetField(ref _activeToggleKey, value);
+    }
+
+    public string RapidFireKey
+    {
+        get => _rapidFireKey;
+        set => SetField(ref _rapidFireKey, value);
     }
 
     public string TriggerKey

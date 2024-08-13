@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using Aimmy2.AILogic;
+using Aimmy2.InputLogic.HidHide;
 using Aimmy2.Types;
 
 
@@ -22,7 +23,7 @@ public class AppConfig : BaseSettings
     private CaptureSource _captureSource = AILogic.CaptureSource.MainScreen();
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     
-    public string ThemeName { get; set; } = ThemePalette.DefaultPalette.Name;
+    public string ThemeName { get; set; } = ThemePalette.PurplePalette.Name;
     public string ActiveThemeName { get; set; } = ThemePalette.GreenPalette.Name;
     public BindingSettings BindingSettings { get; set; } = new BindingSettings();
     public SliderSettings SliderSettings { get; set; } = new SliderSettings();
@@ -38,7 +39,6 @@ public class AppConfig : BaseSettings
         get => _captureSource;
         set => SetField(ref _captureSource, value);
     }
-
 
     public static AppConfig Load(string path = DefaultConfigPath)
     {

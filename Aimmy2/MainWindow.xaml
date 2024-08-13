@@ -9,7 +9,7 @@
         xmlns:aimmy2="clr-namespace:Aimmy2"
         xmlns:visuality="clr-namespace:Visuality"
         mc:Ignorable="d"
-        Title="AI-M"
+        Title="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
         Height="444"
         MinHeight="444"
         Width="670"
@@ -129,7 +129,7 @@
                             </Ellipse.Effect>
                         </Ellipse>
                     </Grid>
-                    <StackPanel>
+                    <StackPanel x:Name="MenuButtons">
                         <Ant:Button x:Name="Menu1B"
                                     Tag="AimMenu"
                                     VerticalAlignment="Top"
@@ -179,6 +179,7 @@
                                     Width="50"
                                     Click="MenuSwitch" />
                         <Ant:Button 
+                                    x:Name="ButtonGamepadSettings"
                                     Tag="GamepadSettings"
                                     VerticalAlignment="Top"
                                     Height="50"
@@ -212,6 +213,7 @@
                                     Click="MenuSwitch" />
                         <Ant:Button x:Name="Menu4B"
                                     Tag="AboutMenu"
+                                    Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
                                     VerticalAlignment="Top"
                                     Height="50"
                                     BorderThickness="0"
@@ -246,6 +248,7 @@
                                     Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
                                     Grid.Column="0"
                                     Margin="10,0,5,0">
+                            <StackPanel x:Name="RapidFire" />
                             <StackPanel x:Name="AimAssist" />
                             <StackPanel x:Name="TriggerBot" />
                             <StackPanel x:Name="AntiRecoil" />
@@ -379,6 +382,7 @@
                             </TabItem>
                             <TabItem BorderThickness="0"
                                      Padding="0"
+                                     Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
                                      Height="33"
                                      Width="132">
                                 <TabItem.Header>
@@ -420,6 +424,7 @@
                             </TabItem>
                             <TabItem BorderThickness="0"
                                      Padding="10,0,10,0"
+                                     Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
                                      Height="33"
                                      Width="132">
                                 <TabItem.Header>
@@ -559,7 +564,7 @@
                                     Margin="0,20,0,0">
                             <Grid HorizontalAlignment="Center"
                                   VerticalAlignment="Top"
-                                  Width="193"
+                                  
                                   Height="12">
                                 <Label Foreground="White"
                                        Content="{x:Static aimmy2:ApplicationConstants.ApplicationInfo}"
@@ -569,15 +574,7 @@
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
                                        FontSize="10" />
-                                <Label Foreground="White"
-                                       Content="&#xE946;"
-                                       FontFamily="Segoe MDL2 Assets"
-                                       VerticalContentAlignment="Center"
-                                       Padding="0,0,0,0"
-                                       FontSize="13"
-                                       HorizontalAlignment="Left"
-                                       HorizontalContentAlignment="Right"
-                                       VerticalAlignment="Center" />
+                           
                             </Grid>
                             <Path x:Name="AboutAimmyLogo"
                                   Fill="White"
