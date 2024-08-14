@@ -15,15 +15,19 @@ namespace Aimmy2.Extensions;
 
 public static class UIElementExtensions
 {
-    public static T InitWith<T>(this T component, Action<T> cfg) where T : UIElement
+    public static T InitWith<T>(this T component, Action<T>? cfg) where T : UIElement
     {
-        DependencyPropertyChangedEventHandler visibleChangeHandler = null;
-        visibleChangeHandler = (s, e) => component.Dispatcher.BeginInvoke(() =>
+        if (cfg != null)
         {
-            component.IsVisibleChanged -= visibleChangeHandler;
-            cfg.Invoke(component);
-        });
-        component.IsVisibleChanged += visibleChangeHandler;
+            DependencyPropertyChangedEventHandler visibleChangeHandler = null;
+            visibleChangeHandler = (s, e) => component.Dispatcher.BeginInvoke(() =>
+            {
+                component.IsVisibleChanged -= visibleChangeHandler;
+                cfg.Invoke(component);
+            });
+            component.IsVisibleChanged += visibleChangeHandler;
+        }
+
         return component;
     }
 
@@ -174,15 +178,40 @@ public static class UIElementExtensions
         return element;
     }
 
-    internal static T AddToggleWithKeyBind<T>(this T panel, string title, InputBindingManager bindingManager, Action<AToggle>? cfg = null) where T : IAddChild, new()
+    internal static AToggle AddToggleWithKeyBind<T>(this T owner, string title, InputBindingManager bindingManager, Action<AToggle>? cfg = null, Action<Border>? containerCfg = null) where T : IAddChild, new()
     {
-        var toggle = panel.AddToggle(title, cfg);
+        var border = owner.Add<Border>(p =>
+        {
+            p.MinWidth = 200;
+            p.Background = new SolidColorBrush(Color.FromArgb(63, 60, 60, 60));
+            p.BorderBrush = new SolidColorBrush(Color.FromArgb(63, 255, 255, 255));
+            p.BorderThickness = new Thickness(1, 0, 1, 0);
+        }).InitWith(containerCfg);
+        var grid = border.Add<Grid>(p =>
+        {
+            p.HorizontalAlignment = HorizontalAlignment.Stretch;
+        });
+        var innergrid = grid.Add<Grid>(p => p.HorizontalAlignment = HorizontalAlignment.Right);
+        var panel = innergrid.Add<StackPanel>(p => p.Orientation = Orientation.Horizontal);
+        grid.Add<TextBlock>(t =>
+        {
+            t.Text = title;
+            t.Foreground = Brushes.White;
+            t.Margin = new Thickness(10, 0, 5, 0);
+            t.VerticalAlignment = VerticalAlignment.Center;
+            t.HorizontalAlignment = HorizontalAlignment.Left;
+        });
+        var toggle = new AToggle("");
+        toggle.Background = toggle.BorderBrush = Brushes.Transparent;
         var code = AKeyChanger.CodeFor(title);
         var keyCodeValue = AppConfig.Current.BindingSettings[code]?.ToString();
+        bool updating = false;
         panel.AddKeyChanger(
             code,
             () => keyCodeValue ?? "None", bindingManager, changer =>
             {
+                changer.Background = changer.BorderBrush = Brushes.Transparent;
+
                 if (keyCodeValue != null)
                 {
                     bindingManager.SetupDefault(code, keyCodeValue);
@@ -191,13 +220,16 @@ public static class UIElementExtensions
                 changer.ShowTitle = false;
                 bindingManager.OnBindingPressed += (key) =>
                 {
-                    if (changer.HasKeySet && key == code)
+                    if (changer.HasKeySet && key == code && !updating)
                     {
+                        updating = true;
                         toggle.ToggleState();
+                        Task.Delay(300).ContinueWith(_ => updating = false);
                     }
                 };
             } );
-        return panel;
+        panel.Add(toggle, cfg);
+        return toggle;
     }
 
 
@@ -244,6 +276,8 @@ public static class UIElementExtensions
 
         keyChanger.Reader.Click += (sender, e) =>
         {
+            if(keyChanger.InUpdateMode)
+                return;
             keyChanger.InUpdateMode = true;
             keyChanger.SetContent("...");
             bindingManager.StartListeningForBinding(title);

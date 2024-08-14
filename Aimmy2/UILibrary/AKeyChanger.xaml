@@ -16,10 +16,10 @@
             </ContextMenu>
         </Grid.ContextMenu>
         <Border Height="40"
-                Background="#3F3C3C3C"
+                Background="Transparent"
                 CornerRadius="00"
                 BorderThickness="1,0,1,0"
-                BorderBrush="#3FFFFFFF">
+                BorderBrush="{Binding BorderBrush}">
             <Grid>
                 <Label x:Name="KeyChangerTitle"
                        Padding="10,10,10,10"

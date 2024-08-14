@@ -9,6 +9,7 @@ using Aimmy2.Types;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using System.Reflection;
+using System.Windows.Controls;
 using Aimmy2.Extensions;
 
 namespace Aimmy2.UILibrary
@@ -61,6 +62,8 @@ namespace Aimmy2.UILibrary
 
         public AToggle()
         {
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C"));
+            BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF"));
             InitializeComponent();
             DataContext = this;
             ApplicationConstants.StaticPropertyChanged += (sender, args) =>
@@ -157,5 +160,20 @@ namespace Aimmy2.UILibrary
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public void BindActiveStateColor(StackPanel panel)
+        {
+            void SetColor(bool isChecked)
+            {
+                var title = panel.FindChildren<ATitle>().FirstOrDefault();
+                var themeForActive = ThemePalette.ThemeForActive;
+                if (title != null)
+                {
+                    title.LabelTitle.Foreground = isChecked ? new SolidColorBrush(themeForActive.AccentColor) : Brushes.White;
+                }
+                panel.Background = isChecked ? new SolidColorBrush(themeForActive.MainColor) : Brushes.Transparent;
+            }
+            SetColor(Checked);
+            Changed += (s, e) => SetColor(e.Value);
+        }
     }
 }

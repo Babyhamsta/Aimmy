@@ -2,7 +2,6 @@
 
 public class BindingSettings: BaseSettings
 {
-    private string _activeToggleKey = "B";
     private string _triggerKey = "";
     private string _triggerAdditionalSend = "";
     private string _aimKeybind = "Right";
@@ -14,17 +13,18 @@ public class BindingSettings: BaseSettings
     private string _gun1Key = "D1";
     private string _gun2Key = "D2";
     private string _rapidFireKey;
-
-    public string ActiveToggleKey
-    {
-        get => _activeToggleKey;
-        set => SetField(ref _activeToggleKey, value);
-    }
+    private string _triggerAdditionalCommandKey;
 
     public string RapidFireKey
     {
         get => _rapidFireKey;
         set => SetField(ref _rapidFireKey, value);
+    }
+
+    public string TriggerAdditionalCommandKey
+    {
+        get => _triggerAdditionalCommandKey;
+        set => SetField(ref _triggerAdditionalCommandKey, value);
     }
 
     public string TriggerKey

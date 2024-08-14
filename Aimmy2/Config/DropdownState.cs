@@ -11,6 +11,7 @@ public class DropdownState: BaseSettings
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
     private OverlayDrawingMethod _overlayDrawingMethod;
     private GamepadSendMode _gamepadSendMode = GamepadSendMode.ViGEm;
+    private TriggerCheck _triggerAdditionalCommandCheck = TriggerCheck.IntersectingCenter;
 
     public GamepadSendMode GamepadSendMode
     {
@@ -28,6 +29,12 @@ public class DropdownState: BaseSettings
     {
         get => _headArea;
         set => SetField(ref _headArea, value);
+    }
+
+    public TriggerCheck TriggerAdditionalCommandCheck
+    {
+        get => _triggerAdditionalCommandCheck;
+        set => SetField(ref _triggerAdditionalCommandCheck, value);
     }
 
     public TriggerCheck TriggerCheck

@@ -64,7 +64,7 @@ public static class ApplicationConstants
 
     public const string DefaultModel = "default.onnx";
     public const string ShowOnly = ""; 
-    public const bool EasyMode = true;
+    public const bool EasyMode = false;
 
     public static Visibility EasyModeHidden => EasyMode ? Visibility.Collapsed : Visibility.Visible;
     public static string[] DisabledFeatures => EasyMode ? ["AimAssist", "AntiRecoil", "ASP2", "AimConfig", "ARConfig"] : [];

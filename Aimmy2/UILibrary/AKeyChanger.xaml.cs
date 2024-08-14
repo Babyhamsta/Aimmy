@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Aimmy2.InputLogic.Contracts;
 using Aimmy2.InputLogic.Gamepad.Interaction;
 using Other;
@@ -13,7 +14,10 @@ namespace Aimmy2.UILibrary
     {
         public AKeyChanger(string text, string keybind)
         {
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C"));
+            BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF"));
             InitializeComponent();
+            DataContext = this;
             SetContent(text, keybind);
         }
 

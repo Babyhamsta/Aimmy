@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Class;
@@ -117,12 +118,11 @@ public partial class MainWindow
             AppConfig.Current.BindingSettings.AimKeybind);
         bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey),
             AppConfig.Current.BindingSettings.TriggerKey);
-
+        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey),
+            AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey);
         bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.RapidFireKey),
             AppConfig.Current.BindingSettings.RapidFireKey);
 
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ActiveToggleKey),
-            AppConfig.Current.BindingSettings.ActiveToggleKey);
         bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind),
             AppConfig.Current.BindingSettings.SecondAimKeybind);
         bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind),
@@ -179,27 +179,18 @@ public partial class MainWindow
                 LoadLastModel();
             };
         });
-        //TopCenterGrid.AddToggleWithKeyBind("Global Active", toggle =>
-        //{
-        //    toggle.BindTo(() => AppConfig.Current.ToggleState.GlobalActive);
-        //    toggle.Changed += (s, e) => SetActive(e.Value);
-        //}, bindingManager);
-
-        TopCenterGrid.AddToggle("Global Active", toggle =>
+        TopCenterGrid.AddToggleWithKeyBind("Global Active", bindingManager, toggle =>
         {
+            toggle.BindTo(() => AppConfig.Current.ToggleState.GlobalActive);
             toggle.Changed += (s, e) => SetActive(e.Value);
-        }).BindTo(() => AppConfig.Current.ToggleState.GlobalActive);
-        TopCenterGrid.AddKeyChanger(
-            nameof(AppConfig.Current.BindingSettings.ActiveToggleKey),
-            () => AppConfig.Current.BindingSettings.ActiveToggleKey, bindingManager);
-
+        }, border => border.Background = Brushes.Transparent);
     }
 
     public void SetActive(bool active)
     {
         AppConfig.Current.ToggleState.GlobalActive = active;
         var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
-        var themeActive = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
+        var themeActive = ThemePalette.ThemeForActive;
         ApplicationConstants.Theme = active ? themeActive : theme;
     }
 
@@ -332,14 +323,6 @@ public partial class MainWindow
     {
         switch (bindingId)
         {
-            case nameof(AppConfig.Current.BindingSettings.ActiveToggleKey):
-                if (IsModelLoaded)
-                {
-                    AppConfig.Current.ToggleState.GlobalActive = !AppConfig.Current.ToggleState.GlobalActive;
-                    //UpdateToggleUI(uiManager.G_Active!, !uiManager.G_Active.Checked);
-                }
-
-                break;
             case nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind):
                 if (AppConfig.Current.ToggleState.EnableModelSwitchKeybind)
                     if (!FileManager.CurrentlyLoadingModel)
@@ -355,8 +338,8 @@ public partial class MainWindow
 
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
                 AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
-                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.DynamicFOVSize);
-                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.DynamicFOVSize);
+                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.ActualFovSize);
+                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.ActualFovSize);
                 break;
 
 
@@ -408,8 +391,8 @@ public partial class MainWindow
 
         var keybind = AppConfig.Current.BindingSettings;
         AimAssist.AddTitle("Aim Assist", true);
-        AimAssist.AddToggle("Aim Assist").BindTo(() => AppConfig.Current.ToggleState.AimAssist);
-
+        AimAssist.AddToggleWithKeyBind("Aim Assist", bindingManager).BindTo(() => AppConfig.Current.ToggleState.AimAssist).BindActiveStateColor(AimAssist);
+        
 
         AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AimKeybind), () => keybind.AimKeybind, bindingManager);
         AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind), () => keybind.SecondAimKeybind, bindingManager);
@@ -461,7 +444,7 @@ public partial class MainWindow
         #region Rapid
 
         RapidFire.AddTitle("Rapid Fire", true);
-        RapidFire.AddToggle("Rapid Fire").BindTo(() => AppConfig.Current.ToggleState.RapidFire);
+        RapidFire.AddToggleWithKeyBind("Rapid Fire", bindingManager).BindTo(() => AppConfig.Current.ToggleState.RapidFire).BindActiveStateColor(RapidFire);
         RapidFire.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.RapidFireKey), () => keybind.RapidFireKey, bindingManager);
         RapidFire.AddSeparator();
         RapidFire.Visibility = GetVisibilityFor(nameof(RapidFire));
@@ -471,10 +454,12 @@ public partial class MainWindow
         #region Trigger Bot
 
         TriggerBot.AddTitle("Auto Trigger", true);
-        TriggerBot.AddToggle("Auto Trigger").BindTo(() => AppConfig.Current.ToggleState.AutoTrigger);
-        TriggerBot.AddToggle("TEST Charge Mode").BindTo(() => AppConfig.Current.ToggleState.AutoTriggerCharged);
 
-        TriggerBot.AddKeyChanger("Trigger Additional Send", () => keybind.TriggerAdditionalSend, bindingManager);
+        TriggerBot.AddToggleWithKeyBind("Auto Trigger", bindingManager).BindTo(() => AppConfig.Current.ToggleState.AutoTrigger).BindActiveStateColor(TriggerBot);
+        
+        TriggerBot.AddToggleWithKeyBind("Charge Mode", bindingManager, null, b => b.ToolTip = "If this is on, mouse will be clicked down when enemy is detected and trigger key is hold and then released when configured area is reached")
+            .BindTo(() => AppConfig.Current.ToggleState.AutoTriggerCharged);
+        
 
         TriggerBot.AddDropdown("Trigger Check", AppConfig.Current.DropdownState.TriggerCheck,
             check => AppConfig.Current.DropdownState.TriggerCheck = check);
@@ -508,6 +493,15 @@ public partial class MainWindow
             slider.ToolTip = "The minimum time the trigger key must be held down before the trigger is executed";
         }).BindTo(() => AppConfig.Current.SliderSettings.TriggerKeyMin);
         TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.00, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
+
+
+        TriggerBot.AddKeyChanger("Trigger Additional Command", () => keybind.TriggerAdditionalSend, bindingManager);
+
+        TriggerBot.AddDropdown("Trigger Additional Command Check", AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck,
+            check => AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck = check);
+        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey), () => keybind.TriggerAdditionalCommandKey, bindingManager);
+
+
         TriggerBot.AddSeparator();
         TriggerBot.Visibility = GetVisibilityFor(nameof(TriggerBot));
 
@@ -516,7 +510,7 @@ public partial class MainWindow
         #region Anti Recoil
 
         AntiRecoil.AddTitle("Anti Recoil", true);
-        AntiRecoil.AddToggle("Anti Recoil").BindTo(() => AppConfig.Current.ToggleState.AntiRecoil);
+        AntiRecoil.AddToggleWithKeyBind("Anti Recoil", bindingManager).BindTo(() => AppConfig.Current.ToggleState.AntiRecoil).BindActiveStateColor(AntiRecoil);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), "Left", bindingManager);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), "Oem6", bindingManager);
         AntiRecoil.AddSlider("Hold Time", "Milliseconds", 1, 1, 1, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.HoldTime);
@@ -533,7 +527,7 @@ public partial class MainWindow
 
         // Anti-Recoil Config
         ARConfig.AddTitle("Anti Recoil Config", true);
-        ARConfig.AddToggle("Enable Gun Switching Keybind").BindTo(() => AppConfig.Current.ToggleState.EnableGunSwitchingKeybind);
+        ARConfig.AddToggleWithKeyBind("Enable Gun Switching Keybind", bindingManager).BindTo(() => AppConfig.Current.ToggleState.EnableGunSwitchingKeybind).BindActiveStateColor(ARConfig);
         ARConfig.AddButton("Save Anti Recoil Config").Reader.Click += (s, e) =>
         {
             var saveFileDialog = new SaveFileDialog
@@ -564,8 +558,8 @@ public partial class MainWindow
         #region FOV Config
 
         FOVConfig.AddTitle("FOV Config", true);
-        FOVConfig.AddToggle("FOV").BindTo(() => AppConfig.Current.ToggleState.FOV);
-        FOVConfig.AddToggle("Dynamic FOV").BindTo(() => AppConfig.Current.ToggleState.DynamicFOV);
+        FOVConfig.AddToggleWithKeyBind("FOV", bindingManager).BindTo(() => AppConfig.Current.ToggleState.FOV).BindActiveStateColor(FOVConfig);
+        FOVConfig.AddToggleWithKeyBind("Dynamic FOV", bindingManager).BindTo(() => AppConfig.Current.ToggleState.DynamicFOV);
         FOVConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), () => keybind.DynamicFOVKeybind, bindingManager);
         FOVConfig.AddColorChanger("FOV Color").BindTo(() => AppConfig.Current.ColorState.FOVColor);
 
@@ -581,10 +575,10 @@ public partial class MainWindow
         #region ESP Config
 
         ESPConfig.AddTitle("ESP Config", true);
-        ESPConfig.AddToggle("Show Detected Player").BindTo(() => AppConfig.Current.ToggleState.ShowDetectedPlayer);
-        ESPConfig.AddToggle("Show Trigger Head Area").BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea);
-        ESPConfig.AddToggle("Show AI Confidence").BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
-        ESPConfig.AddToggle("Show Tracers").BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
+        ESPConfig.AddToggleWithKeyBind("Show Detected Player", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowDetectedPlayer).BindActiveStateColor(ESPConfig);
+        ESPConfig.AddToggleWithKeyBind("Show Trigger Head Area", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea);
+        ESPConfig.AddToggleWithKeyBind("Show AI Confidence", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
+        ESPConfig.AddToggleWithKeyBind("Show Tracers", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
 
         ESPConfig.AddDropdown("Drawing Method", AppConfig.Current.DropdownState.OverlayDrawingMethod, v => AppConfig.Current.DropdownState.OverlayDrawingMethod = v);
 
@@ -805,7 +799,7 @@ public partial class MainWindow
             if (Config != null)
                 Config.ThemeName = palette.Name;
         });
-        var themeOnActive = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
+        var themeOnActive = ThemePalette.ThemeForActive;
         SettingsConfig.AddDropdown("Theme when active", themeOnActive, ThemePalette.All, palette =>
         {
             if (Config != null)

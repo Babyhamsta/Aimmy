@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿using Aimmy2.Config;
+using System.Windows.Media;
 
 namespace Aimmy2.Types;
 
@@ -18,6 +19,8 @@ public class ThemePalette
     {
         return Name;
     }
+
+    public static ThemePalette ThemeForActive => All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName) ?? ThemePalette.GreenPalette;
 
     public static ThemePalette PurplePalette = new ThemePalette("Purple")
     {
