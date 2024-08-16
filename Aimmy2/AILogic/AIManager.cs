@@ -14,6 +14,7 @@ using Visuality;
 
 public class AIManager : IDisposable
 {
+    public static AIManager Instance { get; private set; }
     private readonly IList<IAction> _actions;
     private bool _isAiLoopRunning;
     private Thread _aiLoopThread;
@@ -50,6 +51,7 @@ public class AIManager : IDisposable
 
     public AIManager(ICapture screenCapture, IPredictionLogic predictionLogic, IList<IAction> actions)
     {
+        Instance = this;
         ImageCapture = screenCapture;
         PredictionLogic = predictionLogic;
         _actions = actions.Apply(a =>

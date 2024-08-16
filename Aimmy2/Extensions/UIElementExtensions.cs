@@ -321,6 +321,7 @@ public static class UIElementExtensions
                 return;
             keyChanger.InUpdateMode = true;
             keyChanger.SetContent("...");
+            keyChanger.ToolTip = "Press any key to set the binding";
             bindingManager.StartListeningForBinding(title);
 
             // Event handler for setting the binding
@@ -330,6 +331,7 @@ public static class UIElementExtensions
                 if (bindingId == title)
                 {
                     keyChanger.SetContent(key);
+                    keyChanger.ToolTip = string.Empty;
                     AppConfig.Current.BindingSettings[bindingId] = key;
                     bindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
                     Task.Delay(300).ContinueWith(_ => keyChanger.InUpdateMode = false);

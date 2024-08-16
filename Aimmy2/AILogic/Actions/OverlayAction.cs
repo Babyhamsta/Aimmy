@@ -18,7 +18,6 @@ public class OverlayAction : BaseAction
     {
         if (AppConfig.Current.ToggleState.FOV)
         {
-            FOV.Instance.Area = ImageCapture.GetCaptureArea();
             _ = FOV.Instance.UpdateStrictEnclosure();
         }
         if (Active)

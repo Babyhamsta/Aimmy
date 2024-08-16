@@ -14,7 +14,6 @@ namespace Visuality
     /// </summary>
     public partial class FOV : Window
     {
-        public Rectangle Area { get; set; } = Screen.PrimaryScreen.Bounds;
 
         public static FOV Instance { get; private set; }
         protected override void OnSourceInitialized(EventArgs e)
@@ -35,13 +34,16 @@ namespace Visuality
         {
             await Application.Current.Dispatcher.BeginInvoke(() =>
             {
+                var targetScreen = AIManager.Instance?.ImageCapture?.Screen ?? Screen.PrimaryScreen;
+                var area = AIManager.Instance?.ImageCapture?.GetCaptureArea() ?? Screen.PrimaryScreen.Bounds;
+                
                 var cursorPosition = WinAPICaller.GetCursorPosition();
                 
-                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - Area.Left : Area.Width / 2;
-                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - Area.Top : Area.Height / 2;
+                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
+                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
 
-                var centerX = Area.Left + targetX;
-                var centerY = Area.Top + targetY;
+                var centerX = area.Left + targetX;
+                var centerY = area.Top + targetY;
 
                 FOVStrictEnclosure.Margin = new Thickness(
                     Convert.ToInt16(centerX / WinAPICaller.scalingFactorX) - 320,
