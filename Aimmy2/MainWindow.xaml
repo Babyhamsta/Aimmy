@@ -29,16 +29,21 @@
                       CaptionHeight="0" />
     </WindowChrome.WindowChrome>
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="boolToVis"></BooleanToVisibilityConverter>
         </Grid.Resources>
         <Border x:Name="MainBorder"
-                CornerRadius="5,5,5,5"
+                CornerRadius="5,5,0,0"
                 BorderBrush="Black"
                 Background="{StaticResource Background}"
                 BorderThickness="1,1,1,1">
 
             <Grid>
+                
                 <Grid x:Name="Topbar"
                       VerticalAlignment="Top"
                       Height="50">
@@ -56,6 +61,16 @@
                                           FillRule="NonZero" />
                         </Path.Data>
                     </Path>
+                    <Menu Cursor="Hand" HorizontalAlignment="Left">
+                        <MenuItem>
+                            <MenuItem Header="Save as quick config" Click="MenuItem_OnClick" />
+                            <MenuItem Header="Save config as..." Click="MenuItemSaveAs_OnClick" />
+                            
+                            <Separator/>
+                            <MenuItem x:Name="MenuItemOpenCfg" Header="Open quick config"></MenuItem>
+                            <MenuItem Header="Open other config..." Click="OpenConfig_CLick"/>
+                        </MenuItem>
+                    </Menu>
                     <Label Content="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
                            HorizontalAlignment="Left"
                            Margin="45,0,0,0"
@@ -646,5 +661,25 @@
                 </ScrollViewer>
             </Grid>
         </Border>
+        <StatusBar Background="{StaticResource Background}" Grid.Row="1">
+            <StatusBarItem Cursor="Hand" Foreground="White" Margin="15,5,0, 5" HorizontalAlignment="Left" >
+                <Button BorderBrush="Transparent" FontSize="11" Background="Transparent" Click="OpenConfig_CLick" Content="{Binding Config.Path}" Foreground="White" />
+            </StatusBarItem>
+            <StatusBarItem Cursor="Hand" Foreground="White" Margin="0,5,15, 5" HorizontalAlignment="Right" >
+                <Menu Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="White" Height="20">
+                    <MenuItem FontSize="11" Header="default.onnx" VerticalAlignment="Top" Height="20">
+                        <MenuItem Header="_Bold"
+                        />
+                        <MenuItem Header="_Italic" IsCheckable="True"
+                        />
+                        <Separator/>
+                        <MenuItem Header="I_ncrease Font Size"
+                        />
+                        <MenuItem Header="_Decrease Font Size"
+                        />
+                    </MenuItem>
+                </Menu>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </visuality:BaseDialog>

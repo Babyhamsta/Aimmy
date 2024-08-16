@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Aimmy2;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
 using Color = System.Windows.Media.Color;
@@ -39,9 +40,11 @@ namespace Visuality
 
         private void WriteJSON()
         {
-            AppConfig.Current.Save($"bin\\configs\\{ConfigNameTextbox.Text}.cfg");
+            var path = $"bin\\configs\\{ConfigNameTextbox.Text}.cfg";
+            AppConfig.Current.Save(path);
             new NoticeBar("Config has been saved to bin/configs.", 4000).Show();
             Close();
+            MainWindow.Instance?.LoadConfig(path);
         }
 
         private void DownloadableModelChecker_Click(object sender, RoutedEventArgs e)

@@ -223,7 +223,7 @@ public static class UIElementExtensions
     {
         var border = owner.Add<Border>(p =>
         {
-            p.MinWidth = 200;
+            p.MinWidth = 220;
             p.Background = new SolidColorBrush(Color.FromArgb(63, 60, 60, 60));
             p.BorderBrush = new SolidColorBrush(Color.FromArgb(63, 255, 255, 255));
             p.BorderThickness = new Thickness(1, 0, 1, 0);

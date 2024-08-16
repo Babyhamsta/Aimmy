@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel;
 using System.IO;
-using System.Text.Json;
 using System.Windows;
 using Aimmy2.AILogic;
 using Aimmy2.InputLogic.HidHide;
 using Aimmy2.Types;
+using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 
 namespace Aimmy2.Config;
@@ -13,7 +14,12 @@ public class AppConfig : BaseSettings
 {
     public const string DefaultConfigPath = "bin\\configs\\Default.cfg";
 
-    public string? Path;
+    [JsonIgnore]
+    public string? Path
+    {
+        get => _path;
+        set => SetField(ref _path, value);
+    }
 
     public static AppConfig Current { get; private set; }
 
@@ -21,6 +27,7 @@ public class AppConfig : BaseSettings
     
     public string LastLoadedConfig = "N/A";
     private CaptureSource _captureSource = AILogic.CaptureSource.MainScreen();
+    private string? _path;
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     
     public string ThemeName { get; set; } = ThemePalette.PurplePalette.Name;

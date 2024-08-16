@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Class;
@@ -18,6 +19,7 @@ using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
 using InputLogic;
+using Microsoft.Xaml.Behaviors.Core;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
 using Other;
@@ -34,6 +36,8 @@ namespace Aimmy2;
 public partial class MainWindow
 {
     #region Main Variables
+
+    public static MainWindow? Instance => Application.Current.MainWindow as MainWindow;
 
     private bool _uiCreated;
     private InputBindingManager? bindingManager;
@@ -146,6 +150,17 @@ public partial class MainWindow
 
         bindingManager.OnBindingPressed += BindingOnKeyPressed;
         bindingManager.OnBindingReleased += BindingOnKeyReleased;
+
+        MenuItemOpenCfg.Items.Clear();
+        foreach (var item in ConfigsListBox.Items)
+        {
+            MenuItemOpenCfg.Items.Add(new MenuItem
+            {
+                Header = item,
+                Command = new ActionCommand(() => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), item.ToString())))
+            });
+        }
+
         _uiCreated = true;
     }
 
@@ -222,14 +237,13 @@ public partial class MainWindow
     {
         fileManager.InQuittingState = true;
         FileManager.AIManager?.Dispose();
-
-
+        GamepadManager.Dispose();
+        
         FOV.Instance?.Close();
 
         if (AppConfig.Current.DropdownState.MouseMovementMethod == MouseMovementMethod.LGHUB) LGMouse.Close();
 
         AppConfig.Current.Save();
-        GamepadManager.Dispose();
         Application.Current.Shutdown();
     }
 
@@ -378,6 +392,7 @@ public partial class MainWindow
     private void LoadAimMenu()
     {
         AimAssist.RemoveAll();
+        RapidFire.RemoveAll();
         AimConfig.RemoveAll();
         TriggerBot.RemoveAll();
         AntiRecoil.RemoveAll();
@@ -892,9 +907,9 @@ public partial class MainWindow
         try
         {
             Task models = FileManager.RetrieveAndAddFiles(
-                "https://api.github.com/repos/Babyhamsta/Aimmy/contents/models", "bin\\models", AvailableModels);
+                "https://api.github.com/repos/fgilde/AI-Ming/contents/models", "bin\\models", AvailableModels);
             Task configs = FileManager.RetrieveAndAddFiles(
-                "https://api.github.com/repos/Babyhamsta/Aimmy/contents/configs", "bin\\configs", AvailableConfigs);
+                "https://api.github.com/repos/fgilde/AI-Ming/contents/configs", "bin\\configs", AvailableConfigs);
 
             await Task.WhenAll(models, configs);
         }
@@ -938,7 +953,7 @@ public partial class MainWindow
 
     #region Config Loader
 
-    private void LoadConfig(string path = AppConfig.DefaultConfigPath, bool loading_from_configlist = false)
+    internal void LoadConfig(string path = AppConfig.DefaultConfigPath, bool loading_from_configlist = false)
     {
         AppConfig.Load(path);
         if (loading_from_configlist)
@@ -1032,5 +1047,28 @@ public partial class MainWindow
     private void ClearLogs_Click(object sender, RoutedEventArgs e)
     {
         OutputTextBox.Clear();
+    }
+
+    private void MenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        new ConfigSaver().ShowDialog();
+    }
+
+    private void MenuItemSaveAs_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dlg = new SaveFileDialog() { Filter = "Configuration File (*.cfg) | *.cfg" };
+        if (dlg.ShowDialog() == true)
+        {
+            AppConfig.Current.Save(dlg.FileName);
+        }
+    }
+
+    private void OpenConfig_CLick(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog() { Filter = "Configuration File (*.cfg) | *.cfg" };
+        if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            LoadConfig(dlg.FileName);
+        }
     }
 }
