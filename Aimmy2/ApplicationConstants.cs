@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
 using Aimmy2.Types;
@@ -57,6 +58,9 @@ public static class ApplicationConstants
     //public const string ApplicationInfo = "Aimmy is free, and will never be for sale.";
     //public const string ApplicationSlogan = "Aimmy - Universal Second Eye";
 
+    public static string ApplicationVersionStr => $"v{ApplicationVersion.ToString()}";
+
+    private static Version? ApplicationVersion => typeof(ApplicationConstants).Assembly.GetName().Version;
 
     public static string ApplicationName => Names[random.Next(Names.Length)];
     public static string ApplicationInfo => Infos[random.Next(Infos.Length)];

@@ -603,7 +603,7 @@
                                    FontSize="15" />
                             <Label x:Name="AboutDesc"
                                    Foreground="White"
-                                   Content="v2.1.5"
+                                   Content="{x:Static aimmy2:ApplicationConstants.ApplicationVersionStr}"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
                                    VerticalContentAlignment="Center"
                                    Padding="0,0,0,0"
