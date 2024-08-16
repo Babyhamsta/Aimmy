@@ -60,6 +60,7 @@ public class AIManager : IDisposable
         NotifyLoaded(true);
 
         _isAiLoopRunning = true;
+        _= SetActionsState(false);
         _aiLoopThread = new Thread(AiLoop);
         _aiLoopThread.Start();
     }
@@ -85,7 +86,7 @@ public class AIManager : IDisposable
                 if(_pausedNotified)
                 {
                     _pausedNotified = false;
-                    await Task.WhenAll(_actions.Select(a => a.OnResume()));
+                    await SetActionsState(false);
                 }
                 var area = ImageCapture.GetCaptureArea();
 
@@ -103,11 +104,16 @@ public class AIManager : IDisposable
             else if (!_pausedNotified)
             {
                 _pausedNotified = true;
-                await Task.WhenAll(_actions.Select(a => a.OnPause()));
+                await SetActionsState(true);
 
             }
             await Task.Delay(1);
         }
+    }
+
+    private async Task SetActionsState(bool paused)
+    {
+        await Task.WhenAll(_actions.Select(a => paused ? a.OnPause() : a.OnResume()));
     }
 
 

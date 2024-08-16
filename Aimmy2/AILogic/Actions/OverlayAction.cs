@@ -38,6 +38,13 @@ public class OverlayAction : BaseAction
         return Task.CompletedTask;
     }
 
+    public override Task OnResume()
+    {
+        FOV.Instance?.MoveToScreenCenter(ImageCapture.Screen);
+        _playerOverlay?.MoveToScreenCenter(ImageCapture.Screen);
+        return base.OnResume();
+    }
+
     public override Task OnPause()
     {
         DisableOverlay();

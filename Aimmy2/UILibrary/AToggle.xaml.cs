@@ -10,6 +10,7 @@ using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using System.Reflection;
 using System.Windows.Controls;
+using Aimmy2.Config;
 using Aimmy2.Extensions;
 
 namespace Aimmy2.UILibrary
@@ -170,10 +171,22 @@ namespace Aimmy2.UILibrary
                 {
                     title.LabelTitle.Foreground = isChecked ? new SolidColorBrush(themeForActive.AccentColor) : Brushes.White;
                 }
-                panel.Background = isChecked ? new SolidColorBrush(themeForActive.MainColor) : Brushes.Transparent;
+
+                var solidColorBrush = new SolidColorBrush(themeForActive.MainColor)
+                {
+                    Opacity = AppConfig.Current.ToggleState.GlobalActive ? 1 : 0.35
+                };
+                panel.Background = isChecked ? solidColorBrush : Brushes.Transparent;
             }
             SetColor(Checked);
             Changed += (s, e) => SetColor(e.Value);
+            AppConfig.Current.ToggleState.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(AppConfig.Current.ToggleState.GlobalActive))
+                {
+                    SetColor(Checked);
+                }
+            };
         }
     }
 }

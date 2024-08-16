@@ -2,6 +2,7 @@
 using Class;
 using System.Drawing;
 using System.Windows.Forms;
+using Visuality;
 
 namespace Aimmy2.AILogic;
 
@@ -9,14 +10,14 @@ public class ScreenCapture : ICapture
 {
     private Bitmap? _screenCaptureBitmap;
     private Graphics? _graphics;
-    private readonly Screen _screen;
+    public Screen Screen { get; }
 
     public ScreenCapture(): this(Screen.PrimaryScreen!)
     {}
 
     public ScreenCapture(Screen screen)
     {
-        _screen = screen;
+        Screen = screen;
     }
 
     public ScreenCapture(int screenIndex): this(Screen.AllScreens[screenIndex])
@@ -34,13 +35,13 @@ public class ScreenCapture : ICapture
             _graphics = Graphics.FromImage(_screenCaptureBitmap);
         }
 
-        _graphics.CopyFromScreen(_screen.Bounds.Left + detectionBox.Left, _screen.Bounds.Top + detectionBox.Top, 0, 0, detectionBox.Size);
+        _graphics.CopyFromScreen(Screen.Bounds.Left + detectionBox.Left, Screen.Bounds.Top + detectionBox.Top, 0, 0, detectionBox.Size);
 
         return _screenCaptureBitmap;
     }
 
     public Rectangle GetCaptureArea()
     {
-        return _screen.Bounds;
+        return Screen.Bounds;
     }
 }

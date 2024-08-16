@@ -4,6 +4,8 @@ using Class;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Reflection.Metadata;
+using System.Windows.Forms;
 
 namespace Aimmy2.AILogic;
 
@@ -21,12 +23,14 @@ public class ProcessCapture : ICapture
             throw new ArgumentException("Process not running");
         }
         _processId = processId;
+        Screen = GetProcessTargetScreen();
     }
 
     public Bitmap Capture(Rectangle detectionBox)
     {
-        var process = Process.GetProcessById(_processId);
-        var handle = process.MainWindowHandle;
+        var handle = GetProcessWindowHandle();
+
+        Screen = GetProcessTargetScreen(handle);
 
         // Get window dimensions
         var windowRect = WinAPICaller.GetWindowRectangle(handle);
@@ -42,6 +46,21 @@ public class ProcessCapture : ICapture
 
         return bitmap;
     }
+    
+    private Screen GetProcessTargetScreen(IntPtr? handle = null)
+    {
+        handle ??= GetProcessWindowHandle();
+        return Screen.FromHandle(handle.Value);
+    }
+
+    private IntPtr GetProcessWindowHandle()
+    {
+        var process = Process.GetProcessById(_processId);
+        var handle = process.MainWindowHandle;
+        return handle;
+    }
+
+    public Screen Screen { get; private set; }
 
     public Rectangle GetCaptureArea()
     {

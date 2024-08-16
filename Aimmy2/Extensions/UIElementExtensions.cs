@@ -15,17 +15,58 @@ namespace Aimmy2.Extensions;
 
 public static class UIElementExtensions
 {
+    public static void MoveToScreenCenter(this Window window, System.Windows.Forms.Screen screen)
+    {
+        if (!window.CheckAccess())
+        {
+            window.Dispatcher.Invoke(() => window.MoveToScreenCenter(screen));
+            return;
+        }
+        // Convert the window size to pixels, because WPF uses device-independent units
+        double dpiX, dpiY;
+        var source = PresentationSource.FromVisual(window);
+        if (source?.CompositionTarget != null)
+        {
+            dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
+            dpiY = 96.0 * source.CompositionTarget.TransformToDevice.M22;
+        }
+        else
+        {
+            dpiX = 96.0;
+            dpiY = 96.0;
+        }
+
+        // Get the size of the window in pixels
+        double windowWidth = window.Width * dpiX / 96.0;
+        double windowHeight = window.Height * dpiY / 96.0;
+
+        // Calculate the new top-left position to center the window on the given screen
+        double newLeft = screen.WorkingArea.Left + (screen.WorkingArea.Width - windowWidth) / 2;
+        double newTop = screen.WorkingArea.Top + (screen.WorkingArea.Height - windowHeight) / 2;
+
+        // Move the window
+        window.Left = newLeft;
+        window.Top = newTop;
+    }
+
     public static T InitWith<T>(this T component, Action<T>? cfg) where T : UIElement
     {
         if (cfg != null)
         {
-            DependencyPropertyChangedEventHandler visibleChangeHandler = null;
-            visibleChangeHandler = (s, e) => component.Dispatcher.BeginInvoke(() =>
+            if(component.IsVisible)
             {
-                component.IsVisibleChanged -= visibleChangeHandler;
                 cfg.Invoke(component);
-            });
-            component.IsVisibleChanged += visibleChangeHandler;
+            }
+            else
+            {
+                DependencyPropertyChangedEventHandler visibleChangeHandler = null;
+                visibleChangeHandler = (s, e) => component.Dispatcher.BeginInvoke(() =>
+                {
+                    component.IsVisibleChanged -= visibleChangeHandler;
+                    cfg.Invoke(component);
+                });
+                component.IsVisibleChanged += visibleChangeHandler;
+            }
         }
 
         return component;

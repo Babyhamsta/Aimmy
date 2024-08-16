@@ -2,10 +2,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Class;
@@ -63,6 +61,7 @@ public partial class MainWindow
         Console.SetOut(writer);
         AppConfig.ConfigLoaded += (s, e) => CreateUI();
         Console.WriteLine("Init UI");
+        Config = AppConfig.Load();
 
         try
         {
@@ -71,7 +70,6 @@ public partial class MainWindow
         catch
         {}
 
-        Config = AppConfig.Load();
 
 
         DataContext = this;
