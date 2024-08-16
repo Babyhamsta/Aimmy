@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{205C992C-B78C-4208-B7DD-ADC3FA475DC2}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		build.ps1 = build.ps1
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher", "Launcher\Launcher.csproj", "{8C0346F1-BCDF-4E74-8F8C-9E53980F86BC}"

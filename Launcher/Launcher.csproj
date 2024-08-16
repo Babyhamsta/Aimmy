@@ -31,4 +31,8 @@
     <Resource Include="CH.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
 </Project>
