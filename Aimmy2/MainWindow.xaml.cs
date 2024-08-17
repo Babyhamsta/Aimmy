@@ -508,7 +508,7 @@ public partial class MainWindow
         TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.00, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
 
 
-        TriggerBot.AddKeyChanger("Trigger Additional Command", () => keybind.TriggerAdditionalSend, bindingManager);
+        TriggerBot.AddKeyChanger("Trigger Additional Send", () => keybind.TriggerAdditionalSend, bindingManager);
 
         TriggerBot.AddDropdown("Trigger Additional Command Check", AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck,
             check => AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck = check);

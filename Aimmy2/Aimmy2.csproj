@@ -31,6 +31,7 @@
     <Platforms>AnyCPU;x64</Platforms>	  <Product></Product>
 	  <Title></Title>
 	  <AssemblyName>TotallyNotAimmyV2</AssemblyName>
+    <Version>1.0.1.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
