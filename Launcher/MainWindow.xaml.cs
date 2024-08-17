@@ -88,7 +88,7 @@ namespace Launcher
             process.Start();
             process.WaitForInputIdle();
 
-            await Task.Delay(2500);
+            await Task.Delay(3000);
 
             await Dispatcher.Invoke(() =>
             {
