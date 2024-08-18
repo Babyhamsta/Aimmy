@@ -1,0 +1,34 @@
+name: Create Release ZIP
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up PowerShell
+      uses: actions/setup-powershell@v2
+      with:
+        powershell-version: '7.x'
+
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0.x' # Passe die Version an dein Projekt an
+
+    - name: Run build script
+      run: pwsh -File ./build.ps1 -version ${{ github.event.release.tag_name }}
+
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./Aimmy2/bin/Release/*.zip
+        asset_name: ${{ github.event.release.tag_name }}.zip
+        asset_content_type: application/zip
