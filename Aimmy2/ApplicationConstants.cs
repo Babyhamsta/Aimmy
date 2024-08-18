@@ -8,6 +8,8 @@ namespace Aimmy2;
 
 public static class ApplicationConstants
 {
+    public const string RepoOwner = "fgilde";
+    public const string RepoName = "AI-Ming";
     private static ThemePalette _theme = ThemePalette.DarkPalette;
     private static readonly string[] Names =
     {
@@ -62,7 +64,7 @@ public static class ApplicationConstants
 
     public static string ApplicationVersionStr => $"v{ApplicationVersion.ToString()}";
 
-    private static Version? ApplicationVersion => typeof(ApplicationConstants).Assembly.GetName().Version;
+    public static Version? ApplicationVersion => typeof(ApplicationConstants).Assembly.GetName().Version;
 
     public static string ApplicationName => Names[random.Next(Names.Length)];
     public static string ApplicationInfo => Infos[random.Next(Infos.Length)];

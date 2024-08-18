@@ -907,9 +907,9 @@ public partial class MainWindow
         try
         {
             Task models = FileManager.RetrieveAndAddFiles(
-                "https://api.github.com/repos/fgilde/AI-Ming/contents/models", "bin\\models", AvailableModels);
+                $"https://api.github.com/repos/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/contents/models", "bin\\models", AvailableModels);
             Task configs = FileManager.RetrieveAndAddFiles(
-                "https://api.github.com/repos/fgilde/AI-Ming/contents/configs", "bin\\configs", AvailableConfigs);
+                $"https://api.github.com/repos/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/contents/configs", "bin\\configs", AvailableConfigs);
 
             await Task.WhenAll(models, configs);
         }
@@ -1025,7 +1025,7 @@ public partial class MainWindow
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         var updateManager = new UpdateManager();
-        await updateManager.CheckForUpdate("v2.2.0");
+        await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion);
         updateManager.Dispose();
     }
 

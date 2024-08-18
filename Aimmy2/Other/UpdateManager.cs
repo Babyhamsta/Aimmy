@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using Aimmy2;
 using Visuality;
 
 namespace Other
@@ -16,28 +17,28 @@ namespace Other
             client = new HttpClient();
         }
 
-        public async Task CheckForUpdate(string currentVersion)
+        public async Task CheckForUpdate(Version currentVersion)
         {
             GithubManager githubManager = new();
-            var (latestVersion, latestZipUrl) = await githubManager.GetLatestReleaseInfo("Babyhamsta", "Aimmy");
+            var (latestVersion, latestZipUrl) = await githubManager.GetLatestReleaseInfo(ApplicationConstants.RepoOwner, ApplicationConstants.RepoName);
 
             if (string.IsNullOrEmpty(latestVersion) || string.IsNullOrEmpty(latestZipUrl))
             {
                 new NoticeBar("Failed to get latest release information from Github.", 5000).Show();
                 return;
             }
-            else
-            {
-                if (latestVersion == currentVersion)
-                {
-                    new NoticeBar("You are up to date.", 5000).Show();
-                    return;
-                }
 
-                new NoticeBar("An update was found, downloading the update from Github.", 5000).Show();
-                githubManager.Dispose();
-                await DoUpdate(latestZipUrl);
+            var latest = Version.Parse(latestVersion);
+
+            if (latest <= currentVersion)
+            {
+                new NoticeBar("You are up to date.", 5000).Show();
+                return;
             }
+
+            new NoticeBar("An update was found, downloading the update from Github.", 5000).Show();
+            githubManager.Dispose();
+            await DoUpdate(latestZipUrl);
         }
 
         private async Task DoUpdate(string latestZipUrl)
