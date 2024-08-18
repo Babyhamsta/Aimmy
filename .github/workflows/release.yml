@@ -15,7 +15,7 @@ jobs:
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: '6.0.x'  # Passe die Version an dein Projekt an
+        dotnet-version: '8.0.x' 
 
     - name: Run build script
       run: powershell -ExecutionPolicy Bypass -File ./build.ps1 -version ${{ github.event.release.tag_name }}
