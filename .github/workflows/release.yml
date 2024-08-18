@@ -6,16 +6,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-
-    - name: Set up PowerShell
-      uses: actions/setup-powershell@v2
-      with:
-        powershell-version: '7.x'
 
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v2
@@ -23,7 +18,7 @@ jobs:
         dotnet-version: '6.0.x' # Passe die Version an dein Projekt an
 
     - name: Run build script
-      run: pwsh -File ./build.ps1 -version ${{ github.event.release.tag_name }}
+      run: powershell -File ./build.ps1 -version ${{ github.event.release.tag_name }}
 
     - name: Upload release asset
       uses: actions/upload-release-asset@v1
