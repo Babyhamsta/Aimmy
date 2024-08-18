@@ -4,7 +4,7 @@ param(
 )
 # Git-Konfiguration
 git config user.email "fgilde@gmail.com"
-git config user.name "Florian Gilde"
+git config user.name "fgilde"
 
 # Call this script with "powershell -ExecutionPolicy Bypass -File .\build.ps1"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -82,6 +82,7 @@ function Replace-Version {
 # Update the version if needed
 $versionUpdated = $false
 $currentVersion = $currentVersion -replace '(^\s+|\s+$)','' -replace '\s+',' '
+$assemblyName = $assemblyName -replace '(^\s+|\s+$)','' -replace '\s+',' '
 $oldversion = $currentVersion
 if ($version) {
     $currentVersion = $version
