@@ -16,6 +16,8 @@ jobs:
 
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Stellt sicher, dass alle Branches und Tags vorhanden sind
 
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v2

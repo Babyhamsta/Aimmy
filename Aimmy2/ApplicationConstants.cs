@@ -12,12 +12,14 @@ public static class ApplicationConstants
     private static readonly string[] Names =
     {
         "AI-M ME Winehouse",
+        "AI-Machine",
         "Aim A.I. Little Higher",
         "AIM-Botox",
         "Drunken AIrcher",
         "AI'll Be Back",
         "AIM-Possible",
         "A.I.migo",
+        "AI-M King",
         "Aimmy",
         "Mousemovement Machine",
         "Micro AI-mbot",

@@ -129,6 +129,8 @@ if ($buildSucceeded) {
     Write-Host "Output directory compressed into $zipFileName in the Release folder."
 
     if ($versionUpdated) {
+        # Checkout to master branch
+        git checkout master
         # Commit and push the changes
         git add $csprojPath
         git commit -m "Updated version to $currentVersion"
