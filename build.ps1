@@ -106,7 +106,8 @@ if ($versionUpdated) {
 # Build the project
 $buildSucceeded = $true
 try {
-    dotnet build --configuration Release --no-incremental
+    # dotnet build --configuration Release --no-incremental
+    dotnet publish -r win-x64 -p:PublishSingleFile=true --self-contained false
 } catch {
     $buildSucceeded = $false
     Write-Host "Build failed. Reverting .csproj file to the old version."
@@ -114,7 +115,12 @@ try {
 }
 
 if ($buildSucceeded) {
-    $zipContent = Join-Path $outputDir "net8.0-windows"
+    $paths = @("net8.0-windows", "win-x64", "publish")
+    $zipContent = $outputDir
+    foreach ($path in $paths) {
+        $zipContent = Join-Path $zipContent $path
+    }
+
     # Define the zip file name and path
     $zipFileName = "$assemblyName`_$currentVersion.zip"
     $zipFileName  = $zipFileName -replace '(^\s+|\s+$)','' -replace '\s+',' '

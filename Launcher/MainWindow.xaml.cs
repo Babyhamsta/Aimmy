@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
+
 using System.Windows;
 using System.Windows.Input;
-using Aimmy2;
-using Aimmy2.Extensions;
-using dnlib.DotNet;
-using Visuality;
+using Vestris.ResourceLib;
 
 
 namespace Launcher
@@ -17,7 +17,43 @@ namespace Launcher
     {
         private static readonly Random _random = new Random();
         private string _status;
+        private bool _isInstallerMode;
+        private string _version;
+        private string? _installDirectory;
+        private string _subTitle = "Please wait...";
+        private bool _installing;
+        private bool _canClose = true;
         private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        public Visibility InstallerVisibility => IsInstallerMode ? Visibility.Visible : Visibility.Collapsed;
+        public bool IsInstallerMode
+        {
+            get => _isInstallerMode;
+            set {
+                if (SetField(ref _isInstallerMode, value))
+                {
+                    OnPropertyChanged(nameof(InstallerVisibility));
+                }
+            }
+        }
+
+        public bool CanClose
+        {
+            get => _canClose;
+            set => SetField(ref _canClose, value);
+        }
+
+        public bool Installing
+        {
+            get => _installing;
+            set => SetField(ref _installing, value);
+        }
+
+        public string SubTitle
+        {
+            get => _subTitle;
+            set => SetField(ref _subTitle, value);
+        }
 
         public string Status
         {
@@ -25,12 +61,25 @@ namespace Launcher
             set => SetField(ref _status, value);
         }
 
+        public string Version
+        {
+            get => _version;
+            set => SetField(ref _version, value);
+        }
+
+        public string InstallDirectory
+        {
+            get => _installDirectory ?? Path.GetDirectoryName(Environment.ProcessPath);
+            set => SetField(ref _installDirectory, value);
+        }
+
         public MainWindow()
         {
-            Title = ApplicationConstants.ApplicationName;
+            Title = "AI-M";
             InitializeComponent();
+            
             DataContext = this;
-            this.InitWith(w => Execute());
+            Task.Delay(400).ContinueWith(_ => Execute());
         }
 
 
@@ -39,31 +88,69 @@ namespace Launcher
             Status = "Search executable...";
             await Task.Delay(100);
             var exe = FindExe();
-            //ChangeAssemblyTitle(exe, ApplicationConstants.ApplicationName);
-            await RenameExe(exe);
-        }
-
-        private void ChangeAssemblyTitle(string assemblyPath, string newTitle)
-        {
-            Status = $"Change assembly title to {newTitle}";
-            var module = ModuleDefMD.Load(assemblyPath);
-
-            var assemblyTitleAttribute = module.CorLibTypes.GetTypeRef("System.Reflection", "AssemblyTitleAttribute");
-            var constructor = new MemberRefUser(module, ".ctor", MethodSig.CreateInstance(module.CorLibTypes.Void, module.CorLibTypes.String), assemblyTitleAttribute);
-
-            var newAttribute = new CustomAttribute(constructor);
-            newAttribute.ConstructorArguments.Add(new CAArgument(module.CorLibTypes.String, new UTF8String(newTitle)));
-
-            var existingTitleAttribute = module.Assembly.CustomAttributes.Find("System.Reflection.AssemblyTitleAttribute");
-            if (existingTitleAttribute != null)
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
             {
-                module.Assembly.CustomAttributes.Remove(existingTitleAttribute);
+                IsInstallerMode = true;
+                SubTitle = "Install";
+                Status = string.Empty;
             }
-            module.Assembly.CustomAttributes.Add(newAttribute);
-
-            module.Write(assemblyPath);
+            else
+            {
+                 ChangeResources(exe);
+                await Task.Delay(200);
+                await RenameExe(exe);
+            }
         }
 
+        private void ChangeResources(string exe)
+        {
+            try
+            {
+                string newName = GenerateRandomString(15).ToUpper();
+                var versionResource = new VersionResource();
+                versionResource.LoadFrom(exe);
+                Version = versionResource.FileVersion;
+                var resource = versionResource["StringFileInfo"];
+                var fi = resource as StringFileInfo;
+
+                foreach (var table in fi.Strings.Select(pair => pair.Value))
+                {
+                    table["CompanyName"] = newName;
+                    table["FileDescription"] = newName;
+                    table["InternalName"] = $"{newName}.dll";
+                    table["OriginalFilename"] = $"{newName}.dll";
+                    table["ProductName"] = newName;
+                }
+
+
+                versionResource.SaveTo(exe);
+
+            }
+            catch (Exception e)
+            {
+                Status = $"Error: {e.Message}";
+            }
+        }
+
+        public static Assembly LoadAssemblyViaStream(string assemblyLocation)
+        {
+            byte[] file = null;
+            int bufferSize = 1024;
+            using (FileStream fileStream = File.Open(assemblyLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    byte[] buffer = new byte[bufferSize];
+                    int readBytesCount = 0;
+                    while ((readBytesCount = fileStream.Read(buffer, 0, bufferSize)) > 0)
+                        memoryStream.Write(buffer, 0, readBytesCount);
+                    file = memoryStream.ToArray();
+                }
+            }
+
+            return Assembly.Load(file);
+        }
+        
 
         private string GenerateRandomString(int length = 8)
         {
@@ -95,7 +182,7 @@ namespace Launcher
             await Dispatcher.Invoke(() =>
             {
                 Close();
-                Application.Current.Shutdown();
+                System.Windows.Application.Current.Shutdown();
                 return Task.CompletedTask;
             });
         }
@@ -106,7 +193,7 @@ namespace Launcher
             var launcherExe = Process.GetCurrentProcess().MainModule.FileName;
             var currentDir = Path.GetDirectoryName(launcherExe);
 
-            var l = Directory.EnumerateFiles(currentDir, "*.exe").Where(x => x != launcherExe).ToList();
+            var l = Directory.EnumerateFiles(currentDir, "*.exe").Where(x => x != launcherExe && Path.GetFileName(x) != "createdump.exe").ToList();
             if(l.Count == 1)
                 return l[0];
             l = l.Where(n => Path.GetFileNameWithoutExtension(n).Length == 8).ToList();
@@ -119,6 +206,57 @@ namespace Launcher
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             DragMove();
+        }
+
+        private void Exit_OnClick(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void Minimize_OnClick(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void Install_Click(object sender, RoutedEventArgs e)
+        {
+            Installing = true;
+            CanClose = false;
+            FolderSelect.Visibility = Visibility.Collapsed;
+            ProgressBar.Visibility = Visibility.Visible;
+            Status = "Installing (Check and create Directory)...";
+            var dir = InstallDirectory;
+            try
+            {
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+            }
+            catch (Exception exception)
+            {
+                Status = $"Error: {exception.Message}";
+                return;
+            }
+            finally
+            {
+                Installing = false;
+            }
+        }
+
+        private void SelectDir_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new FolderBrowserDialog();
+            dlg.InitialDirectory = InstallDirectory;
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                InstallDirectory = dlg.SelectedPath;
+            }
+        }
+
+        private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
+        {
+            e.Cancel = !CanClose;
         }
     }
 }
