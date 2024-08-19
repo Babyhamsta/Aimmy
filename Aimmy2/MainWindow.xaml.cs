@@ -1024,9 +1024,25 @@ public partial class MainWindow
 
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
-        var updateManager = new UpdateManager();
-        await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion, true);
-        updateManager.Dispose();
+        try
+        {
+            CheckForUpdates.IsEnabled = false;
+            UpdateCheckStatusLabel.Content = "Checking for updates...";
+            await Task.Delay(500);
+            var updateManager = new UpdateManager();
+            var hasUpdate = await updateManager.CheckForUpdate();
+            UpdateCheckStatusLabel.Content = hasUpdate ? "Update available!" : "No update available";
+            if (!hasUpdate)
+            {
+                new NoticeBar("You are already on the latest version.", 5000).Show();
+            }
+
+            updateManager.Dispose();
+        }
+        finally
+        {
+            CheckForUpdates.IsEnabled = true;
+        }
     }
 
     #endregion Window Handling

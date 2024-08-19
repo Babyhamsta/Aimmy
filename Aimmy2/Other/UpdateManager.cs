@@ -26,31 +26,39 @@ namespace Other
             client = new HttpClient();
         }
 
-        public async Task CheckForUpdate(Version currentVersion, bool manuallyClicked)
+        public async Task<bool> CheckForUpdate()
         {
-            if (File.Exists(ScriptPath))
-                File.Delete(ScriptPath);
+            try
+            {
+                Version currentVersion = ApplicationConstants.ApplicationVersion;
+                if (File.Exists(ScriptPath))
+                    File.Delete(ScriptPath);
             
-            using GithubManager githubManager = new();
-            var (latestVersion, latestZipUrl) = await githubManager.GetLatestReleaseInfo(ApplicationConstants.RepoOwner, ApplicationConstants.RepoName);
-            UpdateUrl = latestZipUrl;
-            if (string.IsNullOrEmpty(latestVersion) || string.IsNullOrEmpty(latestZipUrl))
-            {
-                new NoticeBar("Failed to get latest release information from Github.", 5000).Show();
-                return;
-            }
+                using GithubManager githubManager = new();
+                var (latestVersion, latestZipUrl) = await githubManager.GetLatestReleaseInfo(ApplicationConstants.RepoOwner, ApplicationConstants.RepoName);
+                UpdateUrl = latestZipUrl;
+                if (string.IsNullOrEmpty(latestVersion) || string.IsNullOrEmpty(latestZipUrl))
+                {
+                    new NoticeBar("Failed to get latest release information from Github.", 5000).Show();
+                    return false;
+                }
 
-            var latest = Version.Parse(latestVersion);
-            NewVersion = latest;
-            if (latest <= currentVersion)
-            {
-                if (manuallyClicked)
-                    new NoticeBar("You are up to date.", 5000).Show();
-                return;
-            }
+                var latest = Version.Parse(latestVersion);
+                NewVersion = latest;
+                if (latest <= currentVersion)
+                {
+                    return false;
+                }
 
-            new UpdateDialog(this) { Owner = Application.Current.MainWindow }.ShowDialog();
+                Task.Delay(200).ContinueWith(task => new UpdateDialog(this) { Owner = Application.Current.MainWindow }.ShowDialog());
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
+
         public async Task DoUpdate(IProgress<double>? progressCallback = null, IEnumerable<string>? filesToIgnore = null)
         {
             string latestZipUrl = UpdateUrl;

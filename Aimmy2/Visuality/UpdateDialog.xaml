@@ -24,7 +24,7 @@
     <Grid>
         <Border x:Name="MainBorder"
                 CornerRadius="5"
-                BorderBrush="Black"
+                BorderBrush="Green"
                 BorderThickness="1"
                 Background="{StaticResource Background}"
                 MouseLeftButtonDown="Border_MouseLeftButtonDown">
