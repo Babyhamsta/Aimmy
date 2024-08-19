@@ -2,9 +2,6 @@ param(
     [string]$version,
     [string]$incVersion
 )
-# Git-Konfiguration
-git config user.email "fgilde@gmail.com"
-git config user.name "fgilde"
 
 # Call this script with "powershell -ExecutionPolicy Bypass -File .\build.ps1"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
