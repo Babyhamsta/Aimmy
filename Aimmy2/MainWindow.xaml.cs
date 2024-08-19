@@ -14,7 +14,6 @@ using Aimmy2.InputLogic;
 using Aimmy2.InputLogic.HidHide;
 using Aimmy2.Models;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
-using Aimmy2.Other;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
@@ -74,8 +73,7 @@ public partial class MainWindow
         }
         catch
         {}
-
-
+        
 
         DataContext = this;
 
@@ -161,7 +159,7 @@ public partial class MainWindow
                 Command = new ActionCommand(() => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), item.ToString())))
             });
         }
-
+        _ = CheckUpdate(false);
         _uiCreated = true;
     }
 
@@ -1025,6 +1023,11 @@ public partial class MainWindow
 
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
+        await CheckUpdate(true);
+    }
+
+    private async Task CheckUpdate(bool showNotice)
+    {
         try
         {
             CheckForUpdates.IsEnabled = false;
@@ -1033,9 +1036,14 @@ public partial class MainWindow
             var updateManager = new UpdateManager();
             var hasUpdate = await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion, ApplicationConstants.RepoOwner, ApplicationConstants.RepoName);
             UpdateCheckStatusLabel.Content = hasUpdate ? "Update available!" : "No update available";
+            if (hasUpdate)
+            {
+                CheckForUpdates.Content = "Install Update";
+            }
             if (!hasUpdate)
             {
-                new NoticeBar("You are already on the latest version.", 5000).Show();
+                if(showNotice)
+                    new NoticeBar("You are already on the latest version.", 5000).Show();
             }
             else
             {
