@@ -90,7 +90,8 @@ public static class ApplicationConstants
         }
     }
 
-    public static Color Foreground => GetForegroundFor(MainColor);
+    //public static Color Foreground => GetForegroundFor(MainColor);
+    public static Color Foreground => Colors.White; // TODO:
 
     private static Color GetForegroundFor(Color background)
     {

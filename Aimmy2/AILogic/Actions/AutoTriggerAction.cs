@@ -79,7 +79,6 @@ public class AutoTriggerAction: BaseAction
 
             if (InputBindingManager.IsValidKey(AppConfig.Current.BindingSettings.TriggerAdditionalSend) && TriggerCommandKeyUnsetOrHold() && PredictionIsIntersecting(AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck, prediction))
             {
-                Console.WriteLine("Sending key");
                 InputBindingManager.SendKey(AppConfig.Current.BindingSettings.TriggerAdditionalSend);
             }
 

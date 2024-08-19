@@ -15,6 +15,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    protected virtual bool SaveRestorePosition => true;
     protected Func<bool> ShouldBindGradientMouse = () => AppConfig.Current.ToggleState.MouseBackgroundEffect;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -33,15 +34,21 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     protected override void OnInitialized(EventArgs e)
     {
         base.OnInitialized(e);
-        var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
-        settingsManager.LoadWindowSettings(this);
+        if (SaveRestorePosition)
+        {
+            var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
+            settingsManager.LoadWindowSettings(this);
+        }
     }
     
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
-        var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
-        settingsManager.SaveWindowSettings(this);
+        if (SaveRestorePosition)
+        {
+            var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
+            settingsManager.SaveWindowSettings(this);
+        }
     }
 
     private string GetSettingsFilePath()

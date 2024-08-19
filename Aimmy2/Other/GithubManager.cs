@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Aimmy2.Other
 {
-    internal class GithubManager
+    internal class GithubManager: IDisposable
     {
         private readonly HttpClient httpClient;
 

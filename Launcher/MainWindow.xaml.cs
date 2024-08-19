@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using Aimmy2;
+using Aimmy2.Extensions;
 using dnlib.DotNet;
 using Visuality;
 
@@ -29,8 +30,9 @@ namespace Launcher
             Title = ApplicationConstants.ApplicationName;
             InitializeComponent();
             DataContext = this;
-            Activated += (s, e) => _ = Task.Run(Execute);
+            this.InitWith(w => Execute());
         }
+
 
         private async Task Execute()
         {

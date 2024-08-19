@@ -1025,7 +1025,7 @@ public partial class MainWindow
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         var updateManager = new UpdateManager();
-        await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion);
+        await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion, true);
         updateManager.Dispose();
     }
 

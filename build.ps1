@@ -117,6 +117,7 @@ try {
 }
 
 if ($buildSucceeded) {
+    $zipContent = Join-Path $outputDir "net8.0-windows"
     # Define the zip file name and path
     $zipFileName = "$assemblyName`_$currentVersion.zip"
     $zipFileName  = $zipFileName -replace '(^\s+|\s+$)','' -replace '\s+',' '
@@ -124,7 +125,7 @@ if ($buildSucceeded) {
     $zipFilePath = Join-Path $outputDir $zipFileName
 
     # Compress the output directory into a zip file
-    Compress-Archive -Path $outputDir\* -DestinationPath $zipFilePath
+    Compress-Archive -Path $zipContent\* -DestinationPath $zipFilePath
 
     Write-Host "Output directory compressed into $zipFileName in the Release folder."
 
