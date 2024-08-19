@@ -107,7 +107,9 @@ if ($versionUpdated) {
 $buildSucceeded = $true
 try {
     # dotnet build --configuration Release --no-incremental
-    dotnet publish -r win-x64 -p:PublishSingleFile=true --self-contained false
+    dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None
+    # dotnet publish $csprojPath -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false
+
 } catch {
     $buildSucceeded = $false
     Write-Host "Build failed. Reverting .csproj file to the old version."
@@ -122,7 +124,8 @@ if ($buildSucceeded) {
     }
 
     # Define the zip file name and path
-    $zipFileName = "$assemblyName`_$currentVersion.zip"
+    # $zipFileName = "$assemblyName`_$currentVersion.zip"
+    $zipFileName = "Release_$currentVersion.zip"
     $zipFileName  = $zipFileName -replace '(^\s+|\s+$)','' -replace '\s+',' '
 
     $zipFilePath = Join-Path $outputDir $zipFileName
@@ -131,6 +134,17 @@ if ($buildSucceeded) {
     Compress-Archive -Path $zipContent\* -DestinationPath $zipFilePath
 
     Write-Host "Output directory compressed into $zipFileName in the Release folder."
+
+    # Rename and copy Launcher.exe to Installer.exe
+    $launcherPath = Join-Path $zipContent "Launcher.exe"
+    $installerPath = Join-Path $outputDir "Installer.exe"
+
+    if (Test-Path $launcherPath) {
+        Copy-Item -Path $launcherPath -Destination $installerPath
+        Write-Host "Launcher.exe copied and renamed to Installer.exe in the Release folder."
+    } else {
+        Write-Host "Launcher.exe not found, skipping the copy operation."
+    }
 
     if ($versionUpdated) {
         # Checkout to master branch

@@ -27,12 +27,22 @@ jobs:
     - name: Run build script
       run: powershell -ExecutionPolicy Bypass -File ./build.ps1 -version ${{ github.event.release.tag_name }}
 
-    - name: Upload release asset
+    - name: Upload release ZIP asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./Aimmy2/bin/Release/TotallyNotAimmyV2_${{ github.event.release.tag_name }}.zip
+        asset_path: ./Aimmy2/bin/Release/Release_${{ github.event.release.tag_name }}.zip
         asset_name: ${{ github.event.release.tag_name }}.zip
         asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Installer.exe asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./Aimmy2/bin/Release/Installer.exe
+        asset_name: Installer.exe
+        asset_content_type: application/octet-stream
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

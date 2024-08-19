@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using Aimmy2;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
+using Core;
 using Other;
 
 namespace Visuality

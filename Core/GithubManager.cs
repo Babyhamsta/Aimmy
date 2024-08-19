@@ -1,10 +1,9 @@
-﻿using Newtonsoft.Json;
-using System.Net.Http;
-using System.Text.Json;
+﻿using System.Text.Json;
+using Newtonsoft.Json;
 
-namespace Aimmy2.Other
+namespace Core
 {
-    internal class GithubManager: IDisposable
+    public class GithubManager: IDisposable
     {
         private readonly HttpClient httpClient;
 

@@ -18,6 +18,7 @@ using Aimmy2.Other;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
+using Core;
 using InputLogic;
 using Microsoft.Xaml.Behaviors.Core;
 using MouseMovementLibraries.ddxoftSupport;
@@ -1030,11 +1031,15 @@ public partial class MainWindow
             UpdateCheckStatusLabel.Content = "Checking for updates...";
             await Task.Delay(500);
             var updateManager = new UpdateManager();
-            var hasUpdate = await updateManager.CheckForUpdate();
+            var hasUpdate = await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion, ApplicationConstants.RepoOwner, ApplicationConstants.RepoName);
             UpdateCheckStatusLabel.Content = hasUpdate ? "Update available!" : "No update available";
             if (!hasUpdate)
             {
                 new NoticeBar("You are already on the latest version.", 5000).Show();
+            }
+            else
+            {
+                new UpdateDialog(updateManager) { Owner = Application.Current.MainWindow }.ShowDialog();
             }
 
             updateManager.Dispose();

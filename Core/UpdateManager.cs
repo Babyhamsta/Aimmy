@@ -1,56 +1,48 @@
-﻿using Aimmy2.Other;
+﻿using static System.Net.Mime.MediaTypeNames;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
-using System.Windows;
-using System.Windows.Media;
-using Aimmy2;
-using Visuality;
 
-namespace Other
+namespace Core
 {
-    public class UpdateManager: IDisposable
+    public class UpdateManager : IDisposable
     {
         private readonly HttpClient client;
 
         public Version NewVersion { get; private set; }
         public string UpdateUrl { get; private set; }
 
-        private string MainAppPath => Environment.ProcessPath;
-        private string MainAppDir => Path.GetDirectoryName(MainAppPath);
+        public string MainAppDir { get; private set; }
         private string ScriptPath => Path.Combine(MainAppDir, "UpdateScript.ps1");
 
-        public UpdateManager()
+        public UpdateManager(string? installDir = null)
         {
+            MainAppDir = installDir ?? Path.GetDirectoryName(Environment.ProcessPath);
             client = new HttpClient();
         }
 
-        public async Task<bool> CheckForUpdate()
+        public async Task<bool> CheckForUpdate(Version? currentVersion, string repoOwner, string repoName)
         {
             try
             {
-                Version currentVersion = ApplicationConstants.ApplicationVersion;
                 if (File.Exists(ScriptPath))
                     File.Delete(ScriptPath);
-            
+
                 using GithubManager githubManager = new();
-                var (latestVersion, latestZipUrl) = await githubManager.GetLatestReleaseInfo(ApplicationConstants.RepoOwner, ApplicationConstants.RepoName);
+                var (latestVersion, latestZipUrl) = await githubManager.GetLatestReleaseInfo(repoOwner, repoName);
                 UpdateUrl = latestZipUrl;
                 if (string.IsNullOrEmpty(latestVersion) || string.IsNullOrEmpty(latestZipUrl))
                 {
-                    new NoticeBar("Failed to get latest release information from Github.", 5000).Show();
                     return false;
                 }
 
                 var latest = Version.Parse(latestVersion);
                 NewVersion = latest;
-                if (latest <= currentVersion)
+                if (currentVersion != null && latest <= currentVersion)
                 {
                     return false;
                 }
 
-                Task.Delay(200).ContinueWith(task => new UpdateDialog(this) { Owner = Application.Current.MainWindow }.ShowDialog());
+                
                 return true;
             }
             catch (Exception e)
@@ -72,7 +64,7 @@ namespace Other
 
 
             //CreateUpdateBatchScript(mainAppDir, extractPath, localZipPath, filesToIgnore);
-            CreateUpdatePowerShellScript( extractPath, localZipPath, filesToIgnore);
+            CreateUpdatePowerShellScript(extractPath, localZipPath, filesToIgnore);
             StartUpdateProcess();
         }
 
@@ -173,7 +165,10 @@ namespace Other
 
                 sw.WriteLine("Start-Sleep -Seconds 2");
 
-                sw.WriteLine($"Start-Process \"{Path.Combine(MainAppDir, "Launcher.exe")}\"");
+                // Arbeitsverzeichnis setzen und Launcher.exe starten
+                sw.WriteLine($"Set-Location \"{MainAppDir}\"");
+                sw.WriteLine($"Start-Process -FilePath \"Launcher.exe\" -WorkingDirectory \"{MainAppDir}\"");
+
                 sw.WriteLine($"Remove-Item -Force \"{zipPath}\"");
                 sw.WriteLine($"Remove-Item -Recurse -Force \"{extractPath}\"");
                 sw.WriteLine($"Remove-Item -Force \"{ScriptPath}\"");
@@ -181,7 +176,7 @@ namespace Other
                 sw.WriteLine("$window.Close()");
             }
         }
-
+        
 
         private bool ShouldIgnoreFile(string relativePath, IEnumerable<string> filesToIgnore)
         {
@@ -199,9 +194,9 @@ namespace Other
         private void StartUpdateProcess()
         {
             ProcessStartInfo startInfo = new ProcessStartInfo("powershell", $"-ExecutionPolicy Bypass -File \"{ScriptPath}\"")
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
             };
             Process.Start(startInfo);
             Environment.Exit(0);

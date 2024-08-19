@@ -188,7 +188,7 @@
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Border BorderBrush="White" BorderThickness="0 1 0 0" Grid.Row="1" Visibility="{Binding InstallVisibility}">
+                    <Border BorderBrush="White" BorderThickness="0 1 0 0" Grid.Row="1" Visibility="{Binding InstallerVisibility}">
                         <Grid Margin="0 5 0 0">
                             <Button IsEnabled="{Binding CanClose}" Click="Exit_OnClick" Margin="0 0 120 0" Background="Transparent" BorderBrush="White" Foreground="White" HorizontalAlignment="Right" Width="100" Visibility="{Binding InstallVisibility}" Height="25" Grid.Row="1">Close</Button>
                             <Button IsEnabled="{Binding CanClose}" Click="Install_Click" Background="Transparent" BorderBrush="White" Foreground="White" HorizontalAlignment="Right" Width="100" Height="25" Grid.Row="1">Install</Button>

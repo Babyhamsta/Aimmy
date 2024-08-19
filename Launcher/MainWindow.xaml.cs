@@ -5,6 +5,7 @@ using System.Reflection;
 
 using System.Windows;
 using System.Windows.Input;
+using Core;
 using Vestris.ResourceLib;
 
 
@@ -106,24 +107,24 @@ namespace Launcher
         {
             try
             {
-                string newName = GenerateRandomString(15).ToUpper();
                 var versionResource = new VersionResource();
                 versionResource.LoadFrom(exe);
                 Version = versionResource.FileVersion;
-                var resource = versionResource["StringFileInfo"];
-                var fi = resource as StringFileInfo;
+                //string newName = GenerateRandomString(15).ToUpper();
+                //var resource = versionResource["StringFileInfo"];
+                //var fi = resource as StringFileInfo;
 
-                foreach (var table in fi.Strings.Select(pair => pair.Value))
-                {
-                    table["CompanyName"] = newName;
-                    table["FileDescription"] = newName;
-                    table["InternalName"] = $"{newName}.dll";
-                    table["OriginalFilename"] = $"{newName}.dll";
-                    table["ProductName"] = newName;
-                }
+                //foreach (var table in fi.Strings.Select(pair => pair.Value))
+                //{
+                //    table["CompanyName"] = newName;
+                //    table["FileDescription"] = newName;
+                //    table["InternalName"] = $"{newName}.dll";
+                //    table["OriginalFilename"] = $"{newName}.dll";
+                //    table["ProductName"] = newName;
+                //}
 
 
-                versionResource.SaveTo(exe);
+                //versionResource.SaveTo(exe);
 
             }
             catch (Exception e)
@@ -193,7 +194,7 @@ namespace Launcher
             var launcherExe = Process.GetCurrentProcess().MainModule.FileName;
             var currentDir = Path.GetDirectoryName(launcherExe);
 
-            var l = Directory.EnumerateFiles(currentDir, "*.exe").Where(x => x != launcherExe && Path.GetFileName(x) != "createdump.exe").ToList();
+            var l = Directory.EnumerateFiles(currentDir, "*.exe").Where(x => x != launcherExe && Path.GetFileName(x) != "createdump.exe" && Path.GetFileName(x) != "Installer.exe").ToList();
             if(l.Count == 1)
                 return l[0];
             l = l.Where(n => Path.GetFileNameWithoutExtension(n).Length == 8).ToList();
@@ -218,20 +219,37 @@ namespace Launcher
             WindowState = WindowState.Minimized;
         }
 
-        private void Install_Click(object sender, RoutedEventArgs e)
+        private async void Install_Click(object sender, RoutedEventArgs e)
         {
             Installing = true;
             CanClose = false;
             FolderSelect.Visibility = Visibility.Collapsed;
+            ProgressBar.IsIndeterminate = true;
             ProgressBar.Visibility = Visibility.Visible;
+           
             Status = "Installing (Check and create Directory)...";
             var dir = InstallDirectory;
             try
             {
                 if (!Directory.Exists(dir))
-                {
                     Directory.CreateDirectory(dir);
+                await Task.Delay(500);
+                Status = "Checking for latest version...";
+                var installer = new UpdateManager(dir);
+                var canInstall = await installer.CheckForUpdate(null, "fgilde", "AI-Ming");
+                ProgressBar.IsIndeterminate = false;
+                if (!canInstall)
+                {
+                    Status = "Can not install";
+                    return;
                 }
+
+                await installer.DoUpdate(new Progress<double>(p =>
+                {
+                    ProgressBar.Value = p;
+                    Status = $"Downloading... {p:0.00}%";
+                }));
+
             }
             catch (Exception exception)
             {

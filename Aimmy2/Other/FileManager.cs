@@ -8,10 +8,10 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using Aimmy2.Config;
 using Visuality;
-using static Aimmy2.Other.GithubManager;
 using System.Windows.Input;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic.Contracts;
+using Core;
 using Microsoft.ML.OnnxRuntime;
 
 namespace Other
