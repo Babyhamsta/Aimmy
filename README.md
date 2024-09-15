@@ -6,13 +6,13 @@
       <img width="100%" src="https://raw.githubusercontent.com/Babyhamsta/Aimmy/master/readme_assets/AimmyV2Banner.png"></a>
   </p>
 
-Aimmy is a universal AI-Based Aim Alignment Mechanism developed by BabyHamsta, MarsQQ & Taylor to make gaming more accessible for users who have difficulty aiming.
+Aimmy is a universal AI-Based Aim Alignment Mechanism developed by BabyHamsta, MarsInsanity & Taylor to make gaming more accessible for users who have difficulty aiming.
 
 Unlike most AI-Based Aim Alignment Mechanisms, Aimmy utilizes DirectML, ONNX, and YOLOV8 to detect players, offering both higher accuracy and faster performance compared to other Aim Aligners, especially on AMD GPUs, which would not perform well on Aim Alignment Mechanisms that utilize TensorRT.
 
 Aimmy also provides an easy to use user-interface, a wide set of features and customizability options which makes Aimmy a great option for anyone who wants to use and tailor an Aim Alignment Mechanism for a specific game without having to code.
 
-Aimmy is 100% free to use. This means no ads, no key system, and no paywalled features. Aimmy is not, and will never be for sale for the end user, and is considered a source-available product, **not open source** as we actively discourage other developers from making commercial forks of Aimmy.
+Aimmy is 100% free to use. This means no ads, no key system, and no paywalled features. Aimmy is not, and will never be for sale for the end user, and is considered a [source-available](https://github.com/Babyhamsta/Aimmy/blob/master/SourceAvailable.md) product, **not open source** as we actively discourage other developers from making commercial forks of Aimmy.
 
 Please do not confuse Aimmy as an open-source project, we are not one.
 
