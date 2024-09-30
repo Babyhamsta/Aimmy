@@ -21,15 +21,7 @@ Want to connect with us? Join our Discord Server: https://discord.gg/aimmy
 If you want to share Aimmy with your friends, our website is: https://aimmy.dev/
 
 ## Table of Contents
-- [What is the purpose of Aimmy?](#what-is-the-purpose-of-aimmy)
-- [How does Aimmy Work?](#how-does-aimmy-work)
-- [Features](#features)
-- [Setup](#setup)
-- [How is Aimmy better than similar AI-Based tools?](#how-is-aimmy-better-than-similar-ai-based-tools)
-- [How the hell is Aimmy free?](#how-the-hell-is-aimmy-free)
-- [What is the Web Model?](#what-is-the-web-model)
-- [How do I train my own model?](#how-do-i-train-my-own-model)
-- [How do I upload my model to the "Downloadable Models" menu](#how-do-i-upload-my-model-to-the-downloadable-models-menu)
+[toc]
 
 
 
