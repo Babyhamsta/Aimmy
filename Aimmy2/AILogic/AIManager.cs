@@ -5,19 +5,14 @@ using InputLogic;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using Other;
-using SharpDX;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
 using Supercluster.KDTree;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Windows;
 using Visuality;
-using Device = SharpDX.Direct3D11.Device;
 
 namespace Aimmy2.AILogic
 {
@@ -35,14 +30,14 @@ namespace Aimmy2.AILogic
         private KalmanPrediction kalmanPrediction;
         private WiseTheFoxPrediction wtfpredictionManager;
 
-        private Bitmap? _screenCaptureBitmap;
+        //private Bitmap? _screenCaptureBitmap;
         private byte[]? _bitmapBuffer; // Reusable buffer for bitmap operations
 
         // Screen capture
-        private Device _dxDevice;
-        private OutputDuplication _deskDuplication;
-        private Texture2DDescription _texDesc;
-        private Texture2D _stagingTex;
+        //private Device _dxDevice;
+        //private OutputDuplication _deskDuplication;
+        //private Texture2DDescription _texDesc;
+        //private Texture2D _stagingTex;
 
         // Display-aware properties
         private int ScreenWidth => DisplayManager.ScreenWidth;
@@ -89,10 +84,8 @@ namespace Aimmy2.AILogic
         private readonly Dictionary<string, BenchmarkData> _benchmarks = new();
         private readonly object _benchmarkLock = new();
 
-        // Display change handling
-        private readonly object _displayLock = new();
-        private bool _displayChangesPending = false;
 
+        private readonly CaptureManager _captureManager = new();
         #endregion Variables
 
         #region Benchmarking
@@ -171,7 +164,10 @@ namespace Aimmy2.AILogic
             DisplayManager.DisplayChanged += OnDisplayChanged;
 
             // Initialize DXGI capture for current display
-            InitializeDxgiDuplication();
+            if (Dictionary.dropdownState["Screen Capture Method"] == "DirectX")
+            {
+                _captureManager.InitializeDxgiDuplication();
+            }
 
             kalmanPrediction = new KalmanPrediction();
             wtfpredictionManager = new WiseTheFoxPrediction();
@@ -181,7 +177,7 @@ namespace Aimmy2.AILogic
             var sessionOptions = new SessionOptions
             {
                 EnableCpuMemArena = true,
-                EnableMemoryPattern = true,
+                EnableMemoryPattern = false,
                 GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
                 ExecutionMode = ExecutionMode.ORT_PARALLEL,
                 InterOpNumThreads = Environment.ProcessorCount,
@@ -194,112 +190,27 @@ namespace Aimmy2.AILogic
 
         private void OnDisplayChanged(object? sender, DisplayChangedEventArgs e)
         {
-            lock (_displayLock)
+            lock (_captureManager._displayLock)
             {
-                _displayChangesPending = true;
+                _captureManager._displayChangesPending = true;
             }
         }
 
         private void HandlePendingDisplayChanges()
         {
-            lock (_displayLock)
+            lock (_captureManager._displayLock)
             {
-                if (!_displayChangesPending) return;
+                if (!_captureManager._displayChangesPending) return;
 
                 try
                 {
-                    InitializeDxgiDuplication();
-                    _displayChangesPending = false;
+                    _captureManager.InitializeDxgiDuplication();
+                    _captureManager._displayChangesPending = false;
                 }
                 catch (Exception ex)
                 {
                     // Will retry on next iteration
                 }
-            }
-        }
-
-        private void InitializeDxgiDuplication()
-        {
-            try
-            {
-
-                // Clean up any existing resources
-                DisposeDxgiResources();
-
-                using (var factory = new Factory1())
-                {
-                    Output1? targetOutput1 = null;
-                    Adapter1? targetAdapter = null;
-                    int globalOutputIndex = 0;
-
-                    // Find the output by global index
-                    foreach (var adapter in factory.Adapters1)
-                    {
-
-                        var outputCount = adapter.GetOutputCount();
-                        for (int i = 0; i < outputCount; i++)
-                        {
-                            try
-                            {
-                                using (var output = adapter.GetOutput(i))
-                                {
-                                    var desc = output.Description;
-                                    var bounds = desc.DesktopBounds;
-
-                                    if (globalOutputIndex == DisplayManager.CurrentDisplayIndex)
-                                    {
-                                        targetOutput1 = output.QueryInterface<Output1>();
-                                        targetAdapter = adapter;
-                                        break;
-                                    }
-
-                                    globalOutputIndex++;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                globalOutputIndex++;
-                            }
-                        }
-
-                        if (targetOutput1 != null) break;
-                    }
-
-                    if (targetOutput1 == null || targetAdapter == null)
-                    {
-                        targetAdapter = factory.Adapters1[0];
-                        targetOutput1 = targetAdapter.GetOutput(0).QueryInterface<Output1>();
-                    }
-
-                    // Create D3D11 device on the correct adapter
-                    _dxDevice = new Device(targetAdapter, DeviceCreationFlags.None);
-
-                    // Create desktop duplication
-                    _deskDuplication = targetOutput1.DuplicateOutput(_dxDevice);
-                    targetOutput1.Dispose();
-
-                }
-
-                // Create staging texture
-                _texDesc = new Texture2DDescription
-                {
-                    CpuAccessFlags = CpuAccessFlags.Read,
-                    BindFlags = BindFlags.None,
-                    Format = Format.B8G8R8A8_UNorm,
-                    Height = IMAGE_SIZE,
-                    Width = IMAGE_SIZE,
-                    OptionFlags = ResourceOptionFlags.None,
-                    MipLevels = 1,
-                    ArraySize = 1,
-                    SampleDescription = new SampleDescription(1, 0),
-                    Usage = ResourceUsage.Staging
-                };
-                _stagingTex = new Texture2D(_dxDevice, _texDesc);
-
-            }
-            catch (Exception ex)
-            {
-                throw;
             }
         }
 
@@ -675,7 +586,6 @@ namespace Aimmy2.AILogic
                     ShalloePredictionV2.xValues.Add(detectedX - PrevX);
                     ShalloePredictionV2.yValues.Add(detectedY - PrevY);
 
-                    // Optimize: only keep last 5 values
                     if (ShalloePredictionV2.xValues.Count > 5)
                     {
                         ShalloePredictionV2.xValues.RemoveAt(0);
@@ -733,12 +643,12 @@ namespace Aimmy2.AILogic
                 targetY = DisplayManager.ScreenTop + (DisplayManager.ScreenHeight / 2);
             }
 
-            Rectangle detectionBox = new(targetX - IMAGE_SIZE / 2, targetY - IMAGE_SIZE / 2, IMAGE_SIZE, IMAGE_SIZE);
+            Rectangle detectionBox = new(targetX - IMAGE_SIZE / 2, targetY - IMAGE_SIZE / 2, IMAGE_SIZE, IMAGE_SIZE); // Detection box always 640x640
 
             Bitmap? frame;
             using (Benchmark("ScreenGrab"))
             {
-                frame = ScreenGrab(detectionBox);
+                frame = _captureManager.ScreenGrab(detectionBox);
             }
             if (frame == null) return null;
 
@@ -914,137 +824,7 @@ namespace Aimmy2.AILogic
             }
         }
 
-        public Bitmap? ScreenGrab(Rectangle detectionBox)
-        {
-            // Clamp detectionBox to current display bounds
-            var displayBounds = new Rectangle(
-                DisplayManager.ScreenLeft,
-                DisplayManager.ScreenTop,
-                DisplayManager.ScreenWidth,
-                DisplayManager.ScreenHeight);
 
-            // Ensure detection box is within display bounds
-            if (detectionBox.Left < displayBounds.Left)
-                detectionBox.X = displayBounds.Left;
-            if (detectionBox.Top < displayBounds.Top)
-                detectionBox.Y = displayBounds.Top;
-            if (detectionBox.Right > displayBounds.Right)
-                detectionBox.X = displayBounds.Right - detectionBox.Width;
-            if (detectionBox.Bottom > displayBounds.Bottom)
-                detectionBox.Y = displayBounds.Bottom - detectionBox.Height;
-
-            // Acquire frame
-            SharpDX.DXGI.Resource? desktopResource = null;
-            OutputDuplicateFrameInformation frameInfo;
-            Result result;
-
-            try
-            {
-                result = _deskDuplication.TryAcquireNextFrame(0, out frameInfo, out desktopResource);
-            }
-            catch (SharpDXException ex)
-            {
-                // Reinitialize on next iteration
-                lock (_displayLock) { _displayChangesPending = true; }
-                return null;
-            }
-
-            if (result.Failure || desktopResource == null)
-            {
-                desktopResource?.Dispose();
-                return null;
-            }
-
-            try
-            {
-                using (desktopResource)
-                using (var screenTexture2D = desktopResource.QueryInterface<Texture2D>())
-                {
-                    // Copy region - coordinates are relative to the display being captured
-                    var region = new ResourceRegion
-                    {
-                        Left = detectionBox.Left - DisplayManager.ScreenLeft,
-                        Top = detectionBox.Top - DisplayManager.ScreenTop,
-                        Right = detectionBox.Right - DisplayManager.ScreenLeft,
-                        Bottom = detectionBox.Bottom - DisplayManager.ScreenTop,
-                        Front = 0,
-                        Back = 1
-                    };
-
-                    _dxDevice.ImmediateContext.CopySubresourceRegion(
-                        screenTexture2D, 0, region, _stagingTex, 0, 0, 0, 0);
-
-                    // Map and copy to bitmap
-                    var dataBox = _dxDevice.ImmediateContext.MapSubresource(
-                        _stagingTex, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
-
-                    try
-                    {
-                        if (_screenCaptureBitmap == null ||
-                            _screenCaptureBitmap.Width != detectionBox.Width ||
-                            _screenCaptureBitmap.Height != detectionBox.Height)
-                        {
-                            _screenCaptureBitmap?.Dispose();
-                            _screenCaptureBitmap = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
-                        }
-
-                        var bmpData = _screenCaptureBitmap.LockBits(
-                            new Rectangle(0, 0, detectionBox.Width, detectionBox.Height),
-                            ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-                        Utilities.CopyMemory(bmpData.Scan0, dataBox.DataPointer,
-                            detectionBox.Width * detectionBox.Height * 4);
-
-                        _screenCaptureBitmap.UnlockBits(bmpData);
-                    }
-                    finally
-                    {
-                        _dxDevice.ImmediateContext.UnmapSubresource(_stagingTex, 0);
-                    }
-                }
-
-                _deskDuplication.ReleaseFrame();
-                return _screenCaptureBitmap;
-            }
-            catch (Exception ex)
-            {
-                lock (_displayLock) { _displayChangesPending = true; }
-                return null;
-            }
-        }
-
-        private void DisposeDxgiResources()
-        {
-            try
-            {
-                // Try to release any pending frame
-                if (_deskDuplication != null)
-                {
-                    try
-                    {
-                        _deskDuplication.ReleaseFrame();
-                    }
-                    catch (SharpDXException)
-                    {
-                        // This is expected if no frame is currently acquired
-                    }
-                }
-
-                _deskDuplication?.Dispose();
-                _stagingTex?.Dispose();
-                _dxDevice?.Dispose();
-
-                _deskDuplication = null;
-                _stagingTex = null;
-                _dxDevice = null;
-
-                // Small delay to ensure resources are fully released
-                System.Threading.Thread.Sleep(50);
-            }
-            catch (Exception ex)
-            {
-            }
-        }
 
         #endregion Screen Capture
 
@@ -1063,46 +843,51 @@ namespace Aimmy2.AILogic
 
         private unsafe void BitmapToFloatArrayInPlace(Bitmap image, float[] result)
         {
-            int height = image.Height;
-            int width = image.Width;
+            const int width = IMAGE_SIZE;
+            const int height = IMAGE_SIZE;
+            const int totalPixels = width * height;
             const float multiplier = 1f / 255f;
 
-            // Lock the bits once
             var rect = new Rectangle(0, 0, width, height);
-            var bmpData = image.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-
+            var bmpData = image.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb); //3 bytes per pixel
+                                                                                                    // blue green red (strict order)
             try
             {
                 int stride = bmpData.Stride;
-                int totalPixels = width * height;
+                byte* basePtr = (byte*)bmpData.Scan0;
                 int redOffset = 0;
                 int greenOffset = totalPixels;
                 int blueOffset = 2 * totalPixels;
 
-                byte* basePtr = (byte*)bmpData.Scan0.ToPointer();
-                // For each channel, copy entire component block
-                // We know format is 24bpp BGR so each pixel is [B][G][R] per byte
-
-                // Create temporary buffer to hold one row of bytes
-                byte[] rowBuffer = new byte[width * 3];
-
-                for (int y = 0; y < height; y++)
+                //for each row in the image -> create a temporary array for red green and blue (rgb)
+                Parallel.For(0, height, () => (localR: new float[width], localG: new float[width], localB: new float[width]),
+                (y, state, local) =>
                 {
-                    byte* rowPtr = basePtr + y * stride;
-                    // Copy this entire row: width*3 bytes
-                    Marshal.Copy((IntPtr)rowPtr, rowBuffer, 0, rowBuffer.Length);
+                    byte* row = basePtr + (y * stride);
 
-                    // Now extract channels
-                    int pixelIndexBase = y * width;
+                    // process entire row in local buffers
                     for (int x = 0; x < width; x++)
                     {
                         int bufferIndex = x * 3;
-                        // BGR byte order: rowBuffer[bufferIndex + 2] = R, +1 = G, +0 = B
-                        result[redOffset + pixelIndexBase + x] = rowBuffer[bufferIndex + 2] * multiplier;
-                        result[greenOffset + pixelIndexBase + x] = rowBuffer[bufferIndex + 1] * multiplier;
-                        result[blueOffset + pixelIndexBase + x] = rowBuffer[bufferIndex] * multiplier;
+                        // BGR byte order: +2 = R, +1 = G, +0 = B
+                        // B = 0
+                        // G = 1
+                        // R = 2
+                        // (bufferIndex + x)
+                        local.localR[x] = row[bufferIndex + 2] * multiplier;
+                        local.localG[x] = row[bufferIndex + 1] * multiplier;
+                        local.localB[x] = row[bufferIndex] * multiplier;
                     }
-                }
+
+                    // after processing the row copy the results into the final array
+                    int rowStart = y * width;
+                    Array.Copy(local.localR, 0, result, redOffset + rowStart, width);
+                    Array.Copy(local.localG, 0, result, greenOffset + rowStart, width);
+                    Array.Copy(local.localB, 0, result, blueOffset + rowStart, width);
+
+                    return local;
+                },
+                _ => { });
             }
             finally
             {
@@ -1132,7 +917,7 @@ namespace Aimmy2.AILogic
             PrintBenchmarks();
 
             // Dispose DXGI objects
-            DisposeDxgiResources();
+            _captureManager.DisposeDxgiResources();
 
             // Clean up other resources
             _reusableInputArray = null;
@@ -1140,7 +925,7 @@ namespace Aimmy2.AILogic
             _onnxModel?.Dispose();
             _modeloptions?.Dispose();
             _bitmapBuffer = null;
-            _screenCaptureBitmap?.Dispose();
+            _captureManager.screenCaptureBitmap?.Dispose();
         }
 
         public class Prediction

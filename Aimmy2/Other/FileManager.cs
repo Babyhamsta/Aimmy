@@ -39,6 +39,15 @@ namespace Other
             ModelListBox.SelectionChanged += ModelListBox_SelectionChanged;
             ConfigListBox.SelectionChanged += ConfigListBox_SelectionChanged;
 
+            ModelListBox.AllowDrop = true;
+            ModelListBox.DragOver += ModelListBox_DragOver; 
+            ModelListBox.Drop += ModelListBox_DragDrop;
+
+            ConfigListBox.AllowDrop = true;
+            ConfigListBox.DragOver += ConfigListBox_DragDrop;
+            ConfigListBox.Drop += ConfigListBox_DragDrop;
+
+
             CheckForRequiredFolders();
             InitializeFileWatchers();
             LoadModelsIntoListBox(null, null);
@@ -151,6 +160,70 @@ namespace Other
                 watcher.Created += LoadConfigsIntoListBox;
                 watcher.Deleted += LoadConfigsIntoListBox;
                 watcher.Renamed += LoadConfigsIntoListBox;
+            }
+        }
+        private void ModelListBox_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+
+            e.Handled = true;
+        }
+
+        private void ModelListBox_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                string targetFolder = "bin/models";
+
+                foreach (var file in files)
+                {
+                    if (Path.GetExtension(file) == ".onnx")
+                    {
+                        string fileName = Path.GetFileName(file);
+                        string destFile = Path.Combine(targetFolder, fileName);
+                        File.Move(file, destFile, true);
+                    }
+                }
+            }
+        }
+        private void ConfigListBox_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+
+            e.Handled = true;
+        }
+
+        private void ConfigListBox_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                string targetFolder = "bin/models";
+
+                foreach (var file in files)
+                {
+                    if (Path.GetExtension(file) == ".cfg")
+                    {
+                        string fileName = Path.GetFileName(file);
+                        string destFile = Path.Combine(targetFolder, fileName);
+                        File.Move(file, destFile, true);
+                    }
+                }
             }
         }
 

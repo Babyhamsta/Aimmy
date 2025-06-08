@@ -834,6 +834,11 @@ namespace Aimmy2
                     ["LG HUB"] = 2,
                     ["Razer Synapse (Require Razer Peripheral)"] = 3,
                     ["ddxoft Virtual Input Driver"] = 4
+                }),
+                (uiManager.D_ScreenCaptureMethod, "Screen Capture Method", new Dictionary<string, int>
+                {
+                    ["DirectX"] = 1,
+                    ["GDI+"] = 2
                 })
             };
 

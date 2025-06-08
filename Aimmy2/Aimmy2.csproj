@@ -73,13 +73,14 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.22.0" />
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
-    <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
     <PackageReference Include="Supercluster.KDTree" Version="1.0.4" />
     <PackageReference Include="System.IO.Ports" Version="9.0.5" />
     <PackageReference Include="System.Management" Version="9.0.5" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.6.2" />
+    <PackageReference Include="Vortice.DirectX" Version="3.6.2" />
+    <PackageReference Include="Vortice.DXGI" Version="3.6.2" />
     <PackageReference Include="XamlRadialProgressBar" Version="1.0.3" />
   </ItemGroup>
 

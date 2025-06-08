@@ -89,7 +89,9 @@ namespace Aimmy2.Class
             { "Prediction Method", "Kalman Filter" },
             { "Detection Area Type", "Closest to Center Screen" },
             { "Aiming Boundaries Alignment", "Center" },
-            { "Mouse Movement Method", "Mouse Event" }
+            { "Mouse Movement Method", "Mouse Event" },
+            { "Screen Capture Method", "DirectX" }
+
         };
 
         public static Dictionary<string, dynamic> colorState = new()

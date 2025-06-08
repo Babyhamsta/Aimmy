@@ -161,6 +161,12 @@ namespace Aimmy2.Controls
             SettingsConfig.Children.Add(uiManager.D_MouseMovementMethod);
             SetupMouseMovementDropdown(uiManager);
 
+            uiManager.D_ScreenCaptureMethod = CreateDropdown("Screen Capture Method");
+            SettingsConfig.Children.Add(uiManager.D_ScreenCaptureMethod);
+
+            _mainWindow.AddDropdownItem(uiManager.D_ScreenCaptureMethod, "DirectX");
+            _mainWindow.AddDropdownItem(uiManager.D_ScreenCaptureMethod, "GDI");
+
             // AI Confidence slider
             uiManager.S_AIMinimumConfidence = CreateSlider("AI Minimum Confidence", "% Confidence", 1, 1, 1, 100);
             SettingsConfig.Children.Add(uiManager.S_AIMinimumConfidence);

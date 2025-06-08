@@ -97,6 +97,7 @@ namespace Class
         public AToggle? T_CollectDataWhilePlaying { get; set; }
         public AToggle? T_AutoLabelData { get; set; }
         public ADropdown? D_MouseMovementMethod { get; set; }
+        public ADropdown? D_ScreenCaptureMethod { get; set; }
         public ComboBoxItem? DDI_LGHUB { get; set; }
         public ComboBoxItem? DDI_RazerSynapse { get; set; }
         public ComboBoxItem? DDI_ddxoft { get; set; }
