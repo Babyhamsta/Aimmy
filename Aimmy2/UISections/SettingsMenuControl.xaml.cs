@@ -4,6 +4,7 @@ using Aimmy2.UILibrary;
 using Class;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
+using MouseMovementLibraries.MakcuSupport;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -201,23 +202,33 @@ namespace Aimmy2.Controls
             uiManager.DDI_LGHUB = _mainWindow.AddDropdownItem(dropdown, "LG HUB");
             uiManager.DDI_RazerSynapse = _mainWindow.AddDropdownItem(dropdown, "Razer Synapse (Require Razer Peripheral)");
             uiManager.DDI_ddxoft = _mainWindow.AddDropdownItem(dropdown, "ddxoft Virtual Input Driver");
+            uiManager.DDI_MAKCU = _mainWindow.AddDropdownItem(dropdown, "MAKCU Support");
 
             // Setup handlers
             uiManager.DDI_LGHUB.Selected += async (s, e) =>
             {
+                MakcuMain.Unload();
                 if (!new LGHubMain().Load())
                     await ResetToMouseEvent();
             };
 
             uiManager.DDI_RazerSynapse.Selected += async (s, e) =>
             {
+                MakcuMain.Unload();
                 if (!await RZMouse.Load())
                     await ResetToMouseEvent();
             };
 
             uiManager.DDI_ddxoft.Selected += async (s, e) =>
             {
+                MakcuMain.Unload();
                 if (!await DdxoftMain.Load())
+                    await ResetToMouseEvent();
+            };
+
+            uiManager.DDI_MAKCU.Selected += async (s, e) =>
+            {
+                if (!await MakcuMain.Load())
                     await ResetToMouseEvent();
             };
         }

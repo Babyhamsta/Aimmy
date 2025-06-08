@@ -76,6 +76,7 @@
     <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
     <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
     <PackageReference Include="Supercluster.KDTree" Version="1.0.4" />
+    <PackageReference Include="System.IO.Ports" Version="9.0.5" />
     <PackageReference Include="System.Management" Version="9.0.5" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />

@@ -1,11 +1,13 @@
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Input;
 using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Class;
 using MouseMovementLibraries.ddxoftSupport;
+using MouseMovementLibraries.MakcuSupport;
 using MouseMovementLibraries.RazerSupport;
 using MouseMovementLibraries.SendInputSupport;
-using System.Drawing;
-using System.Runtime.InteropServices;
 
 namespace InputLogic
 {
@@ -87,6 +89,10 @@ namespace InputLogic
                     mouseUpAction = () => DdxoftMain.ddxoftInstance.btn(2);
                     break;
 
+                case "MAKCU Support":
+                    mouseDownAction = () => MakcuMain.MakcuInstance.Press(MakcuMouseButton.Left);
+                    mouseUpAction = () => MakcuMain.MakcuInstance.Release(MakcuMouseButton.Left);
+                    break;
                 default:
                     mouseDownAction = () => mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
                     mouseUpAction = () => mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
@@ -128,6 +134,10 @@ namespace InputLogic
 
                 case "ddxoft Virtual Input Driver":
                     DdxoftMain.ddxoftInstance.movR!(xRecoil, yRecoil);
+                    break;
+
+                case "MAKCU Support":
+                    MakcuMain.MakcuInstance.Move(xRecoil, yRecoil);
                     break;
 
                 default:
@@ -182,6 +192,10 @@ namespace InputLogic
 
                 case "ddxoft Virtual Input Driver":
                     DdxoftMain.ddxoftInstance.movR!(newPosition.X, newPosition.Y);
+                    break;
+
+                case "MAKCU Support":
+                    MakcuMain.MakcuInstance.Move(newPosition.X, newPosition.Y);
                     break;
 
                 default:

@@ -100,6 +100,8 @@ namespace Class
         public ComboBoxItem? DDI_LGHUB { get; set; }
         public ComboBoxItem? DDI_RazerSynapse { get; set; }
         public ComboBoxItem? DDI_ddxoft { get; set; }
+
+        public ComboBoxItem? DDI_MAKCU { get; set; }
         public ASlider? S_AIMinimumConfidence { get; set; }
         public AToggle? T_MouseBackgroundEffect { get; set; }
         public AToggle? T_UITopMost { get; set; }
