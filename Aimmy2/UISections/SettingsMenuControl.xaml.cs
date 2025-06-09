@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+﻿﻿using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.UILibrary;
 using Class;
@@ -176,6 +176,12 @@ namespace Aimmy2.Controls
                         if (!await DdxoftMain.Load())
                             await ResetToMouseEvent();
                     };
+
+                    uiManager.DDI_MAKCU.Selected += async (s, e) =>
+                    {
+                        if (!await MakcuMain.Load())
+                            await ResetToMouseEvent();
+                    };
                 })
                 .AddDropdown("Screen Capture Method", d =>
                 {
@@ -292,170 +298,6 @@ namespace Aimmy2.Controls
         #endregion
 
         #region Menu Section Loaders
-
-        private void LoadSettingsConfig()
-        {
-            var uiManager = _mainWindow!.uiManager;
-            var builder = new SectionBuilder(this, SettingsConfig);
-
-            builder
-                .AddTitle("Settings Menu", true, t =>
-                {
-                    uiManager.AT_SettingsMenu = t;
-                    t.Minimize.Click += (s, e) => TogglePanel("Settings Menu", SettingsConfigPanel);
-                })
-                .AddToggle("Collect Data While Playing", t => uiManager.T_CollectDataWhilePlaying = t)
-                .AddToggle("Auto Label Data", t => uiManager.T_AutoLabelData = t)
-                .AddDropdown("Mouse Movement Method", d =>
-                {
-                    uiManager.D_MouseMovementMethod = d;
-                    d.DropdownBox.SelectedIndex = -1;  // Prevent auto-selection
-
-                    // Add options
-                    _mainWindow!.AddDropdownItem(d, "Mouse Event");
-                    _mainWindow.AddDropdownItem(d, "SendInput");
-
-                    // Special options with validation
-                    uiManager.DDI_LGHUB = _mainWindow.AddDropdownItem(d, "LG HUB");
-                    uiManager.DDI_RazerSynapse = _mainWindow.AddDropdownItem(d, "Razer Synapse (Require Razer Peripheral)");
-                    uiManager.DDI_ddxoft = _mainWindow.AddDropdownItem(d, "ddxoft Virtual Input Driver");
-                    uiManager.DDI_MAKCU = _mainWindow.AddDropdownItem(d, "MAKCU Support");
-                    // Setup handlers
-                    uiManager.DDI_LGHUB.Selected += async (s, e) =>
-                    {
-                        MakcuMain.Unload();
-                        if (!new LGHubMain().Load())
-                            await ResetToMouseEvent();
-                    };
-
-                    uiManager.DDI_RazerSynapse.Selected += async (s, e) =>
-                    {
-                        MakcuMain.Unload();
-                        if (!await RZMouse.Load())
-                            await ResetToMouseEvent();
-                    };
-
-                    uiManager.DDI_ddxoft.Selected += async (s, e) =>
-                    {
-                        MakcuMain.Unload();
-                        if (!await DdxoftMain.Load())
-                            await ResetToMouseEvent();
-                    };
-
-                    uiManager.DDI_MAKCU.Selected += async (s, e) =>
-                    {
-                        if (!await MakcuMain.Load())
-                            await ResetToMouseEvent();
-                    };
-                })
-                .AddDropdown("Screen Capture Method", d =>
-                {
-                    uiManager.D_ScreenCaptureMethod = d;
-                    d.DropdownBox.SelectedIndex = -1;  // Prevent auto-selection
-                    _mainWindow.AddDropdownItem(d, "DirectX");
-                    _mainWindow.AddDropdownItem(d, "GDI+");
-                })
-                .AddSlider("AI Minimum Confidence", "% Confidence", 1, 1, 1, 100, s =>
-                {
-                    uiManager.S_AIMinimumConfidence = s;
-                    s.Slider.PreviewMouseLeftButtonUp += (sender, e) =>
-                    {
-                        var value = s.Slider.Value;
-                        if (value >= 95)
-                            ShowNotice("The minimum confidence you have set for Aimmy to be too high and may be unable to detect players.");
-                        else if (value <= 35)
-                            ShowNotice("The minimum confidence you have set for Aimmy may be too low can cause false positives.");
-                    };
-                })
-                .AddToggle("Mouse Background Effect", t => uiManager.T_MouseBackgroundEffect = t)
-                .AddToggle("UI TopMost", t => uiManager.T_UITopMost = t)
-                .AddButton("Save Config", b =>
-                {
-                    uiManager.B_SaveConfig = b;
-                    b.Reader.Click += (s, e) => new ConfigSaver().ShowDialog();
-                })
-                .AddSeparator();
-        }
-
-        private void LoadXYPercentageMenu()
-        {
-            var uiManager = _mainWindow!.uiManager;
-            var builder = new SectionBuilder(this, XYPercentageEnablerMenu);
-
-            builder
-                .AddTitle("X/Y Percentage Adjustment", true, t =>
-                {
-                    uiManager.AT_XYPercentageAdjustmentEnabler = t;
-                    t.Minimize.Click += (s, e) =>
-                        TogglePanel("X/Y Percentage Adjustment", XYPercentageEnablerMenuPanel);
-                })
-                .AddToggle("X Axis Percentage Adjustment", t => uiManager.T_XAxisPercentageAdjustment = t)
-                .AddToggle("Y Axis Percentage Adjustment", t => uiManager.T_YAxisPercentageAdjustment = t)
-                .AddSeparator();
-        }
-
-        private void LoadDisplaySelectMenu()
-        {
-            var uiManager = _mainWindow!.uiManager;
-            var builder = new SectionBuilder(this, DisplaySelectMenu);
-
-            builder
-                .AddTitle("Display Settings", true, t =>
-                {
-                    uiManager.AT_DisplaySelector = t;
-                    t.Minimize.Click += (s, e) =>
-                        TogglePanel("Display Settings", DisplaySelectMenuPanel);
-                })
-                .AddSeparator();
-
-            // Handle DisplaySelector separately as it's a custom control
-            uiManager.DisplaySelector = new ADisplaySelector();
-            uiManager.DisplaySelector.RefreshDisplays();
-
-            // Insert after title but before separator
-            var insertIndex = DisplaySelectMenu.Children.Count - 2;
-            DisplaySelectMenu.Children.Insert(insertIndex, uiManager.DisplaySelector);
-
-            // Add refresh button after DisplaySelector
-            var refreshButton = new APButton("Refresh Displays");
-            refreshButton.Reader.Click += (s, e) =>
-            {
-                try
-                {
-                    DisplayManager.RefreshDisplays();
-                    uiManager.DisplaySelector.RefreshDisplays();
-                    ShowNotice("Display list refreshed successfully");
-                }
-                catch (Exception ex)
-                {
-                    ShowNotice($"Error refreshing displays: {ex.Message}");
-                }
-            };
-            DisplaySelectMenu.Children.Insert(insertIndex + 1, refreshButton);
-        }
-
-        private void LoadThemeMenu()
-        {
-            var uiManager = _mainWindow!.uiManager;
-            var builder = new SectionBuilder(this, ThemeMenu);
-
-            builder
-                .AddTitle("Theme Settings", true, t =>
-                {
-                    uiManager.AT_ThemeColorWheel = t;
-                    t.Minimize.Click += (s, e) =>
-                        TogglePanel("Theme Settings", ThemeMenuPanel);
-                })
-                .AddSeparator();
-
-            // Handle ColorWheel separately as it's a custom control
-            uiManager.ThemeColorWheel = new AColorWheel();
-
-            // Insert before separator
-            var insertIndex = ThemeMenu.Children.Count - 1;
-            ThemeMenu.Children.Insert(insertIndex, uiManager.ThemeColorWheel);
-        }
-
         #endregion
 
         #region Helper Methods
