@@ -358,72 +358,135 @@ namespace MouseMovementLibraries.MakcuSupport
 
         private void ListenForButtonEvents(bool debug)
         {
-            Log("Listener thread started."); byte lastMask = 0xFF;
+            Log("Listener thread started. (PACKET PARSING MODE)");
+            byte lastMask = 0x00; // <<-- CAMBIO CLAVE: Inicializar como todos los botones liberados
             var buttonMap = new Dictionary<int, MakcuMouseButton> {
-                {0, MakcuMouseButton.Left}, {1, MakcuMouseButton.Right}, {2, MakcuMouseButton.Middle},
-                {3, MakcuMouseButton.Mouse4}, {4, MakcuMouseButton.Mouse5}
-            };
+        {0, MakcuMouseButton.Left}, {1, MakcuMouseButton.Right}, {2, MakcuMouseButton.Middle},
+        {3, MakcuMouseButton.Mouse4}, {4, MakcuMouseButton.Mouse5}
+    };
+
+            byte[] packetHeader = { 0x6B, 0x6D, 0x2E };
+            int currentHeaderIndex = 0;
+
             while (!_stopListenerEvent.IsSet)
             {
                 if (!IsInitializedAndConnected || _pauseListener || _serialPort == null || !_serialPort.IsOpen)
                 {
                     Thread.Sleep(20);
+                    currentHeaderIndex = 0;
                     continue;
                 }
+
                 try
                 {
                     if (_serialPort.BytesToRead > 0)
                     {
-                        int byteRead = _serialPort.ReadByte();
-                        if (byteRead == -1) continue;
+                        byte byteRead = (byte)_serialPort.ReadByte();
 
-                        byte currentMask = (byte)byteRead;
-                        if (currentMask > 0b00011111 && currentMask != 0xFF)
+                        if (byteRead == packetHeader[currentHeaderIndex])
                         {
-                            if (debug) Log($"Listener: Filtered byte (out of range or unwanted): 0x{currentMask:X2}");
-                            continue;
-                        }
-
-                        if (currentMask != lastMask)
-                        {
-                            if (debug) Log($"Listener: New mask 0x{currentMask:X2} (previous 0x{lastMask:X2})");
-                            byte changedBits = (byte)(currentMask ^ lastMask);
-                            lock (_buttonStates)
+                            currentHeaderIndex++;
+                            if (currentHeaderIndex == packetHeader.Length)
                             {
-                                foreach (var pair in buttonMap)
+                                if (debug) Log($"Listener: Packet header {string.Join(",", packetHeader.Select(b => b.ToString("X2")))} detected!");
+
+                                if (_serialPort.BytesToRead > 0)
                                 {
-                                    if ((changedBits & (1 << pair.Key)) != 0)
+                                    byte currentMask = (byte)_serialPort.ReadByte();
+                                    if (debug) Log($"Listener: Potential button mask byte: 0x{currentMask:X2}");
+
+                                    if (currentMask <= 0b00011111)
                                     {
-                                        bool isPressed = (currentMask & (1 << pair.Key)) != 0;
-                                        _buttonStates[pair.Value] = isPressed;
-                                        try { ButtonStateChanged?.Invoke(pair.Value, isPressed); }
-                                        catch (Exception ex) { Log($"Exception in ButtonStateChanged handler: {ex.Message}"); }
+                                        if (currentMask != lastMask)
+                                        {
+                                            if (debug) Log($"Listener: Processing button mask. New: 0x{currentMask:X2}, Prev: 0x{lastMask:X2}");
+                                            byte changedBits = (byte)(currentMask ^ lastMask);
+
+                                            lock (_buttonStates)
+                                            {
+                                                foreach (var pair in buttonMap)
+                                                {
+                                                    if ((changedBits & (1 << pair.Key)) != 0)
+                                                    {
+                                                        bool isPressed = (currentMask & (1 << pair.Key)) != 0;
+                                                        _buttonStates[pair.Value] = isPressed;
+                                                        if (debug) Log($"Listener: ---> EVENT: Button: {pair.Value}, IsPressed: {isPressed}");
+                                                        try
+                                                        {
+                                                            ButtonStateChanged?.Invoke(pair.Value, isPressed);
+                                                        }
+                                                        catch (Exception ex)
+                                                        {
+                                                            Log($"Exception in ButtonStateChanged handler: {ex.Message}");
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            lastMask = currentMask;
+                                            if (debug)
+                                            {
+                                                var pressedButtons = _buttonStates.Where(kvp => kvp.Value).Select(kvp => kvp.Key.ToString()).ToArray();
+                                                Log($"Listener: Button states updated. Mask: 0x{currentMask:X2} -> {(pressedButtons.Any() ? string.Join(", ", pressedButtons) : "None")}");
+                                            }
+                                        }
+                                    }
+
+                                    int expectedTailBytes = 2;
+                                    for (int i = 0; i < expectedTailBytes; i++)
+                                    {
+                                        if (_serialPort.BytesToRead > 0)
+                                        {
+                                            byte consumedByte = (byte)_serialPort.ReadByte();
+                                            if (debug) Log($"Listener: Consumed tail byte {i + 1}: 0x{consumedByte:X2}");
+                                        }
+                                        else
+                                        {
+                                            if (debug) Log($"Listener: Expected tail byte {i + 1} but no data. Packet might be short.");
+                                            break;
+                                        }
                                     }
                                 }
+                                else
+                                {
+                                    if (debug) Log("Listener: Header found, but no data for button mask byte. Packet might be short.");
+                                }
+                                currentHeaderIndex = 0;
                             }
-                            lastMask = currentMask;
-                            if (debug)
+                        }
+                        else
+                        {
+                            if (currentHeaderIndex > 0 && debug)
                             {
-                                var pressedButtons = _buttonStates.Where(kvp => kvp.Value).Select(kvp => kvp.Key.ToString()).ToArray();
-                                Log($"Button states: Mask: 0x{currentMask:X2} -> {(pressedButtons.Any() ? string.Join(", ", pressedButtons) : "None")}");
+                                Log($"Listener: Byte 0x{byteRead:X2} broke header sequence at index {currentHeaderIndex}. Resetting search.");
+                            }
+                            currentHeaderIndex = 0;
+                            if (byteRead == packetHeader[0])
+                            {
+                                currentHeaderIndex = 1;
                             }
                         }
                     }
-                    else Thread.Sleep(1);
+                    else
+                    {
+                        Thread.Sleep(1);
+                    }
                 }
                 catch (TimeoutException)
                 {
-
+                    if (debug) Log("Listener: TimeoutException during serial read.");
+                    currentHeaderIndex = 0;
                 }
                 catch (InvalidOperationException ex)
                 {
                     Log($"Listener: InvalidOperationException (port probably closed): {ex.Message}. Stopping listener.");
                     _isInitializedAndConnected = false;
+                    currentHeaderIndex = 0;
                     break;
                 }
                 catch (Exception ex)
                 {
-                    Log($"Error in listener: {ex.Message}");
+                    Log($"Error in listener: {ex.GetType().Name} - {ex.Message}");
+                    currentHeaderIndex = 0;
                     Thread.Sleep(100);
                 }
             }
