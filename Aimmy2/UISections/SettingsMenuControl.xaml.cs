@@ -295,13 +295,6 @@ namespace Aimmy2.Controls
 
         #region Helper Methods
 
-        #endregion
-
-        #region Menu Section Loaders
-        #endregion
-
-        #region Helper Methods
-
         private void OnDisplayChanged(object? sender, DisplayChangedEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke(() =>
