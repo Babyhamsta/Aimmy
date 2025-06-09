@@ -207,6 +207,7 @@ namespace Aimmy2.Controls
                 })
                 .AddDropdown("Prediction Method", d =>
                 {
+                    d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_PredictionMethod = d;
                     _mainWindow.AddDropdownItem(d, "Kalman Filter");
                     _mainWindow.AddDropdownItem(d, "Shall0e's Prediction");
@@ -214,6 +215,7 @@ namespace Aimmy2.Controls
                 })
                 .AddDropdown("Detection Area Type", d =>
                 {
+                    d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_DetectionAreaType = d;
                     uiManager.DDI_ClosestToCenterScreen = _mainWindow.AddDropdownItem(d, "Closest to Center Screen");
                     _mainWindow.AddDropdownItem(d, "Closest to Mouse");
@@ -229,6 +231,7 @@ namespace Aimmy2.Controls
                 })
                 .AddDropdown("Aiming Boundaries Alignment", d =>
                 {
+                    d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_AimingBoundariesAlignment = d;
                     _mainWindow.AddDropdownItem(d, "Center");
                     _mainWindow.AddDropdownItem(d, "Top");

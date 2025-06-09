@@ -62,7 +62,7 @@
                        FontSize="15" />
                 <Label x:Name="AboutDesc"
                        Foreground="White"
-                       Content="v2.4.0"
+                       Content="v2.4.1"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
                        VerticalContentAlignment="Center"
                        Padding="0,0,0,0"

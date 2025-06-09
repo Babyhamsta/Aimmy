@@ -86,9 +86,19 @@ namespace Aimmy2
         {
             try
             {
+                SaveDictionary.EnsureDirectoriesExist();
+
                 InitializeMenus();
                 InitializeFileManagerEarly();
+
+                // Load configurations BEFORE loading any menus
+                // This ensures minimize states are loaded from file before menu initialization
+                await LoadConfigurationsAsync();
+
+                // Now load the initial menu - it will use the loaded minimize states
                 LoadInitialMenu();
+
+                // Continue with the rest of initialization
                 await InitializeApplicationAsync();
                 UpdateAboutSpecs();
                 ApplyThemeGradients();
@@ -133,9 +143,15 @@ namespace Aimmy2
             InitializeWindows();
 
             EnsureRequiredFiles();
-            await LoadConfigurationsAsync();
+
+            // Configuration loading has been moved to Window_Loaded before menu initialization
+            // Only load specific configurations that aren't related to UI state
+            await Task.Run(() =>
+            {
+                arManager.HoldDownLoad();
+            });
+
             SetupKeybindings();
-            LoadDropdownStates();
             ConfigurePropertyChangers();
             ApplyInitialSettings();
             ListenForKeybinds();
@@ -180,6 +196,15 @@ namespace Aimmy2
         private void EnsureRequiredFiles()
         {
             var labelsPath = "bin\\labels\\labels.txt";
+            var labelsDir = Path.GetDirectoryName(labelsPath);
+
+            // Ensure the directory exists
+            if (!string.IsNullOrEmpty(labelsDir) && !Directory.Exists(labelsDir))
+            {
+                Directory.CreateDirectory(labelsDir);
+            }
+
+            // Create the file if it doesn't exist
             if (!File.Exists(labelsPath))
             {
                 File.WriteAllText(labelsPath, "Enemy");
@@ -188,12 +213,12 @@ namespace Aimmy2
 
         private async Task LoadConfigurationsAsync()
         {
+            // Run non-UI operations in background
             await Task.Run(() =>
             {
                 arManager.HoldDownLoad();
-                LoadConfig();
-                LoadAntiRecoilConfig();
 
+                // Load configurations that don't create UI
                 var configs = new[]
                 {
                     (Dictionary.minimizeState, "bin\\minimize.cfg"),
@@ -209,8 +234,13 @@ namespace Aimmy2
                 }
             });
 
+            // Load these on UI thread since they might show notifications
+            LoadConfig();
+            LoadAntiRecoilConfig();
+
             ApplyThemeColorFromConfig();
         }
+
 
         private void ApplyThemeColorFromConfig()
         {
@@ -466,6 +496,7 @@ namespace Aimmy2
                     case AimMenuControl aimMenu:
                         aimMenu.Initialize(this);
                         CurrentScrollViewer = aimMenu.AimMenuScrollViewer;
+                        LoadDropdownStates();
                         break;
 
                     case ModelMenuControl modelMenu:
@@ -642,7 +673,7 @@ namespace Aimmy2
             dropdownitem.Selected += (s, e) =>
             {
                 var key = dropdown.DropdownTitle.Content?.ToString()
-                    ?? throw new NullReferenceException("dropdown.DropdownTitle.Content.ToString() is null");
+                        ?? throw new NullReferenceException("dropdown.DropdownTitle.Content.ToString() is null");
                 Dictionary.dropdownState[key] = title;
             };
 
@@ -809,27 +840,31 @@ namespace Aimmy2
 
         private void LoadDropdownStates()
         {
-            if (_menuControls["SettingsMenu"] == null || !_menuInitialized["SettingsMenu"])
-                return;
 
             var dropdownConfigs = new[]
             {
+                // AimMenu dropdowns
                 (uiManager.D_PredictionMethod, "Prediction Method", new Dictionary<string, int>
                 {
+                    ["Kalman Filter"] = 0,
                     ["Shall0e's Prediction"] = 1,
                     ["wisethef0x's EMA Prediction"] = 2
                 }),
                 (uiManager.D_DetectionAreaType, "Detection Area Type", new Dictionary<string, int>
                 {
+                    ["Closest to Center Screen"] = 0,
                     ["Closest to Mouse"] = 1
                 }),
                 (uiManager.D_AimingBoundariesAlignment, "Aiming Boundaries Alignment", new Dictionary<string, int>
                 {
+                    ["Center"] = 0,
                     ["Top"] = 1,
                     ["Bottom"] = 2
                 }),
+                // SettingsMenu dropdowns
                 (uiManager.D_MouseMovementMethod, "Mouse Movement Method", new Dictionary<string, int>
                 {
+                    ["Mouse Event"] = 0,
                     ["SendInput"] = 1,
                     ["LG HUB"] = 2,
                     ["Razer Synapse (Require Razer Peripheral)"] = 3,
@@ -837,20 +872,30 @@ namespace Aimmy2
                 }),
                 (uiManager.D_ScreenCaptureMethod, "Screen Capture Method", new Dictionary<string, int>
                 {
-                    ["DirectX"] = 1,
-                    ["GDI+"] = 2
+                    ["DirectX"] = 0,
+                    ["GDI+"] = 1
                 })
             };
 
-            foreach (var (dropdown, _, mappings) in dropdownConfigs)
+            foreach (var (dropdown, key, mappings) in dropdownConfigs)
             {
-                if (dropdown == null) continue;
+                if (dropdown == null)
+                {
+                    continue;
+                }
 
-                var dropdownKey = dropdown.DropdownTitle.Content?.ToString();
-                if (dropdownKey != null && Dictionary.dropdownState.TryGetValue(dropdownKey, out var value))
+                if (Dictionary.dropdownState.TryGetValue(key, out var value))
                 {
                     var stringValue = value?.ToString() ?? "";
-                    dropdown.DropdownBox.SelectedIndex = mappings.TryGetValue(stringValue, out int index) ? index : 0;
+
+                    if (mappings.TryGetValue(stringValue, out int index))
+                    {
+                        dropdown.DropdownBox.SelectedIndex = index;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"No mapping found for '{stringValue}'");
+                    }
                 }
             }
         }
@@ -908,25 +953,63 @@ namespace Aimmy2
 
         public void LoadAntiRecoilConfig(string path = "bin\\anti_recoil_configs\\Default.cfg", bool loading_outside_startup = false)
         {
-            if (!File.Exists(path))
-            {
-                new NoticeBar("[Anti Recoil] Config not found.", 5000).Show();
-                return;
-            }
-
-            SaveDictionary.LoadJSON(Dictionary.AntiRecoilSettings, path);
-
-            if (!loading_outside_startup || _menuControls["AimMenu"] == null || !_menuInitialized["AimMenu"])
-                return;
-
             try
             {
+                // Ensure directory exists
+                string? directory = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                if (!File.Exists(path))
+                {
+                    // Create default config file
+                    SaveDictionary.WriteJSON(Dictionary.AntiRecoilSettings, path);
+
+                    // Only show notification if not during startup
+                    if (loading_outside_startup)
+                    {
+                        // Use dispatcher to ensure UI operations happen on UI thread
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            new NoticeBar("[Anti Recoil] Created default config.", 2000).Show();
+                        });
+                    }
+                    return;
+                }
+
+                SaveDictionary.LoadJSON(Dictionary.AntiRecoilSettings, path);
+
+                if (!loading_outside_startup || _menuControls["AimMenu"] == null || !_menuInitialized["AimMenu"])
+                    return;
+
                 ApplyAntiRecoilConfig();
-                new NoticeBar($"[Anti Recoil] Loaded \"{path}\"", 2000).Show();
+
+                // Only show notification if not during startup
+                if (loading_outside_startup)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        new NoticeBar($"[Anti Recoil] Loaded \"{path}\"", 2000).Show();
+                    });
+                }
             }
             catch (Exception e)
             {
-                throw new Exception($"Error loading config, possibly outdated\n{e}");
+                // Only show error if not during startup
+                if (loading_outside_startup)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show($"Error loading config, possibly outdated\n{e}");
+                    });
+                }
+                else
+                {
+                    // During startup, just log the error
+                    System.Diagnostics.Debug.WriteLine($"Error loading anti-recoil config: {e.Message}");
+                }
             }
         }
 
