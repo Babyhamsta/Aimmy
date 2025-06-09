@@ -158,14 +158,12 @@ namespace Aimmy2.Controls
                     // Setup handlers
                     uiManager.DDI_LGHUB.Selected += async (s, e) =>
                     {
-                        MakcuMain.Unload();
                         if (!new LGHubMain().Load())
                             await ResetToMouseEvent();
                     };
 
                     uiManager.DDI_RazerSynapse.Selected += async (s, e) =>
                     {
-                        MakcuMain.Unload();
                         if (!await RZMouse.Load())
                             await ResetToMouseEvent();
                     };
@@ -181,6 +179,14 @@ namespace Aimmy2.Controls
                     {
                         if (!await MakcuMain.Load())
                             await ResetToMouseEvent();
+                        else _mainWindow.bindingManager.SetupMakcuEvents();
+
+                    };
+
+                    uiManager.DDI_MAKCU.Unselected += (s, e) =>
+                    {
+                        MakcuMain.DisposeInstance();
+                        _mainWindow.bindingManager.RestoreMouseEvents();
                     };
                 })
                 .AddDropdown("Screen Capture Method", d =>

@@ -868,7 +868,8 @@ namespace Aimmy2
                     ["SendInput"] = 1,
                     ["LG HUB"] = 2,
                     ["Razer Synapse (Require Razer Peripheral)"] = 3,
-                    ["ddxoft Virtual Input Driver"] = 4
+                    ["ddxoft Virtual Input Driver"] = 4,
+                    ["MAKCU Support"] = 5
                 }),
                 (uiManager.D_ScreenCaptureMethod, "Screen Capture Method", new Dictionary<string, int>
                 {

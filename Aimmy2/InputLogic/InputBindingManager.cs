@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using MouseMovementLibraries.MakcuSupport;
+using System.Windows.Threading;
 
 namespace InputLogic
 {
@@ -12,8 +13,6 @@ namespace InputLogic
         private readonly Dictionary<string, string> bindings = [];
         private static readonly Dictionary<string, bool> isHolding = [];
         private string? settingBindingId = null;
-
-        private const string MakcuButtonPrefix = "Makcu_";
 
         public event Action<string, string>? OnBindingSet;
 
@@ -37,6 +36,30 @@ namespace InputLogic
             EnsureHookEvents();
         }
 
+        public void SetupMakcuEvents()
+        {
+            if (MakcuMain.MakcuInstance != null && MakcuMain.MakcuInstance.IsInitializedAndConnected)
+            {
+                MakcuMain.MakcuInstance.ButtonStateChanged -= MakcuMouseButtonStateChanged;
+                MakcuMain.MakcuInstance.ButtonStateChanged += MakcuMouseButtonStateChanged;
+                if (_mEvents != null)
+                {
+                    _mEvents.MouseDown -= GlobalHookMouseDown!;
+                    _mEvents.MouseUp -= GlobalHookMouseUp!;
+                }
+            }
+        }
+
+        public void RestoreMouseEvents(){
+            if (_mEvents != null)
+                {
+                    _mEvents.MouseDown -= GlobalHookMouseDown!;
+                    _mEvents.MouseUp -= GlobalHookMouseUp!;
+                    _mEvents.MouseDown += GlobalHookMouseDown!;
+                    _mEvents.MouseUp += GlobalHookMouseUp!;
+                }
+        }
+
         private void EnsureHookEvents()
         {
             if (_mEvents == null)
@@ -48,11 +71,8 @@ namespace InputLogic
                 _mEvents.MouseUp += GlobalHookMouseUp!;
             }
 
-            if (MakcuMain.MakcuInstance != null && MakcuMain.MakcuInstance.IsInitializedAndConnected)
-            {
-                MakcuMain.MakcuInstance.ButtonStateChanged -= MakcuMouseButtonStateChanged;
-                MakcuMain.MakcuInstance.ButtonStateChanged += MakcuMouseButtonStateChanged;
-            }
+            SetupMakcuEvents();
+
         }
 
         private void GlobalHookKeyDown(object sender, KeyEventArgs e)
@@ -157,26 +177,40 @@ namespace InputLogic
    
         private void MakcuMouseButtonStateChanged(MakcuMouseButton button, bool isPressed)
         {
-            string makcuButtonCodeStr = MakcuButtonPrefix + button.ToString();
+            string makcuButtonCodeStr = button.ToString();
 
-            if (settingBindingId != null)
+            if (settingBindingId != null && isPressed)
             {
-                bindings[settingBindingId] = makcuButtonCodeStr;
-                isHolding[settingBindingId] = false;
-                OnBindingSet?.Invoke(settingBindingId, makcuButtonCodeStr);
-                settingBindingId = null;
+                
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    bindings[settingBindingId] = makcuButtonCodeStr;
+                    isHolding[settingBindingId] = false;
+                    OnBindingSet?.Invoke(settingBindingId, makcuButtonCodeStr);
+                    settingBindingId = null;
+                });
             }
             else
             {
                 foreach (var bindingEntry in bindings)
                 {
+                    
                      if (bindingEntry.Value == makcuButtonCodeStr)
                     {
-                        isHolding[bindingEntry.Key] = isPressed;
-                        OnBindingPressed?.Invoke(bindingEntry.Key);
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            isHolding[bindingEntry.Key] = isPressed;
+                            if (isPressed)
+                                OnBindingPressed?.Invoke(bindingEntry.Key);
+                            else
+                                OnBindingReleased?.Invoke(bindingEntry.Key);
+                        });
+                       
                     }
                 }
             }
         }
+
+
     }
 }
