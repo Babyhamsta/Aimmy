@@ -191,6 +191,15 @@ namespace Aimmy2.Controls
                             ShowNotice("The minimum confidence you have set for Aimmy may be too low can cause false positives.");
                     };
                 })
+                .AddToggle("Enable Custom Image Size", t => {
+                    var customImageSizeSlider = CreateSlider("Custom Image Size", "px", 16, 16, 320, 640);
+                    SettingsConfigPanel.Children.Insert(SettingsConfigPanel.Children.IndexOf(t) + 1, customImageSizeSlider);
+                    customImageSizeSlider.Visibility = Dictionary.toggleState["Enable Custom Image Size"] ? Visibility.Visible : Visibility.Collapsed;
+
+                    t.Reader.Click += (s, e) => {
+                        customImageSizeSlider.Visibility = Dictionary.toggleState["Enable Custom Image Size"] ? Visibility.Visible : Visibility.Collapsed;
+                    };
+                })
                 .AddToggle("Mouse Background Effect", t => uiManager.T_MouseBackgroundEffect = t)
                 .AddToggle("UI TopMost", t => uiManager.T_UITopMost = t)
                 .AddButton("Save Config", b =>
@@ -356,7 +365,7 @@ namespace Aimmy2.Controls
                 Slider = { Minimum = min, Maximum = max, TickFrequency = frequency }
             };
 
-            slider.Slider.Value = Dictionary.sliderSettings.TryGetValue(title, out var value) ? value : min;
+            slider.Slider.Value = Dictionary.sliderSettings.TryGetValue(title, out var value) ? Convert.ToDouble(value) : min;
             slider.Slider.ValueChanged += (s, e) => Dictionary.sliderSettings[title] = slider.Slider.Value;
 
             return slider;

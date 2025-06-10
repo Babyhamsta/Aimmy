@@ -39,7 +39,8 @@ namespace Aimmy2.Class
             { "AI Confidence Font Size", 20 },
             { "Corner Radius", 0 },
             { "Border Thickness", 1 },
-            { "Opacity", 1 }
+            { "Opacity", 1 },
+            { "Custom Image Size", 320 }
         };
 
         // Make sure the Settings Name is the EXACT Same as the Toggle Name or I will smack you :joeangy:
@@ -66,7 +67,8 @@ namespace Aimmy2.Class
             { "Mouse Background Effect", true },
             { "UI TopMost", false },
             { "X Axis Percentage Adjustment", false },
-            { "Y Axis Percentage Adjustment", false }
+            { "Y Axis Percentage Adjustment", false },
+            { "Enable Custom Image Size", false }
         };
 
         public static Dictionary<string, dynamic> minimizeState = new()

@@ -72,8 +72,8 @@ namespace Aimmy2.AILogic
         private static int targetX, targetY;
 
         // Pre-calculated values - now dynamic
-        private float _scaleX => ScreenWidth / 640f;
-        private float _scaleY => ScreenHeight / 640f;
+        private float _scaleX => ScreenWidth / (float)GetCaptureSize();
+        private float _scaleY => ScreenHeight / (float)GetCaptureSize();
 
         // Tensor reuse (model inference)
         private DenseTensor<float>? _reusableTensor;
@@ -614,8 +614,18 @@ namespace Aimmy2.AILogic
             }
         }
 
+        private int GetCaptureSize()
+        {
+            if (Dictionary.toggleState["Enable Custom Image Size"])
+            {
+                return (int)Dictionary.sliderSettings["Custom Image Size"];
+            }
+            return IMAGE_SIZE;
+        }
+
         private async Task<Prediction?> GetClosestPrediction(bool useMousePosition = true)
         {
+            int captureSize = GetCaptureSize();
             int adjustedTargetX, adjustedTargetY;
 
             if (Dictionary.dropdownState["Detection Area Type"] == "Closest to Mouse")
@@ -643,7 +653,7 @@ namespace Aimmy2.AILogic
                 targetY = DisplayManager.ScreenTop + (DisplayManager.ScreenHeight / 2);
             }
 
-            Rectangle detectionBox = new(targetX - IMAGE_SIZE / 2, targetY - IMAGE_SIZE / 2, IMAGE_SIZE, IMAGE_SIZE); // Detection box always 640x640
+            Rectangle detectionBox = new(targetX - captureSize / 2, targetY - captureSize / 2, captureSize, captureSize);
 
             Bitmap? frame;
             using (Benchmark("ScreenGrab"))
@@ -651,6 +661,21 @@ namespace Aimmy2.AILogic
                 frame = _captureManager.ScreenGrab(detectionBox);
             }
             if (frame == null) return null;
+
+            Bitmap modelInputFrame = frame;
+            if (captureSize != IMAGE_SIZE)
+            {
+                using (Benchmark("ResizeImage"))
+                {
+                    Bitmap resizedFrame = new Bitmap(IMAGE_SIZE, IMAGE_SIZE);
+                    using (Graphics g = Graphics.FromImage(resizedFrame))
+                    {
+                        g.DrawImage(frame, 0, 0, IMAGE_SIZE, IMAGE_SIZE);
+                    }
+                    if (frame != modelInputFrame) frame.Dispose();
+                    modelInputFrame = resizedFrame;
+                }
+            }
 
             float[] inputArray;
             using (Benchmark("BitmapToFloatArray"))
@@ -662,8 +687,15 @@ namespace Aimmy2.AILogic
                 inputArray = _reusableInputArray;
 
                 // Fill the reusable array
-                BitmapToFloatArrayInPlace(frame, inputArray);
+                BitmapToFloatArrayInPlace(modelInputFrame, inputArray, IMAGE_SIZE);
             }
+
+            // Dispose of the modelInputFrame if it was a new bitmap
+            if (modelInputFrame != frame)
+            {
+                modelInputFrame.Dispose();
+            }
+
 
             // Reuse tensor and inputs
             if (_reusableTensor == null)
@@ -689,16 +721,16 @@ namespace Aimmy2.AILogic
 
             // Calculate the FOV boundaries
             float FovSize = (float)Dictionary.sliderSettings["FOV Size"];
-            float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
-            float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
+            float fovMinX = (captureSize - FovSize) / 2.0f;
+            float fovMaxX = (captureSize + FovSize) / 2.0f;
+            float fovMinY = (captureSize - FovSize) / 2.0f;
+            float fovMaxY = (captureSize + FovSize) / 2.0f;
 
             List<double[]> KDpoints;
             List<Prediction> KDPredictions;
             using (Benchmark("PrepareKDTreeData"))
             {
-                (KDpoints, KDPredictions) = PrepareKDTreeData(outputTensor, detectionBox, fovMinX, fovMaxX, fovMinY, fovMaxY);
+                (KDpoints, KDPredictions) = PrepareKDTreeData(outputTensor, detectionBox, fovMinX, fovMaxX, fovMinY, fovMaxY, captureSize);
             }
 
             if (KDpoints.Count == 0 || KDPredictions.Count == 0)
@@ -711,7 +743,7 @@ namespace Aimmy2.AILogic
             using (Benchmark("KDTreeOperations"))
             {
                 tree = new KDTree<double, Prediction>(2, KDpoints.ToArray(), KDPredictions.ToArray(), L2Norm_Squared_Double);
-                nearest = tree.NearestNeighbors(new double[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 }, 1);
+                nearest = tree.NearestNeighbors(new double[] { captureSize / 2.0, captureSize / 2.0 }, 1);
             }
 
             if (nearest != null && nearest.Length > 0)
@@ -745,9 +777,10 @@ namespace Aimmy2.AILogic
         }
 
         private (List<double[]>, List<Prediction>) PrepareKDTreeData(Tensor<float> outputTensor, Rectangle detectionBox,
-            float fovMinX, float fovMaxX, float fovMinY, float fovMaxY)
+            float fovMinX, float fovMaxX, float fovMinY, float fovMaxY, int captureSize)
         {
             float minConfidence = (float)Dictionary.sliderSettings["AI Minimum Confidence"] / 100.0f;
+            float scaleRatio = (float)captureSize / IMAGE_SIZE;
 
             var KDpoints = new List<double[]>(100); // Pre-allocate with estimated capacity
             var KDpredictions = new List<Prediction>(100);
@@ -757,25 +790,23 @@ namespace Aimmy2.AILogic
                 float objectness = outputTensor[0, 4, i];
                 if (objectness < minConfidence) continue;
 
-                float x_center = outputTensor[0, 0, i];
-                float y_center = outputTensor[0, 1, i];
-                float width = outputTensor[0, 2, i];
-                float height = outputTensor[0, 3, i];
+                float x_center = outputTensor[0, 0, i] * scaleRatio;
+                float y_center = outputTensor[0, 1, i] * scaleRatio;
+                float width = outputTensor[0, 2, i] * scaleRatio;
+                float height = outputTensor[0, 3, i] * scaleRatio;
 
                 float x_min = x_center - width / 2;
                 float y_min = y_center - height / 2;
-                float x_max = x_center + width / 2;
-                float y_max = y_center + height / 2;
 
-                if (x_min < fovMinX || x_max > fovMaxX || y_min < fovMinY || y_max > fovMaxY) continue;
+                if (x_min < fovMinX || (x_min + width) > fovMaxX || y_min < fovMinY || (y_min + height) > fovMaxY) continue;
 
                 RectangleF rect = new(x_min, y_min, width, height);
                 Prediction prediction = new()
                 {
                     Rectangle = rect,
                     Confidence = objectness,
-                    CenterXTranslated = (x_center - detectionBox.Left) / IMAGE_SIZE,
-                    CenterYTranslated = (y_center - detectionBox.Top) / IMAGE_SIZE
+                    CenterXTranslated = (x_center - detectionBox.Left) / captureSize,
+                    CenterYTranslated = (y_center - detectionBox.Top) / captureSize
                 };
 
                 KDpoints.Add(new double[] { x_center, y_center });
@@ -841,11 +872,11 @@ namespace Aimmy2.AILogic
             return dist;
         };
 
-        private unsafe void BitmapToFloatArrayInPlace(Bitmap image, float[] result)
+        private unsafe void BitmapToFloatArrayInPlace(Bitmap image, float[] result, int imageSize)
         {
-            const int width = IMAGE_SIZE;
-            const int height = IMAGE_SIZE;
-            const int totalPixels = width * height;
+            int width = imageSize;
+            int height = imageSize;
+            int totalPixels = width * height;
             const float multiplier = 1f / 255f;
 
             var rect = new Rectangle(0, 0, width, height);
