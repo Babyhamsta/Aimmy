@@ -1,4 +1,4 @@
-﻿using Aimmy2.UILibrary;
+using Aimmy2.UILibrary;
 using System.Windows.Controls;
 using UILibrary;
 
@@ -96,6 +96,8 @@ namespace Class
         public ATitle? AT_SettingsMenu { get; set; }
         public AToggle? T_CollectDataWhilePlaying { get; set; }
         public AToggle? T_AutoLabelData { get; set; }
+        public AToggle? T_EnableCustomImageSize { get; set; }
+        public ADropdown? D_CustomImageSize { get; set; }
         public ADropdown? D_MouseMovementMethod { get; set; }
         public ADropdown? D_ScreenCaptureMethod { get; set; }
         public ComboBoxItem? DDI_LGHUB { get; set; }

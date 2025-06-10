@@ -618,7 +618,10 @@ namespace Aimmy2.AILogic
         {
             if (Dictionary.toggleState["Enable Custom Image Size"])
             {
-                return (int)Dictionary.sliderSettings["Custom Image Size"];
+                var value = Dictionary.dropdownState["Custom Image Size"];
+                if (value is int intValue) return intValue;
+                if (value is string stringValue && int.TryParse(stringValue, out int parsedValue)) return parsedValue;
+                return IMAGE_SIZE; // Fallback to default if parsing fails - parsing shouldn't affect performance significantly
             }
             return IMAGE_SIZE;
         }
@@ -719,12 +722,18 @@ namespace Aimmy2.AILogic
 
             var outputTensor = results[0].AsTensor<float>();
 
-            // Calculate the FOV boundaries
-            float FovSize = (float)Dictionary.sliderSettings["FOV Size"];
-            float fovMinX = (captureSize - FovSize) / 2.0f;
-            float fovMaxX = (captureSize + FovSize) / 2.0f;
-            float fovMinY = (captureSize - FovSize) / 2.0f;
-            float fovMaxY = (captureSize + FovSize) / 2.0f;
+            float baseFovSize = (float)Dictionary.sliderSettings["FOV Size"];
+            float scaleFactor = captureSize / (float)IMAGE_SIZE;
+            float scaledFovSize = baseFovSize * scaleFactor;
+            
+            // ensure FOV is at least 10% of capture size but never exceeds capture size, this may be kinda a bad way to do it but we'll see - helz
+            float minFovSize = captureSize * 0.1f;
+            scaledFovSize = Math.Clamp(scaledFovSize, minFovSize, captureSize);
+            
+            float fovMinX = (captureSize - scaledFovSize) / 2.0f;
+            float fovMaxX = (captureSize + scaledFovSize) / 2.0f;
+            float fovMinY = (captureSize - scaledFovSize) / 2.0f;
+            float fovMaxY = (captureSize + scaledFovSize) / 2.0f;
 
             List<double[]> KDpoints;
             List<Prediction> KDPredictions;

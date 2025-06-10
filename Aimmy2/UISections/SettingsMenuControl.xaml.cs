@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.UILibrary;
 using Class;
@@ -192,13 +192,40 @@ namespace Aimmy2.Controls
                     };
                 })
                 .AddToggle("Enable Custom Image Size", t => {
-                    var customImageSizeSlider = CreateSlider("Custom Image Size", "px", 16, 16, 320, 640);
-                    SettingsConfigPanel.Children.Insert(SettingsConfigPanel.Children.IndexOf(t) + 1, customImageSizeSlider);
-                    customImageSizeSlider.Visibility = Dictionary.toggleState["Enable Custom Image Size"] ? Visibility.Visible : Visibility.Collapsed;
-
-                    t.Reader.Click += (s, e) => {
-                        customImageSizeSlider.Visibility = Dictionary.toggleState["Enable Custom Image Size"] ? Visibility.Visible : Visibility.Collapsed;
+                    uiManager.T_EnableCustomImageSize = t;
+                })
+                .AddDropdown("Custom Image Size", d => {
+                    _mainWindow.AddDropdownItem(d, "640");
+                    _mainWindow.AddDropdownItem(d, "320");
+                    _mainWindow.AddDropdownItem(d, "160");
+                    _mainWindow.AddDropdownItem(d, "80");
+                    
+                    if (Dictionary.dropdownState.TryGetValue("Custom Image Size", out var savedValue))
+                    {
+                        int index = d.DropdownBox.Items.IndexOf(savedValue);
+                        if (index >= 0)
+                            d.DropdownBox.SelectedIndex = index;
+                        else
+                            d.DropdownBox.SelectedIndex = 0; // Default to 640x640
+                    }
+                    else
+                    {
+                        d.DropdownBox.SelectedIndex = 0; // Default to 640x640
+                        Dictionary.dropdownState["Custom Image Size"] = 640;
+                    }
+                    
+                    d.DropdownBox.SelectionChanged += (s, e) =>
+                    {
+                        if (d.DropdownBox.SelectedItem != null)
+                        {
+                            if (int.TryParse(d.DropdownBox.SelectedItem.ToString(), out int sizeValue))
+                            {
+                                Dictionary.dropdownState["Custom Image Size"] = sizeValue;
+                            }
+                        }
                     };
+                    
+                    uiManager.D_CustomImageSize = d;
                 })
                 .AddToggle("Mouse Background Effect", t => uiManager.T_MouseBackgroundEffect = t)
                 .AddToggle("UI TopMost", t => uiManager.T_UITopMost = t)

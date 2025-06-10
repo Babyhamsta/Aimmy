@@ -40,7 +40,6 @@ namespace Aimmy2.Class
             { "Corner Radius", 0 },
             { "Border Thickness", 1 },
             { "Opacity", 1 },
-            { "Custom Image Size", 320 }
         };
 
         // Make sure the Settings Name is the EXACT Same as the Toggle Name or I will smack you :joeangy:
@@ -92,8 +91,8 @@ namespace Aimmy2.Class
             { "Detection Area Type", "Closest to Center Screen" },
             { "Aiming Boundaries Alignment", "Center" },
             { "Mouse Movement Method", "Mouse Event" },
-            { "Screen Capture Method", "DirectX" }
-
+            { "Screen Capture Method", "DirectX" },
+            { "Custom Image Size", 640 }
         };
 
         public static Dictionary<string, dynamic> colorState = new()
