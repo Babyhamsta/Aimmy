@@ -89,12 +89,13 @@ namespace Visuality
                 this.WindowState = WindowState.Maximized;
 
                 // Center the FOV circle on the current display
+                var modelSize = (int)Aimmy2.Class.Dictionary.sliderSettings["Model Resolution"];
                 var centerX = (DisplayManager.ScreenWidth / 2.0) / WinAPICaller.scalingFactorX;
                 var centerY = (DisplayManager.ScreenHeight / 2.0) / WinAPICaller.scalingFactorY;
 
                 FOVStrictEnclosure.Margin = new Thickness(
-                    centerX - 320,  // 320 = half of 640 (FOV size)
-                    centerY - 320,
+                    centerX - (modelSize / 2),
+                    centerY - (modelSize / 2),
                     0, 0);
 
                 // Force layout update

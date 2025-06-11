@@ -1,4 +1,4 @@
-﻿using AILogic;
+using AILogic;
 using Aimmy2.Class;
 using Class;
 using InputLogic;
@@ -20,8 +20,10 @@ namespace Aimmy2.AILogic
     {
         #region Variables
 
-        private const int IMAGE_SIZE = 640;
-        private const int NUM_DETECTIONS = 8400; // Standard for OnnxV8 model (Shape: 1x5x8400)
+        // private const int IMAGE_SIZE = 640; (saving this for in case something goes wrong - helz)
+        private int ModelSize => (int)Aimmy2.Class.Dictionary.sliderSettings["Model Resolution"];
+        // private const int NUM_DETECTIONS = 8400; // Standard for OnnxV8 model (Shape: 1x5x8400) (same thing ^ - helz)
+        private int NumDetections => (int)(Math.Pow(ModelSize / 8, 2) + Math.Pow(ModelSize / 16, 2) + Math.Pow(ModelSize / 32, 2));
         private const int SAVE_FRAME_COOLDOWN_MS = 500;
 
         private DateTime lastSavedTime = DateTime.MinValue;
@@ -174,6 +176,8 @@ namespace Aimmy2.AILogic
 
             _modeloptions = new RunOptions();
 
+            _bitmapBuffer = new byte[3 * ModelSize * ModelSize];
+
             var sessionOptions = new SessionOptions
             {
                 EnableCpuMemArena = true,
@@ -257,7 +261,7 @@ namespace Aimmy2.AILogic
                 ValidateOnnxShape();
 
                 // Pre-allocate bitmap buffer
-                _bitmapBuffer = new byte[3 * IMAGE_SIZE * IMAGE_SIZE];
+                _bitmapBuffer = new byte[3 * ModelSize * ModelSize];
             }
             catch (Exception ex)
             {
@@ -278,7 +282,7 @@ namespace Aimmy2.AILogic
 
         private void ValidateOnnxShape()
         {
-            var expectedShape = new int[] { 1, 5, NUM_DETECTIONS };
+            var expectedShape = new int[] { 1, 5, NumDetections };
             if (_onnxModel != null)
             {
                 var outputMetadata = _onnxModel.OutputMetadata;
@@ -684,7 +688,7 @@ namespace Aimmy2.AILogic
                 targetY = DisplayManager.ScreenTop + (DisplayManager.ScreenHeight / 2);
             }
 
-            Rectangle detectionBox = new(targetX - IMAGE_SIZE / 2, targetY - IMAGE_SIZE / 2, IMAGE_SIZE, IMAGE_SIZE); // Detection box always 640x640
+            Rectangle detectionBox = new(targetX - ModelSize / 2, targetY - ModelSize / 2, ModelSize, ModelSize);
 
             Bitmap? frame;
             using (Benchmark("ScreenGrab"))
@@ -696,9 +700,9 @@ namespace Aimmy2.AILogic
             float[] inputArray;
             using (Benchmark("BitmapToFloatArray"))
             {
-                if (_reusableInputArray == null || _reusableInputArray.Length != 3 * IMAGE_SIZE * IMAGE_SIZE)
+                if (_reusableInputArray == null || _reusableInputArray.Length != 3 * ModelSize * ModelSize)
                 {
-                    _reusableInputArray = new float[3 * IMAGE_SIZE * IMAGE_SIZE];
+                    _reusableInputArray = new float[3 * ModelSize * ModelSize];
                 }
                 inputArray = _reusableInputArray;
 
@@ -709,7 +713,7 @@ namespace Aimmy2.AILogic
             // Reuse tensor and inputs
             if (_reusableTensor == null)
             {
-                _reusableTensor = new DenseTensor<float>(inputArray, new int[] { 1, 3, IMAGE_SIZE, IMAGE_SIZE });
+                _reusableTensor = new DenseTensor<float>(inputArray, new int[] { 1, 3, ModelSize, ModelSize });
                 _reusableInputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", _reusableTensor) };
             }
             else
@@ -730,10 +734,10 @@ namespace Aimmy2.AILogic
 
             // Calculate the FOV boundaries
             float FovSize = (float)Dictionary.sliderSettings["FOV Size"];
-            float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
-            float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
+            float fovMinX = (ModelSize - FovSize) / 2.0f;
+            float fovMaxX = (ModelSize + FovSize) / 2.0f;
+            float fovMinY = (ModelSize - FovSize) / 2.0f;
+            float fovMaxY = (ModelSize + FovSize) / 2.0f;
 
             List<double[]> KDpoints;
             List<Prediction> KDPredictions;
@@ -752,7 +756,7 @@ namespace Aimmy2.AILogic
             using (Benchmark("KDTreeOperations"))
             {
                 tree = new KDTree<double, Prediction>(2, KDpoints.ToArray(), KDPredictions.ToArray(), L2Norm_Squared_Double);
-                nearest = tree.NearestNeighbors(new double[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 }, 1);
+                nearest = tree.NearestNeighbors(new double[] { ModelSize / 2.0, ModelSize / 2.0 }, 1);
             }
 
             if (nearest != null && nearest.Length > 0)
@@ -793,7 +797,7 @@ namespace Aimmy2.AILogic
             var KDpoints = new List<double[]>(100); // Pre-allocate with estimated capacity
             var KDpredictions = new List<Prediction>(100);
 
-            for (int i = 0; i < NUM_DETECTIONS; i++)
+            for (int i = 0; i < NumDetections; i++)
             {
                 float objectness = outputTensor[0, 4, i];
                 if (objectness < minConfidence) continue;
@@ -815,8 +819,8 @@ namespace Aimmy2.AILogic
                 {
                     Rectangle = rect,
                     Confidence = objectness,
-                    CenterXTranslated = (x_center - detectionBox.Left) / IMAGE_SIZE,
-                    CenterYTranslated = (y_center - detectionBox.Top) / IMAGE_SIZE
+                    CenterXTranslated = (x_center - detectionBox.Left) / ModelSize,
+                    CenterYTranslated = (y_center - detectionBox.Top) / ModelSize
                 };
 
                 KDpoints.Add(new double[] { x_center, y_center });
@@ -884,9 +888,9 @@ namespace Aimmy2.AILogic
 
         private unsafe void BitmapToFloatArrayInPlace(Bitmap image, float[] result)
         {
-            const int width = IMAGE_SIZE;
-            const int height = IMAGE_SIZE;
-            const int totalPixels = width * height;
+            int width = ModelSize;
+            int height = ModelSize;
+            int totalPixels = width * height;
             const float multiplier = 1f / 255f;
 
             var rect = new Rectangle(0, 0, width, height);

@@ -141,6 +141,29 @@ namespace Aimmy2.Controls
                 })
                 .AddToggle("Collect Data While Playing", t => uiManager.T_CollectDataWhilePlaying = t)
                 .AddToggle("Auto Label Data", t => uiManager.T_AutoLabelData = t)
+                .AddDropdown("Model Resolution", d =>
+                {
+                    uiManager.D_ModelResolution = d;
+                    d.DropdownBox.SelectedIndex = -1;
+                    foreach (var resolution in Aimmy2.Class.Dictionary.ModelResolutions)
+                    {
+                        _mainWindow.AddDropdownItem(d, resolution.ToString());
+                    }
+
+                    d.DropdownBox.SelectionChanged += (s, e) =>
+                    {
+                        if (d.DropdownBox.SelectedItem is ComboBoxItem selectedItem)
+                        {
+                            string selectedResolutionStr = selectedItem.Content.ToString();
+                            if (int.TryParse(selectedResolutionStr, out int selectedResolution))
+                            {
+                                Aimmy2.Class.Dictionary.sliderSettings["Model Resolution"] = selectedResolution;
+                                // You might want to reload the model here or notify the user to do so.
+                                new NoticeBar($"Model resolution set to {selectedResolution}. Please reload your model.", 5000).Show();
+                            }
+                        }
+                    };
+                })
                 .AddDropdown("Mouse Movement Method", d =>
                 {
                     uiManager.D_MouseMovementMethod = d;

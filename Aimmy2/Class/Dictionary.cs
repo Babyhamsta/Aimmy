@@ -8,6 +8,7 @@ namespace Aimmy2.Class
         public static string lastLoadedConfig = "N/A";
         public static DetectedPlayerWindow? DetectedPlayerOverlay;
         public static FOV? FOVWindow;
+        public static readonly List<int> ModelResolutions = new List<int> { 640, 320, 160, 80 };
 
         public static Dictionary<string, dynamic> bindingSettings = new()
         {
@@ -39,7 +40,8 @@ namespace Aimmy2.Class
             { "AI Confidence Font Size", 20 },
             { "Corner Radius", 0 },
             { "Border Thickness", 1 },
-            { "Opacity", 1 }
+            { "Opacity", 1 },
+            { "Model Resolution", 640 }
         };
 
         // Make sure the Settings Name is the EXACT Same as the Toggle Name or I will smack you :joeangy:
@@ -91,7 +93,8 @@ namespace Aimmy2.Class
             { "Aiming Boundaries Alignment", "Center" },
             { "Mouse Movement Method", "Mouse Event" },
             { "Screen Capture Method", "DirectX" },
-            { "Tracer Position", "Bottom" }
+            { "Tracer Position", "Bottom" },
+            { "Model Resolution", "640" }
 
         };
 
