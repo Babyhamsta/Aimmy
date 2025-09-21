@@ -1,0 +1,13 @@
+train: C:\Users\msjen\OneDrive\Desktop\This Is Not An Ai Aimbot.v2i.yolov8\train\images
+val: C:\Users\msjen\OneDrive\Desktop\This Is Not An Ai Aimbot.v2i.yolov8\valid\images
+test: C:\Users\msjen\OneDrive\Desktop\This Is Not An Ai Aimbot.v2i.yolov8\test\images
+
+nc: 1
+names: ['Enemy-OdbL']
+
+roboflow:
+  workspace: aim-ge1bq
+  project: this-is-not-an-ai-aimbot-3nnoo
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/aim-ge1bq/this-is-not-an-ai-aimbot-3nnoo/dataset/2
