@@ -301,7 +301,7 @@ namespace Aimmy2.Controls
                     _mainWindow.AddDropdownItem(d, "GDI+");
                 }, tooltip: "How the screen is captured. DirectX is faster, GDI+ works on more systems.")
                 .AddToggle("StreamGuard", t => uiManager.T_StreamGuard = t,
-                    tooltip: "Hide the overlay from screen recordings and streams.")
+                    tooltip: "Hide the overlay from screen recordings and streams. - Appears in your system tray.")
                 .AddSeparator();
 
             // Handle DisplaySelector separately as it's a custom control
