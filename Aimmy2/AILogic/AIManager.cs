@@ -354,7 +354,19 @@ namespace Aimmy2.AILogic
                     var supportedSizes = new[] { "640", "512", "416", "320", "256", "160" };
                     var fixedSizeStr = fixedInputSize.ToString();
 
-                    if (fixedInputSize != IMAGE_SIZE && supportedSizes.Contains(fixedSizeStr))
+                    if (!supportedSizes.Contains(fixedSizeStr))
+                    {
+                        Log(LogLevel.Error,
+                            $"Model requires unsupported size {fixedInputSize}x{fixedInputSize}. Supported sizes are: {string.Join(", ", supportedSizes)}",
+                            true, 10000);
+                        return false;
+                    }
+
+                    // Always calculate NUM_DETECTIONS based on the model's fixed size
+                    NUM_DETECTIONS = CalculateNumDetections(fixedInputSize);
+                    _currentImageSize = fixedInputSize;
+
+                    if (fixedInputSize != int.Parse(Dictionary.dropdownState["Image Size"]))
                     {
                         // Auto-adjust the image size to match the model
                         Log(LogLevel.Warning,
@@ -377,19 +389,9 @@ namespace Aimmy2.AILogic
                             }
                             catch { }
                         });
-
-                        // The IMAGE_SIZE property will now return the correct value
-                        NUM_DETECTIONS = CalculateNumDetections(fixedInputSize);
-                        ImageSizeUpdated?.Invoke(fixedInputSize);
-                    }
-                    else if (!supportedSizes.Contains(fixedSizeStr))
-                    {
-                        Log(LogLevel.Error,
-                            $"Model requires unsupported size {fixedInputSize}x{fixedInputSize}. Supported sizes are: {string.Join(", ", supportedSizes)}",
-                            true, 10000);
-                        return false;
                     }
 
+                    ImageSizeUpdated?.Invoke(fixedInputSize);
                     LoadClasses();
 
                     // For static models, validate the expected shape

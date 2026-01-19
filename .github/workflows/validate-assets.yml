@@ -3,6 +3,9 @@ name: Validate model submissions
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
+    paths:
+      - 'models/**'
+      - 'configs/**'
 
 permissions:
   contents: write
@@ -28,21 +31,15 @@ jobs:
             const changed = files.map(f => f.filename);
             const hasModels = changed.some(f => f.startsWith('models/') && f.endsWith('.onnx'));
             const hasConfigs = changed.some(f => f.startsWith('configs/') && f.endsWith('.cfg'));
-            const touchesAssets = changed.some(f => f.startsWith('models/') || f.startsWith('configs/'));
 
             core.setOutput('files', changed.join('\n'));
             core.setOutput('has_models', hasModels);
             core.setOutput('has_configs', hasConfigs);
-            core.setOutput('touches_assets', touchesAssets);
 
             console.log('Changed files:', changed);
 
-      - name: Skip non-asset PRs
-        if: steps.changes.outputs.touches_assets == 'false'
-        run: echo "PR doesn't touch models/ or configs/ - skipping"
-
       - name: Handle wrong file types
-        if: steps.changes.outputs.touches_assets == 'true' && steps.changes.outputs.has_models == 'false' && steps.changes.outputs.has_configs == 'false'
+        if: steps.changes.outputs.has_models == 'false' && steps.changes.outputs.has_configs == 'false'
         uses: actions/github-script@v7
         with:
           script: |
