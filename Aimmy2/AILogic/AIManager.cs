@@ -65,8 +65,6 @@ namespace Aimmy2.AILogic
         private RectangleF LastDetectionBox;
         private KalmanPrediction kalmanPrediction;
         private WiseTheFoxPrediction wtfpredictionManager;
-        private LinearRegressionPrediction linearRegressionPrediction;
-        private SimpleVelocityPrediction simpleVelocityPrediction;
 
         private byte[]? _bitmapBuffer; // Reusable buffer for bitmap operations
 
@@ -225,8 +223,6 @@ namespace Aimmy2.AILogic
 
             kalmanPrediction = new KalmanPrediction();
             wtfpredictionManager = new WiseTheFoxPrediction();
-            linearRegressionPrediction = new LinearRegressionPrediction();
-            simpleVelocityPrediction = new SimpleVelocityPrediction();
 
             _modeloptions = new RunOptions();
 
@@ -969,33 +965,6 @@ namespace Aimmy2.AILogic
                     MouseManager.MoveCrosshair(wtfpredictedPosition.X, wtfpredictedPosition.Y);
                     break;
 
-                case "Linear Regression":
-                    LinearRegressionPrediction.LRDetection lrDetection = new()
-                    {
-                        X = detectedX,
-                        Y = detectedY,
-                        Timestamp = DateTime.UtcNow
-                    };
-
-                    linearRegressionPrediction.UpdatePosition(lrDetection);
-                    var lrPredictedPosition = linearRegressionPrediction.GetPredictedPosition();
-
-                    MouseManager.MoveCrosshair(lrPredictedPosition.X, lrPredictedPosition.Y);
-                    break;
-
-                case "Simple Velocity":
-                    SimpleVelocityPrediction.SVDetection svDetection = new()
-                    {
-                        X = detectedX,
-                        Y = detectedY,
-                        Timestamp = DateTime.UtcNow
-                    };
-
-                    simpleVelocityPrediction.UpdatePosition(svDetection);
-                    var svPredictedPosition = simpleVelocityPrediction.GetPredictedPosition();
-
-                    MouseManager.MoveCrosshair(svPredictedPosition.X, svPredictedPosition.Y);
-                    break;
             }
         }
 
