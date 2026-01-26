@@ -38,9 +38,14 @@ namespace Aimmy2.AILogic
         public int IMAGE_SIZE => _currentImageSize;
         private int NUM_DETECTIONS { get; set; } = 8400; // Will be set dynamically for dynamic models
         private bool IsDynamicModel { get; set; } = false;
+        
+        // YOLO26 NMS-Free model support
+        private bool IsYOLO26Model { get; set; } = false; // True if model is YOLO26 (NMS-free, direct output)
+        private int YOLO26MaxDetections { get; set; } = 300; // Maximum detections for YOLO26
 
         // Public static property to check if current loaded model is dynamic
         public static bool CurrentModelIsDynamic { get; private set; } = false;
+        public static bool CurrentModelIsYOLO26 { get; private set; } = false; // YOLO26 NMS-Free model flag
         private int ModelFixedSize { get; set; } = 640; // Store the fixed size for non-dynamic models
         private int NUM_CLASSES { get; set; } = 1;
         private Dictionary<int, string> _modelClasses = new Dictionary<int, string>
@@ -51,6 +56,7 @@ namespace Aimmy2.AILogic
         public static event Action<Dictionary<int, string>>? ClassesUpdated;
         public static event Action<int>? ImageSizeUpdated;
         public static event Action<bool>? DynamicModelStatusChanged;
+        public static event Action<bool>? YOLO26ModelStatusChanged;
 
         private const int SAVE_FRAME_COOLDOWN_MS = 500;
 
@@ -113,6 +119,9 @@ namespace Aimmy2.AILogic
         private DenseTensor<float>? _reusableTensor;
         private float[]? _reusableInputArray;
         private List<NamedOnnxValue>? _reusableInputs;
+
+        // Reuse prediction list to reduce allocations
+        private List<Prediction>? _kdPredictionBuffer;
 
         // Benchmarking
         private readonly Dictionary<string, BenchmarkData> _benchmarks = new();
@@ -334,6 +343,70 @@ namespace Aimmy2.AILogic
                     Log(LogLevel.Info, $"  Name: {kvp.Key}, Dimensions: {dimensionsStr}");
                 }
 
+                // YOLO26 NMS-Free model detection
+                // YOLO26 outputs: [1, MAX_DETECTIONS, 6] where 6 = [x, y, w, h, confidence, class_id]
+                bool isYOLO26 = false;
+                int yolo26MaxDetections = 0;
+                
+                foreach (var kvp in outputMetadata)
+                {
+                    var dims = kvp.Value.Dimensions;
+                    // Check for YOLO26 format: [batch, num_detections, 6]
+                    if (dims.Length == 3 && dims[0] == 1 && dims[2] == 6)
+                    {
+                        isYOLO26 = true;
+                        yolo26MaxDetections = dims[1];
+                        break;
+                    }
+                }
+
+                IsYOLO26Model = isYOLO26;
+                CurrentModelIsYOLO26 = isYOLO26;
+                
+                if (IsYOLO26Model)
+                {
+                    YOLO26MaxDetections = yolo26MaxDetections;
+                    NUM_DETECTIONS = yolo26MaxDetections;
+                    LoadClasses();
+                    
+                    // YOLO26 models typically use 640 as default, but can be dynamic
+                    if (isDynamic)
+                    {
+                        ImageSizeUpdated?.Invoke(IMAGE_SIZE);
+                        Log(LogLevel.Info, $"Loaded YOLO26 NMS-Free dynamic model - image size {IMAGE_SIZE}x{IMAGE_SIZE}, max detections: {yolo26MaxDetections}", true, 3000);
+                    }
+                    else
+                    {
+                        // Use fixed input size for YOLO26
+                        if (fixedInputSize > 0)
+                        {
+                            _currentImageSize = fixedInputSize;
+                            if (fixedInputSize != int.Parse(Dictionary.dropdownState["Image Size"]))
+                            {
+                                Dictionary.dropdownState["Image Size"] = fixedInputSize.ToString();
+                                Application.Current?.Dispatcher.BeginInvoke(() =>
+                                {
+                                    try
+                                    {
+                                        var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                                        if (mainWindow?.SettingsMenuControlInstance != null)
+                                        {
+                                            mainWindow.SettingsMenuControlInstance.UpdateImageSizeDropdown(fixedInputSize.ToString());
+                                        }
+                                    }
+                                    catch { }
+                                });
+                            }
+                            ImageSizeUpdated?.Invoke(fixedInputSize);
+                        }
+                        Log(LogLevel.Info, $"Loaded YOLO26 NMS-Free model - image size {fixedInputSize}x{fixedInputSize}, max detections: {yolo26MaxDetections}", true, 3000);
+                    }
+                    
+                    DynamicModelStatusChanged?.Invoke(isDynamic);
+                    YOLO26ModelStatusChanged?.Invoke(isYOLO26);
+                    return true;
+                }
+
                 IsDynamicModel = isDynamic;
                 CurrentModelIsDynamic = isDynamic;
 
@@ -394,12 +467,15 @@ namespace Aimmy2.AILogic
                     ImageSizeUpdated?.Invoke(fixedInputSize);
                     LoadClasses();
 
-                    // For static models, validate the expected shape
-                    var expectedShape = new int[] { 1, 4 + NUM_CLASSES, NUM_DETECTIONS };
-                    if (!outputMetadata.Values.All(metadata => metadata.Dimensions.SequenceEqual(expectedShape)))
+                    // For static models, validate the expected shape (supports DFL outputs)
+                    bool isSupportedShape = outputMetadata.Values.All(metadata =>
+                        IsSupportedYoloOutputShape(metadata.Dimensions, NUM_DETECTIONS, NUM_CLASSES));
+
+                    if (!isSupportedShape)
                     {
                         Log(LogLevel.Error,
-                            $"Output shape does not match the expected shape of {string.Join("x", expectedShape)}.\nThis model will not work with Aimmy, please use an YOLOv8 model converted to ONNXv8.",
+                            "Output shape is not supported. Supported shapes: [1, 4+classes, num_detections] " +
+                            "or DFL [1, (4*(reg_max+1)+classes), num_detections] (and transposed variants).",
                             true, 10000);
                         return false;
                     }
@@ -409,6 +485,7 @@ namespace Aimmy2.AILogic
 
                 // Notify UI about dynamic model status
                 DynamicModelStatusChanged?.Invoke(IsDynamicModel);
+                YOLO26ModelStatusChanged?.Invoke(false); // YOLOv8/YOLOv11 is not YOLO26
 
                 return true;
             }
@@ -636,10 +713,18 @@ namespace Aimmy2.AILogic
                 var displayRelativeX = mousePosition.X - DisplayManager.ScreenLeft;
                 var displayRelativeY = mousePosition.Y - DisplayManager.ScreenTop;
 
+                double dpiScale = (WinAPICaller.scalingFactorX + WinAPICaller.scalingFactorY) / 2.0;
+                if (dpiScale <= 0)
+                {
+                    dpiScale = 1.0;
+                }
+
+                double fovHalf = (Dictionary.sliderSettings["FOV Size"] / 2.0) / dpiScale;
+
                 await Application.Current.Dispatcher.BeginInvoke(() =>
                     Dictionary.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
-                        Convert.ToInt16(displayRelativeX / WinAPICaller.scalingFactorX) - 320, // this is based off the window size, not the size of the model -whip
-                        Convert.ToInt16(displayRelativeY / WinAPICaller.scalingFactorY) - 320, 0, 0));
+                        Convert.ToInt16(displayRelativeX / WinAPICaller.scalingFactorX) - fovHalf,
+                        Convert.ToInt16(displayRelativeY / WinAPICaller.scalingFactorY) - fovHalf, 0, 0));
             }
         }
 
@@ -668,14 +753,21 @@ namespace Aimmy2.AILogic
         {
             var scalingFactorX = WinAPICaller.scalingFactorX;
             var scalingFactorY = WinAPICaller.scalingFactorY;
+            double dpiScale = (scalingFactorX + scalingFactorY) / 2.0;
+            if (dpiScale <= 0)
+            {
+                dpiScale = 1.0;
+            }
 
             // Convert screen coordinates to display-relative coordinates
             var displayRelativeX = LastDetectionBox.X - DisplayManager.ScreenLeft;
             var displayRelativeY = LastDetectionBox.Y - DisplayManager.ScreenTop;
 
             // Calculate center position in display-relative coordinates
-            var centerX = Convert.ToInt16(displayRelativeX / scalingFactorX) + (LastDetectionBox.Width / 2.0);
+            var centerX = Convert.ToInt16(displayRelativeX / scalingFactorX) + ((LastDetectionBox.Width / 2.0) / dpiScale);
             var centerY = Convert.ToInt16(displayRelativeY / scalingFactorY);
+            var scaledBoxWidth = LastDetectionBox.Width / dpiScale;
+            var scaledBoxHeight = LastDetectionBox.Height / dpiScale;
 
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -696,11 +788,11 @@ namespace Aimmy2.AILogic
                     var tracerPosition = Dictionary.dropdownState["Tracer Position"];
 
                     var boxTop = centerY;
-                    var boxBottom = centerY + LastDetectionBox.Height;
+                    var boxBottom = centerY + scaledBoxHeight;
                     var boxHorizontalCenter = centerX;
-                    var boxVerticalCenter = centerY + (LastDetectionBox.Height / 2.0);
-                    var boxLeft = centerX - (LastDetectionBox.Width / 2.0);
-                    var boxRight = centerX + (LastDetectionBox.Width / 2.0);
+                    var boxVerticalCenter = centerY + (scaledBoxHeight / 2.0);
+                    var boxLeft = centerX - (scaledBoxWidth / 2.0);
+                    var boxRight = centerX + (scaledBoxWidth / 2.0);
 
                     switch (tracerPosition)
                     {
@@ -742,9 +834,9 @@ namespace Aimmy2.AILogic
 
                 DetectedPlayerOverlay.DetectedPlayerFocus.Opacity = 1;
                 DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(
-                    centerX - (LastDetectionBox.Width / 2.0), centerY, 0, 0);
-                DetectedPlayerOverlay.DetectedPlayerFocus.Width = LastDetectionBox.Width;
-                DetectedPlayerOverlay.DetectedPlayerFocus.Height = LastDetectionBox.Height;
+                    centerX - (scaledBoxWidth / 2.0), centerY, 0, 0);
+                DetectedPlayerOverlay.DetectedPlayerFocus.Width = scaledBoxWidth;
+                DetectedPlayerOverlay.DetectedPlayerFocus.Height = scaledBoxHeight;
             });
         }
 
@@ -872,6 +964,7 @@ namespace Aimmy2.AILogic
                     // Use both predicted X and Y
                     MouseManager.MoveCrosshair(wtfpredictedPosition.X, wtfpredictedPosition.Y);
                     break;
+
             }
         }
 
@@ -1220,72 +1313,331 @@ namespace Aimmy2.AILogic
             string selectedClass = Dictionary.dropdownState["Target Class"];
             int selectedClassId = selectedClass == "Best Confidence" ? -1 : _modelClasses.FirstOrDefault(c => c.Value == selectedClass).Key;
 
+            var dims = outputTensor.Dimensions.ToArray();
+            int detectionDim = dims[1] == NUM_DETECTIONS ? 1 : (dims[2] == NUM_DETECTIONS ? 2 : -1);
+            if (detectionDim == -1)
+            {
+                detectionDim = dims[1] >= dims[2] ? 1 : 2; // fallback to larger dim as detections
+            }
+
+            int channelDim = detectionDim == 1 ? 2 : 1;
+            int detections = dims[detectionDim];
+            int channels = dims[channelDim];
+            bool channelsFirst = channelDim == 1;
+
+            bool isDflOutput = false;
+            int regMaxPlus1 = 0;
+
+            if (!IsYOLO26Model)
+            {
+                int boxChannels = channels - NUM_CLASSES;
+                if (boxChannels > 0 && boxChannels % 4 == 0 && channels != 4 + NUM_CLASSES)
+                {
+                    regMaxPlus1 = boxChannels / 4;
+                    if (regMaxPlus1 > 1)
+                    {
+                        isDflOutput = true;
+                    }
+                }
+            }
+
             // we dont use kdpoints anymore because we replaced the kd-tree with a linear search
             //var KDpoints = new List<double[]>(NUM_DETECTIONS); // Pre-allocate with estimated capacity
-            var KDpredictions = new List<Prediction>(NUM_DETECTIONS);
-
-            for (int i = 0; i < NUM_DETECTIONS; i++)
+            if (_kdPredictionBuffer == null || _kdPredictionBuffer.Capacity < detections)
             {
-                float x_center = outputTensor[0, 0, i];
-                float y_center = outputTensor[0, 1, i];
-                float width = outputTensor[0, 2, i];
-                float height = outputTensor[0, 3, i];
+                _kdPredictionBuffer = new List<Prediction>(detections);
+            }
+            else
+            {
+                _kdPredictionBuffer.Clear();
+            }
 
-                int bestClassId = 0;
-                float bestConfidence = 0f;
+            var KDpredictions = _kdPredictionBuffer;
 
-                if (NUM_CLASSES == 1)
+            if (IsYOLO26Model)
+            {
+                // YOLO26 NMS-Free format: [batch, num_detections, 6]
+                // Format: [x1, y1, x2, y2, confidence, class_id]
+                // IMPORTANT: YOLO26 uses PIXEL coordinates (not normalized)
+
+                for (int i = 0; i < detections; i++)
                 {
-                    bestConfidence = outputTensor[0, 4, i];
+                    float x1 = outputTensor[0, i, 0];
+                    float y1 = outputTensor[0, i, 1];
+                    float x2 = outputTensor[0, i, 2];
+                    float y2 = outputTensor[0, i, 3];
+                    float confidence = outputTensor[0, i, 4];
+                    float classId = outputTensor[0, i, 5];
+
+                    if (confidence < minConfidence) continue;
+
+                    float width = x2 - x1;
+                    float height = y2 - y1;
+
+                    // Skip invalid detections (negative coordinates or zero size)
+                    if (width <= 0 || height <= 0) continue;
+
+                    // YOLO26 uses pixel coordinates, so no normalization needed
+                    float x_min = x1;
+                    float y_min = y1;
+                    float x_max = x2;
+                    float y_max = y2;
+
+                    // Apply FOV filter using pixel coordinates
+                    if (x_min < fovMinX || x_max > fovMaxX || y_min < fovMinY || y_max > fovMaxY) continue;
+
+                    // Apply class filter if specific class is selected
+                    int classIdInt = (int)classId;
+                    if (selectedClassId != -1 && classIdInt != selectedClassId) continue;
+
+                    float x_center = (x1 + x2) / 2.0f;
+                    float y_center = (y1 + y2) / 2.0f;
+
+                    RectangleF rect = new(x_min, y_min, width, height);
+                    Prediction prediction = new()
+                    {
+                        Rectangle = rect,
+                        Confidence = confidence,
+                        ClassId = classIdInt,
+                        ClassName = _modelClasses.GetValueOrDefault(classIdInt, $"Class_{classIdInt}"),
+                        CenterXTranslated = x_center / IMAGE_SIZE,
+                        CenterYTranslated = y_center / IMAGE_SIZE,
+                        ScreenCenterX = detectionBox.Left + x_center,
+                        ScreenCenterY = detectionBox.Top + y_center
+                    };
+
+                    KDpredictions.Add(prediction);
+                }
+            }
+            else
+            {
+                // YOLOv8/YOLOv11 format: [batch, (4+NUM_CLASSES), num_detections]
+                // Format: [x_center, y_center, width, height, class_confidences...]
+                if (isDflOutput)
+                {
+                    int classOffset = regMaxPlus1 * 4;
+
+                    for (int i = 0; i < detections; i++)
+                    {
+                        GetGridInfo(i, IMAGE_SIZE, out int gridX, out int gridY, out int stride);
+
+                        float l = DecodeDflDistance(outputTensor, i, 0, regMaxPlus1, channelsFirst) * stride;
+                        float t = DecodeDflDistance(outputTensor, i, regMaxPlus1, regMaxPlus1, channelsFirst) * stride;
+                        float r = DecodeDflDistance(outputTensor, i, regMaxPlus1 * 2, regMaxPlus1, channelsFirst) * stride;
+                        float b = DecodeDflDistance(outputTensor, i, regMaxPlus1 * 3, regMaxPlus1, channelsFirst) * stride;
+
+                        float centerX = (gridX + 0.5f) * stride;
+                        float centerY = (gridY + 0.5f) * stride;
+
+                        float x_min = centerX - l;
+                        float y_min = centerY - t;
+                        float x_max = centerX + r;
+                        float y_max = centerY + b;
+
+                        float width = x_max - x_min;
+                        float height = y_max - y_min;
+
+                        int bestClassId = 0;
+                        float bestConfidence = 0f;
+
+                        if (NUM_CLASSES == 1)
+                        {
+                            bestConfidence = ReadOutputValue(outputTensor, i, classOffset, channelsFirst);
+                        }
+                        else
+                        {
+                            if (selectedClassId == -1)
+                            {
+                                for (int classId = 0; classId < NUM_CLASSES; classId++)
+                                {
+                                    float classConfidence = ReadOutputValue(outputTensor, i, classOffset + classId, channelsFirst);
+                                    if (classConfidence > bestConfidence)
+                                    {
+                                        bestConfidence = classConfidence;
+                                        bestClassId = classId;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                bestConfidence = ReadOutputValue(outputTensor, i, classOffset + selectedClassId, channelsFirst);
+                                bestClassId = selectedClassId;
+                            }
+                        }
+
+                        if (bestConfidence < minConfidence) continue;
+                        if (width <= 0 || height <= 0) continue;
+                        if (x_min < fovMinX || x_max > fovMaxX || y_min < fovMinY || y_max > fovMaxY) continue;
+
+                        RectangleF rect = new(x_min, y_min, width, height);
+                        Prediction prediction = new()
+                        {
+                            Rectangle = rect,
+                            Confidence = bestConfidence,
+                            ClassId = bestClassId,
+                            ClassName = _modelClasses.GetValueOrDefault(bestClassId, $"Class_{bestClassId}"),
+                            CenterXTranslated = centerX / IMAGE_SIZE,
+                            CenterYTranslated = centerY / IMAGE_SIZE,
+                            ScreenCenterX = detectionBox.Left + centerX,
+                            ScreenCenterY = detectionBox.Top + centerY
+                        };
+
+                        KDpredictions.Add(prediction);
+                    }
                 }
                 else
                 {
-                    if (selectedClassId == -1)
+                    for (int i = 0; i < detections; i++)
                     {
-                        for (int classId = 0; classId < NUM_CLASSES; classId++)
+                        float x_center = ReadOutputValue(outputTensor, i, 0, channelsFirst);
+                        float y_center = ReadOutputValue(outputTensor, i, 1, channelsFirst);
+                        float width = ReadOutputValue(outputTensor, i, 2, channelsFirst);
+                        float height = ReadOutputValue(outputTensor, i, 3, channelsFirst);
+
+                        int bestClassId = 0;
+                        float bestConfidence = 0f;
+
+                        if (NUM_CLASSES == 1)
                         {
-                            float classConfidence = outputTensor[0, 4 + classId, i];
-                            if (classConfidence > bestConfidence)
+                            bestConfidence = ReadOutputValue(outputTensor, i, 4, channelsFirst);
+                        }
+                        else
+                        {
+                            if (selectedClassId == -1)
                             {
-                                bestConfidence = classConfidence;
-                                bestClassId = classId;
+                                for (int classId = 0; classId < NUM_CLASSES; classId++)
+                                {
+                                    float classConfidence = ReadOutputValue(outputTensor, i, 4 + classId, channelsFirst);
+                                    if (classConfidence > bestConfidence)
+                                    {
+                                        bestConfidence = classConfidence;
+                                        bestClassId = classId;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                bestConfidence = ReadOutputValue(outputTensor, i, 4 + selectedClassId, channelsFirst);
+                                bestClassId = selectedClassId;
                             }
                         }
-                    }
-                    else
-                    {
-                        bestConfidence = outputTensor[0, 4 + selectedClassId, i];
-                        bestClassId = selectedClassId;
+
+                        if (bestConfidence < minConfidence) continue;
+
+                        float x_min = x_center - width / 2;
+                        float y_min = y_center - height / 2;
+                        float x_max = x_center + width / 2;
+                        float y_max = y_center + height / 2;
+
+                        if (x_min < fovMinX || x_max > fovMaxX || y_min < fovMinY || y_max > fovMaxY) continue;
+
+                        RectangleF rect = new(x_min, y_min, width, height);
+                        Prediction prediction = new()
+                        {
+                            Rectangle = rect,
+                            Confidence = bestConfidence,
+                            ClassId = bestClassId,
+                            ClassName = _modelClasses.GetValueOrDefault(bestClassId, $"Class_{bestClassId}"),
+                            CenterXTranslated = x_center / IMAGE_SIZE,
+                            CenterYTranslated = y_center / IMAGE_SIZE,
+                            ScreenCenterX = detectionBox.Left + x_center,
+                            ScreenCenterY = detectionBox.Top + y_center
+                        };
+
+                        //KDpoints.Add(new double[] { x_center, y_center });
+                        KDpredictions.Add(prediction);
                     }
                 }
-
-                if (bestConfidence < minConfidence) continue;
-
-                float x_min = x_center - width / 2;
-                float y_min = y_center - height / 2;
-                float x_max = x_center + width / 2;
-                float y_max = y_center + height / 2;
-
-                if (x_min < fovMinX || x_max > fovMaxX || y_min < fovMinY || y_max > fovMaxY) continue;
-
-                RectangleF rect = new(x_min, y_min, width, height);
-                Prediction prediction = new()
-                {
-                    Rectangle = rect,
-                    Confidence = bestConfidence,
-                    ClassId = bestClassId,
-                    ClassName = _modelClasses.GetValueOrDefault(bestClassId, $"Class_{bestClassId}"),
-                    CenterXTranslated = x_center / IMAGE_SIZE,
-                    CenterYTranslated = y_center / IMAGE_SIZE,
-                    ScreenCenterX = detectionBox.Left + x_center,
-                    ScreenCenterY = detectionBox.Top + y_center
-                };
-
-                //KDpoints.Add(new double[] { x_center, y_center });
-                KDpredictions.Add(prediction);
             }
 
             return KDpredictions;
+        }
+
+        private static bool IsSupportedYoloOutputShape(IReadOnlyList<int> dims, int expectedDetections, int numClasses)
+        {
+            if (dims.Count != 3 || dims[0] != 1) return false;
+
+            int detectionDim = dims[1] == expectedDetections ? 1 : (dims[2] == expectedDetections ? 2 : -1);
+            if (detectionDim == -1) return false;
+
+            int channelDim = detectionDim == 1 ? 2 : 1;
+            int channels = dims[channelDim];
+            int expectedChannels = 4 + numClasses;
+
+            if (channels == expectedChannels) return true;
+
+            int boxChannels = channels - numClasses;
+            if (boxChannels > 0 && boxChannels % 4 == 0) return true;
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float ReadOutputValue(Tensor<float> outputTensor, int detectionIndex, int channelIndex, bool channelsFirst)
+        {
+            return channelsFirst
+                ? outputTensor[0, channelIndex, detectionIndex]
+                : outputTensor[0, detectionIndex, channelIndex];
+        }
+
+        private static float DecodeDflDistance(
+            Tensor<float> outputTensor,
+            int detectionIndex,
+            int channelOffset,
+            int regMaxPlus1,
+            bool channelsFirst)
+        {
+            float maxLogit = float.MinValue;
+            for (int i = 0; i < regMaxPlus1; i++)
+            {
+                float logit = ReadOutputValue(outputTensor, detectionIndex, channelOffset + i, channelsFirst);
+                if (logit > maxLogit) maxLogit = logit;
+            }
+
+            float sum = 0f;
+            float expected = 0f;
+            for (int i = 0; i < regMaxPlus1; i++)
+            {
+                float logit = ReadOutputValue(outputTensor, detectionIndex, channelOffset + i, channelsFirst);
+                float exp = MathF.Exp(logit - maxLogit);
+                sum += exp;
+                expected += exp * i;
+            }
+
+            if (sum <= 0f) return 0f;
+            return expected / sum;
+        }
+
+        private static void GetGridInfo(int index, int imageSize, out int gridX, out int gridY, out int stride)
+        {
+            int grid8 = imageSize / 8;
+            int grid16 = imageSize / 16;
+            int grid32 = imageSize / 32;
+
+            int count8 = grid8 * grid8;
+            int count16 = grid16 * grid16;
+
+            if (index < count8)
+            {
+                stride = 8;
+                gridX = index % grid8;
+                gridY = index / grid8;
+                return;
+            }
+
+            index -= count8;
+            if (index < count16)
+            {
+                stride = 16;
+                gridX = index % grid16;
+                gridY = index / grid16;
+                return;
+            }
+
+            index -= count16;
+            stride = 32;
+            gridX = index % grid32;
+            gridY = index / grid32;
         }
 
         #endregion AI Loop Functions
