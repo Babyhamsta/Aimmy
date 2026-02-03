@@ -4,6 +4,7 @@ using Class;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
 using MouseMovementLibraries.SendInputSupport;
+using MouseMovementLibraries.DriverSupport;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
