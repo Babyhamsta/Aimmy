@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MouseMovementLibraries.DRIVER
+namespace MouseMovementLibraries.DriverSupport
 {
     // Make it static so you can call: DriverMouse.Move(...)
     internal static class DriverMouse
