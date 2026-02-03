@@ -1008,8 +1008,9 @@ namespace Aimmy2
                     ["Mouse Event"] = 0,
                     ["SendInput"] = 1,
                     ["LG HUB"] = 2,
-                    ["Razer Synapse (Require Razer Peripheral)"] = 3,
-                    ["ddxoft Virtual Input Driver"] = 4
+                    ["DriverMouse"] = 3,
+                    ["Razer Synapse (Require Razer Peripheral)"] = 4,
+                    ["ddxoft Virtual Input Driver"] = 5
                 }),
 
                 ("Movement Path", uiManager.D_MovementPath, new Dictionary<string, int>
