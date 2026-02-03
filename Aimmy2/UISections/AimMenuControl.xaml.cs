@@ -229,6 +229,7 @@ namespace Aimmy2.Controls
                     // Add options
                     _mainWindow.AddDropdownItem(d, "Mouse Event");
                     _mainWindow.AddDropdownItem(d, "SendInput");
+                    _mainWindow.AddDropdownItem(d, "DriverMouse");
                     uiManager.DDI_LGHUB = _mainWindow.AddDropdownItem(d, "LG HUB");
                     uiManager.DDI_RazerSynapse = _mainWindow.AddDropdownItem(d, "Razer Synapse (Require Razer Peripheral)");
                     uiManager.DDI_ddxoft = _mainWindow.AddDropdownItem(d, "ddxoft Virtual Input Driver");
