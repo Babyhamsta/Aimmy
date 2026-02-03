@@ -53,6 +53,10 @@ namespace InputLogic
                     mouseDownAction = () => RZMouse.mouse_click(1);
                     mouseUpAction = () => RZMouse.mouse_click(0);
                     break;
+                case "DriverMouse":
+                    mouseDownAction = () => DriverMouse.Move(1, 0, 0, 0); 
+                    mouseUpAction = () => DriverMouse.Move(2, 0, 0, 0);
+                    break;
                 case "ddxoft Virtual Input Driver":
                     mouseDownAction = () => DdxoftMain.ddxoftInstance.btn!(1);
                     mouseUpAction = () => DdxoftMain.ddxoftInstance.btn(2);
@@ -204,6 +208,10 @@ namespace InputLogic
 
                 case "LG HUB":
                     LGMouse.Move(0, newPosition.X, newPosition.Y, 0);
+                    break;
+                    
+                case "DriverMouse":
+                    DriverMouse.Move(0, newPosition.X, newPosition.Y, 0);
                     break;
 
                 case "Razer Synapse (Require Razer Peripheral)":
