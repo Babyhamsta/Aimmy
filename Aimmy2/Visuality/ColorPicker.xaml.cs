@@ -1,4 +1,4 @@
-﻿using Aimmy2.Theme;
+using Aimmy2.Theme;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -9,7 +9,7 @@ namespace UISections
     {
         //--
         public Color SelectedColor { get; private set; }
-        public event Action<Color> ColorChanged;
+        public event Action<Color>? ColorChanged;
         //--
         private Color ThemeGradientColor => ThemeManager.ThemeColorDark;
         private double currentGradientAngle = 0;
@@ -53,7 +53,7 @@ namespace UISections
         }
 
 
-        private void OnThemeChanged(object sender, Color newColor)
+        private void OnThemeChanged(object? sender, Color newColor)
         {
             Dispatcher.Invoke(UpdateThemeColors);
         }
@@ -89,11 +89,11 @@ namespace UISections
         }
 
 
-        private T GetPrivateField<T>(string fieldName)
+        private T? GetPrivateField<T>(string fieldName)
         {
             var field = ColorWheelControl.GetType().GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (field != null)
-                return (T)field.GetValue(ColorWheelControl);
+                return (T?)field.GetValue(ColorWheelControl);
             return default;
         }
         private Color HsvToRgb(double hue, double saturation, double value)

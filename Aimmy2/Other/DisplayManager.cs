@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Windows;
 
 namespace Aimmy2.Class
@@ -320,7 +320,7 @@ namespace Aimmy2.Class
                     });
                 }
             }
-            catch (Exception ex)
+            catch
             {
             }
 
@@ -334,7 +334,7 @@ namespace Aimmy2.Class
                     });
                 }
             }
-            catch (Exception ex)
+            catch
             {
             }
         }

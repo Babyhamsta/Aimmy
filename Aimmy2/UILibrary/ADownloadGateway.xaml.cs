@@ -1,4 +1,4 @@
-﻿using Other;
+using Other;
 using System.IO;
 using System.Net.Http;
 using System.Windows;
@@ -66,7 +66,11 @@ namespace Aimmy2.UILibrary
             var content = await response.Content.ReadAsByteArrayAsync();
             var filePath = Path.Combine("bin", path, name);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath)); // just in case
+            string? dirPath = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(dirPath))
+            {
+                Directory.CreateDirectory(dirPath); // just in case
+            }
             await File.WriteAllBytesAsync(filePath, content);
             return true;
         }

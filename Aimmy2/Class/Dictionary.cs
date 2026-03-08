@@ -39,7 +39,10 @@ namespace Aimmy2.Class
             { "AI Confidence Font Size", 20 },
             { "Corner Radius", 0 },
             { "Border Thickness", 1 },
-            { "Opacity", 1 }
+            { "Opacity", 1 },
+            { "Randomization Seed", 0 },
+            { "Periodic Randomization Interval", 30 },
+            { "Identity Update Interval", 30 }
         };
 
         // Make sure the Settings Name is the EXACT Same as the Toggle Name or I will smack you :joeangy:
@@ -74,7 +77,19 @@ namespace Aimmy2.Class
             { "StreamGuard", false },
             //--
             { "X Axis Percentage Adjustment", false },
-            { "Y Axis Percentage Adjustment", false }
+            { "Y Axis Percentage Adjustment", false },
+            //--
+            { "Anti-Detection", false },
+            { "Memory Randomization", true },
+            { "String Obfuscation", true },
+            { "Control Flow Randomization", false },
+            { "Metadata Randomization", true },
+            //--
+            { "Randomize Identity", false },
+            { "Randomize Window Title", true },
+            { "Randomize Description", true },
+            { "Randomize Window Class", false },
+            { "Advanced Process Name Spoofing", true }
         };
 
         public static Dictionary<string, dynamic> minimizeState = new()
@@ -89,7 +104,9 @@ namespace Aimmy2.Class
             { "Settings Menu", false },
             { "X/Y Percentage Adjustment", false },
             { "Theme Settings", false },
-            { "Screen Settings", false}
+            { "Screen Settings", false},
+            { "Anti-Detection", false },
+            { "Identity Randomizer", false }
         };
 
         public static Dictionary<string, dynamic> dropdownState = new()

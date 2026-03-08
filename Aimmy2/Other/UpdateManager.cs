@@ -1,4 +1,4 @@
-﻿using Aimmy2.Other;
+using Aimmy2.Other;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -29,9 +29,8 @@ namespace Other
 
                 return current.CompareTo(latest);
             }
-            catch (Exception ex)
+            catch
             {
-
                 // Fallback to string comparison if parsing fails
                 return string.Compare(currentVersion, latestVersion, StringComparison.OrdinalIgnoreCase);
             }

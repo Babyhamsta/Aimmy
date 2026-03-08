@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System.Diagnostics;
 using System.Windows;
 using Visuality;
@@ -49,16 +49,16 @@ namespace Other
                     return false;
                 }
 
-                string ghubfilepath = process.MainModule.FileName;
-                if (ghubfilepath == null)
+                string? ghubfilepath = process.MainModule?.FileName;
+                if (string.IsNullOrEmpty(ghubfilepath))
                 {
                     LogManager.Log(LogManager.LogLevel.Error, "An error occurred. Run as admin and try again.", true);
                     return false;
                 }
 
-                FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(ghubfilepath);
+                FileVersionInfo? versionInfo = FileVersionInfo.GetVersionInfo(ghubfilepath);
 
-                if (!versionInfo.ProductVersion.Contains("2021"))
+                if (versionInfo?.ProductVersion?.Contains("2021") != true)
                 {
                     ShowLGHubImproperInstallMessage();
                     return false;

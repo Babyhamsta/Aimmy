@@ -1,4 +1,4 @@
-﻿using Aimmy2.Theme;
+using Aimmy2.Theme;
 using AimmyWPF.Class;
 using System.Windows;
 using System.Windows.Media;
@@ -14,6 +14,8 @@ namespace Aimmy2.UILibrary
         private static readonly Color DisableColor = Colors.White;
         private static readonly TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(500);
         private bool _isEnabled = false;
+
+        public bool IsSwitchedOn => _isEnabled;
 
         public AToggle(string Text, string? tooltip = null)
         {
@@ -38,7 +40,7 @@ namespace Aimmy2.UILibrary
             this.Unloaded += (s, e) => ThemeManager.ThemeChanged -= OnThemeChanged;
         }
 
-        private void OnThemeChanged(object sender, Color newThemeColor)
+        private void OnThemeChanged(object? sender, Color newThemeColor)
         {
             Application.Current.Dispatcher.BeginInvoke(() => RefreshThemeColors());
         }

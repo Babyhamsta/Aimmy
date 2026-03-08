@@ -1,4 +1,4 @@
-﻿using Aimmy2.UILibrary;
+using Aimmy2.UILibrary;
 using Other;
 using System.Diagnostics;
 using System.IO;
@@ -170,7 +170,8 @@ namespace Aimmy2.Controls
             {
                 try
                 {
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "bin", clickedButton.Tag.ToString());
+                    string? tagString = clickedButton.Tag?.ToString();
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "bin", tagString ?? string.Empty);
                     if (Directory.Exists(path))
                     {
                         Process.Start("explorer.exe", path);

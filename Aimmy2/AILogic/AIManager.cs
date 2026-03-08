@@ -1,4 +1,4 @@
-﻿using AILogic;
+using AILogic;
 using Aimmy2.Class;
 using Class;
 using InputLogic;
@@ -75,7 +75,9 @@ namespace Aimmy2.AILogic
         private volatile bool _isAiLoopRunning;
 
         // For Auto-Labelling Data System
+#pragma warning disable CS0414
         private bool PlayerFound = false;
+#pragma warning restore CS0414
 
         // Sticky-Aim
         private Prediction? _currentTarget = null;
@@ -425,19 +427,18 @@ namespace Aimmy2.AILogic
             {
                 var metadata = _onnxModel.ModelMetadata;
 
-                if (metadata != null &&
-                    metadata.CustomMetadataMap.TryGetValue("names", out string? value) &&
+                if (metadata?.CustomMetadataMap.TryGetValue("names", out string? value) == true &&
                     !string.IsNullOrEmpty(value))
                 {
-                    JObject data = JObject.Parse(value);
-                    if (data != null && data.Type == JTokenType.Object)
+                    JObject? data = JObject.Parse(value);
+                    if (data?.Type == JTokenType.Object)
                     {
                         //int maxClassId = -1;
                         foreach (var item in data)
                         {
-                            if (int.TryParse(item.Key, out int classId) && item.Value.Type == JTokenType.String)
+                            if (int.TryParse(item.Key, out int classId) && item.Value?.Type == JTokenType.String)
                             {
-                                _modelClasses[classId] = item.Value.ToString();
+                                _modelClasses[classId] = item.Value?.ToString() ?? string.Empty;
                             }
                         }
                         NUM_CLASSES = _modelClasses.Count > 0 ? _modelClasses.Keys.Max() + 1 : 1;
@@ -526,7 +527,8 @@ namespace Aimmy2.AILogic
 
                             using (Benchmark("CalculateCoordinates"))
                             {
-                                CalculateCoordinates(DetectedPlayerOverlay, closestPrediction, _scaleX, _scaleY);
+                                if (DetectedPlayerOverlay != null)
+                                    CalculateCoordinates(DetectedPlayerOverlay, closestPrediction, _scaleX, _scaleY);
                             }
 
                             using (Benchmark("HandleAim"))
@@ -637,9 +639,14 @@ namespace Aimmy2.AILogic
                 var displayRelativeY = mousePosition.Y - DisplayManager.ScreenTop;
 
                 await Application.Current.Dispatcher.BeginInvoke(() =>
-                    Dictionary.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
-                        Convert.ToInt16(displayRelativeX / WinAPICaller.scalingFactorX) - 320, // this is based off the window size, not the size of the model -whip
-                        Convert.ToInt16(displayRelativeY / WinAPICaller.scalingFactorY) - 320, 0, 0));
+                {
+                    if (Dictionary.FOVWindow?.FOVStrictEnclosure != null)
+                    {
+                        Dictionary.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
+                            Convert.ToInt16(displayRelativeX / WinAPICaller.scalingFactorX) - 320,
+                            Convert.ToInt16(displayRelativeY / WinAPICaller.scalingFactorY) - 320, 0, 0);
+                    }
+                });
             }
         }
 

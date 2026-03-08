@@ -1,4 +1,4 @@
-﻿using Aimmy2.AILogic;
+using Aimmy2.AILogic;
 using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.UILibrary;
@@ -17,8 +17,8 @@ namespace Aimmy2.Controls
     public partial class AimMenuControl : UserControl
     {
         //--
-        UISections.ColorPicker colorPickerInstance = null;
-        UISections.ColorPicker fovColorPickerInstance = null;
+        UISections.ColorPicker? colorPickerInstance = null;
+        UISections.ColorPicker? fovColorPickerInstance = null;
         //--
         private MainWindow? _mainWindow;
         private bool _isInitialized;
@@ -186,7 +186,8 @@ namespace Aimmy2.Controls
                             else
                             {
                                 Dictionary.toggleState["Aim Assist"] = true;
-                                _mainWindow.UpdateToggleUI(uiManager.T_AimAligner, true);
+                                if (uiManager.T_AimAligner != null)
+                                    _mainWindow.UpdateToggleUI(uiManager.T_AimAligner, true);
                             }
                         }
                     };
@@ -492,7 +493,7 @@ namespace Aimmy2.Controls
                             PropertyChanger.PostColor(color);
                         };
 
-                        fovColorPickerInstance.Closed += (sender, args) =>
+                        fovColorPickerInstance!.Closed += (sender, args) =>
                         {
                             fovColorPickerInstance = null;
                         };
@@ -552,13 +553,16 @@ namespace Aimmy2.Controls
                     if (Dictionary.toggleState["Show Detected Player"])
                     {
                         // simulate a click to turn it off - this is to force a reload of the ui cause tracer doesn't update otherwise - helz
-                        uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                        // simulate a click to turn it back on - same as before ^ - helz
-                        uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                        if (uiManager.T_ShowDetectedPlayer?.Reader != null)
+                        {
+                            uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                            // simulate a click to turn it back on - same as before ^ - helz
+                            uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                        }
                     }
                     else
                     {
-                        if (Dictionary.DetectedPlayerOverlay != null)
+                        if (Dictionary.DetectedPlayerOverlay is not null)
                         {
                             Dictionary.DetectedPlayerOverlay.ForceReposition();
                         }

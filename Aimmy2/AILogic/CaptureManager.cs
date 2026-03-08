@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using Other;
 using SharpGen.Runtime;
 using System.Drawing;
@@ -15,8 +15,10 @@ namespace AILogic
     {
         #region Variables
         private string _currentCaptureMethod = ""; // Track current method
+#pragma warning disable CS0414
         private bool _directXFailedPermanently = false; // Track if DirectX failed with unsupported error
         private bool _notificationShown = false; // Prevent spam notifications
+#pragma warning restore CS0414
 
         // Capturing
         public Bitmap? screenCaptureBitmap { get; private set; }
@@ -41,9 +43,11 @@ namespace AILogic
         private const int MAX_CONSECUTIVE_FAILURES = 5;
 
         // stride matching
+#pragma warning disable CS0414
         private bool _lastStrideMatch = true;
         private int _lastSrcStride = 0;
         private int _lastDstStride = 0;
+#pragma warning restore CS0414
 
         #endregion
         #region Handlers
@@ -75,9 +79,8 @@ namespace AILogic
                     InitializeDxgiDuplication();
                     _displayChangesPending = false;
                 }
-                catch (Exception ex)
+                catch
                 {
-
                 }
             }
         }

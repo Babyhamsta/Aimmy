@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace MouseMovementLibraries.ddxoftSupport
 {
@@ -38,13 +38,13 @@ namespace MouseMovementLibraries.ddxoftSupport
 
         public delegate int pDD_todc(int vkcode);
 
-        public pDD_btn btn;         //Mouse button
-        public pDD_whl whl;         //Mouse wheel
-        public pDD_mov mov;      //Mouse move abs.
-        public pDD_movR movR;  //Mouse move rel.
-        public pDD_key key;         //Keyboard
-        public pDD_str str;            //Input visible char
-        public pDD_todc todc;      //VK to ddcode
+        public pDD_btn? btn;         //Mouse button
+        public pDD_whl? whl;         //Mouse wheel
+        public pDD_mov? mov;      //Mouse move abs.
+        public pDD_movR? movR;  //Mouse move rel.
+        public pDD_key? key;         //Keyboard
+        public pDD_str? str;            //Input visible char
+        public pDD_todc? todc;      //VK to ddcode
 
         private IntPtr m_hinst;
 

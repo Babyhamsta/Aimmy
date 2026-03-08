@@ -1,4 +1,4 @@
-﻿using Aimmy2.Theme;
+using Aimmy2.Theme;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -63,7 +63,7 @@ namespace Aimmy2
                 await Task.Delay(500);
                 await StartSmoothTransition();
             }
-            catch (Exception ex)
+            catch
             {
                 ShowMainWindowDirect();
             }
@@ -88,7 +88,7 @@ namespace Aimmy2
                 UpdateDynamicResources(baseColor);
                 UpdateParticleColors(baseColor);
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
@@ -358,6 +358,8 @@ namespace Aimmy2
 
         private void SetupTransitionGeometry()
         {
+            if (_mainWindow == null) return;
+
             _mainWindow.Left = Left;
             _mainWindow.Top = Top;
             _mainWindow.Show();
@@ -445,7 +447,7 @@ namespace Aimmy2
                 ContentContainer.CacheMode = null;
                 Close();
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
@@ -474,7 +476,7 @@ namespace Aimmy2
                 }
                 Close();
             }
-            catch (Exception ex)
+            catch
             {
                 Application.Current.Shutdown();
             }

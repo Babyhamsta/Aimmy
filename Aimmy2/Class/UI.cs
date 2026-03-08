@@ -1,4 +1,4 @@
-﻿using Aimmy2.UILibrary;
+using Aimmy2.UILibrary;
 using System.Windows.Controls;
 using UILibrary;
 
@@ -61,7 +61,7 @@ namespace Class
         public AToggle? T_ThirdPersonSupport { get; set; }
         public AKeyChanger? C_DynamicFOV { get; set; }
         //--
-        public ADropdown D_FOVSTYLE { get; set; }
+        public ADropdown? D_FOVSTYLE { get; set; }
         //--
         public AColorChanger? CC_FOVColor { get; set; }
         public ASlider? S_FOVSize { get; set; }
@@ -121,5 +121,22 @@ namespace Class
 
         // Stores
         public APButton? B_RepoManager { get; set; }
+
+        // Anti-Detection
+        public AToggle? T_AntiDetection { get; set; }
+        public AToggle? T_MemoryRandomization { get; set; }
+        public AToggle? T_StringObfuscation { get; set; }
+        public AToggle? T_ControlFlowRandomization { get; set; }
+        public AToggle? T_MetadataRandomization { get; set; }
+        public ASlider? S_RandomizationSeed { get; set; }
+        public ASlider? S_PeriodicRandomizationInterval { get; set; }
+
+        // Identity Randomizer
+        public AToggle? T_RandomizeIdentity { get; set; }
+        public AToggle? T_RandomizeWindowTitle { get; set; }
+        public AToggle? T_RandomizeDescription { get; set; }
+        public AToggle? T_RandomizeWindowClass { get; set; }
+        public AToggle? T_AdvancedProcessNameSpoofing { get; set; }
+        public ASlider? S_IdentityUpdateInterval { get; set; }
     }
 }

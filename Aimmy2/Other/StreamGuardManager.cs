@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -51,7 +51,7 @@ namespace Aimmy2.Other
         // Event attachment tracking
         private static bool _eventsAttached = false;
         // Popup monitoring timer
-        private static System.Windows.Threading.DispatcherTimer _popupMonitorTimer;
+        private static System.Windows.Threading.DispatcherTimer? _popupMonitorTimer;
         // Tray icon management fields - can be omitted if not needed (i recommend keeping it tho)
         private static bool _trayIconCreated = false;
         private static nint _mainApplicationHandle = nint.Zero;
@@ -192,15 +192,15 @@ namespace Aimmy2.Other
             }
         }
         // Find parent window of a UserControl
-        private static Window FindParentWindow(UserControl userControl)
+        private static Window? FindParentWindow(UserControl userControl)
         {
-            Window parentWindow = Window.GetWindow(userControl);
+            Window? parentWindow = Window.GetWindow(userControl);
             if (parentWindow != null)
             {
                 return parentWindow;
             }
 
-            DependencyObject parent = userControl;
+            DependencyObject? parent = userControl;
             while (parent != null && !(parent is Window))
             {
                 parent = VisualTreeHelper.GetParent(parent) ?? LogicalTreeHelper.GetParent(parent);
@@ -211,7 +211,7 @@ namespace Aimmy2.Other
                 return window;
             }
 
-            DependencyObject current = userControl;
+            DependencyObject? current = userControl;
             while (current != null)
             {
                 if (current is System.Windows.Controls.Primitives.Popup popup && popup.Child != null)
@@ -232,7 +232,7 @@ namespace Aimmy2.Other
         {
             if (userControl == null) return;
 
-            Window parentWindow = FindParentWindow(userControl);
+            Window? parentWindow = FindParentWindow(userControl);
 
             if (parentWindow != null)
             {
@@ -241,7 +241,8 @@ namespace Aimmy2.Other
             else if (enable)
             {
                 userControl.Loaded += (s, e) => {
-                    Window delayedWindow = FindParentWindow(userControl);
+                    Window? delayedWindow = FindParentWindow(userControl);
+
                     if (delayedWindow != null)
                     {
                         ApplyToWindow(delayedWindow, enable);
@@ -711,7 +712,9 @@ namespace Aimmy2.Other
 
                 menu.Items.Add(exitItem);
 
+#pragma warning disable CS0219
                 bool forceClose = false;
+#pragma warning restore CS0219
 
                 menu.PreviewMouseDown += (s, e) =>
                 {
@@ -742,7 +745,7 @@ namespace Aimmy2.Other
                     menu.IsOpen = false;
                 };
 
-                System.Windows.Threading.DispatcherTimer clickTimer = null;
+                System.Windows.Threading.DispatcherTimer? clickTimer = null;
 
                 menu.Opened += (s, e) =>
                 {
@@ -755,7 +758,7 @@ namespace Aimmy2.Other
                             var mousePos = System.Windows.Input.Mouse.GetPosition(menu);
                             var hitResult = System.Windows.Media.VisualTreeHelper.HitTest(menu, mousePos);
 
-                            if (hitResult == null)
+                            if (hitResult is null)
                             {
                                 forceClose = true;
                                 menu.IsOpen = false;
@@ -774,7 +777,7 @@ namespace Aimmy2.Other
                         clickTimer = null;
                     }
                 };
-                Window mainWindow = null;
+                Window? mainWindow = null;
                 foreach (Window window in Application.Current.Windows)
                 {
                     var windowHandle = new WindowInteropHelper(window).Handle;

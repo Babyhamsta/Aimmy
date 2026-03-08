@@ -27,13 +27,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>false</UseWindowsForms>
-    <Platforms>AnyCPU;x64</Platforms>	  <Product></Product>
+    <Platforms>AnyCPU;x64</Platforms>
+    <Product></Product>
     <Title></Title>
     <AssemblyName>YmmiaV2</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-  
+    <ApplicationIcon>Aimmy.ico</ApplicationIcon>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -62,7 +64,6 @@
     <PackageReference Include="AntWpf" Version="1.0.5" />
     <PackageReference Include="Costura.Fody" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Fody" Version="6.9.3">
       <PrivateAssets>all</PrivateAssets>
@@ -92,6 +93,10 @@
 		<Resource Include="Graphics\Fonts\Font Awesome 6 Free-Regular-400.otf" />
 		<Resource Include="Graphics\Fonts\Font Awesome 6 Free-Solid-900.otf" />
 		<Resource Include="Graphics\Fonts\Font Awesome 6 Brands-Regular-400.otf" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Aimmy.ico" />
 	</ItemGroup>
 
 	<ItemGroup>

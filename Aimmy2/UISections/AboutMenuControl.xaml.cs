@@ -26,7 +26,8 @@ namespace Aimmy2.Controls
         {
             ("Babyhamsta", "AI Logic", "Babyhamsta"),
             ("MarsQQ", "Design", "MarsInsanity"),
-            ("Taylor", "Optimization", "TaylorIsBlue")
+            ("Taylor", "Optimization", "TaylorIsBlue"),
+            ("wuke", "Organize code", "wuke3"),
         };
 
         private static readonly (string name, string? github, bool highlighted)[] Contributors =

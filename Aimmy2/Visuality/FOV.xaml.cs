@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using Aimmy2.Theme;
 using Class;
 using System.Runtime.InteropServices;
@@ -104,7 +104,7 @@ namespace Visuality
                 this.UpdateLayout();
 
             }
-            catch (Exception ex)
+            catch
             {
             }
         }

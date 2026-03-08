@@ -243,7 +243,7 @@ namespace Aimmy2
                     {
                         ThemeManager.SetThemeColor(colorString);
                     }
-                    catch (Exception ex)
+                    catch
                     {
                     }
                 }
@@ -344,7 +344,7 @@ namespace Aimmy2
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
@@ -363,7 +363,7 @@ namespace Aimmy2
                 {
                     var fm = _fileManager.Value;
                 }
-                catch (Exception ex)
+                catch
                 {
                 }
             }
@@ -509,7 +509,7 @@ namespace Aimmy2
                         break;
                 }
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
@@ -555,7 +555,7 @@ namespace Aimmy2
                 await SwitchToMenu(newMenuName);
                 _currentMenu = newMenuName;
             }
-            catch (Exception ex)
+            catch
             {
             }
             finally
@@ -800,8 +800,8 @@ namespace Aimmy2
             for (int i = 0; i < features.Length; i++)
             {
                 Dictionary.toggleState[features[i]] = false;
-                if (toggles[i] != null)
-                    UpdateToggleUI(toggles[i], false);
+                if (toggles[i] is AToggle toggle)
+                    UpdateToggleUI(toggle, false);
             }
             LogManager.Log(LogManager.LogLevel.Info, "[Emergency Stop Keybind] Disabled all AI features.", true);
         }

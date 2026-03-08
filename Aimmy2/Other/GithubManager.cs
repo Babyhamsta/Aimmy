@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text.Json;
 
@@ -17,7 +17,7 @@ namespace Aimmy2.Other
 
         private class GitHubContent
         {
-            public string name { get; set; }
+            public string? name { get; set; }
         }
 
         public async Task<(string tagName, string downloadUrl)> GetLatestReleaseInfo(string owner, string repo)
@@ -28,10 +28,10 @@ namespace Aimmy2.Other
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(content);
+            var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(content)!;
 
-            string tagName = data["tag_name"].ToString() ?? throw new InvalidOperationException("Tag name is missing in the response");
-            string downloadUrl = ((JsonElement)data["assets"]).EnumerateArray().First().GetProperty("browser_download_url").ToString();
+            string tagName = data["tag_name"]?.ToString() ?? throw new InvalidOperationException("Tag name is missing in the response");
+            string downloadUrl = data.ContainsKey("assets") ? ((JsonElement)data["assets"]).EnumerateArray().First().GetProperty("browser_download_url").GetString() ?? string.Empty : string.Empty;
 
             return (tagName, downloadUrl);
         }
@@ -50,7 +50,7 @@ namespace Aimmy2.Other
                 throw new InvalidOperationException("Failed to deserialize GitHub content or Github content is empty.");
             }
 
-            return contents.Select(c => c.name);
+            return contents.Select(c => c.name ?? string.Empty);
         }
 
         public void Dispose()

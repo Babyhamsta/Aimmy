@@ -1,4 +1,4 @@
-﻿using Aimmy2.Theme;
+using Aimmy2.Theme;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -54,7 +54,7 @@ namespace Aimmy2.UILibrary
         private bool _isUpdatingMediaFromCode = false;
         //--
         private bool _isMouseDown = false;
-        private WriteableBitmap _colorWheelBitmap;
+        private WriteableBitmap? _colorWheelBitmap;
         private Color _selectedColor = Color.FromRgb(114, 46, 209); // Default purple
         private Color _previewColor = Color.FromRgb(114, 46, 209); // For live preview
         private double _brightness = 1.0;
@@ -503,11 +503,11 @@ namespace Aimmy2.UILibrary
 
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                var files = e.Data.GetData(DataFormats.FileDrop) as string[];
                 if (files?.Length > 0)
                 {
                     string filePath = files[0];
-                    string extension = System.IO.Path.GetExtension(filePath)?.ToLowerInvariant();
+                    string? extension = System.IO.Path.GetExtension(filePath)?.ToLowerInvariant();
 
                     // Only allow image formats
                     if (extension == ".png" || extension == ".jpg" || extension == ".jpeg")

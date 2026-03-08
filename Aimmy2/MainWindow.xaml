@@ -1,4 +1,4 @@
-﻿<Window x:Class="Aimmy2.MainWindow"
+<Window x:Class="Aimmy2.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -10,6 +10,7 @@
         theme:ThemeBehavior.AutoRegister="True"
         mc:Ignorable="d"
         Title="Aimmy"
+        Icon="Aimmy.ico"
         Height="444"
         MinHeight="444"
         Width="670"

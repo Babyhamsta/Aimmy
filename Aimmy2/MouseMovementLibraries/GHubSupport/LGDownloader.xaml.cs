@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using Aimmy2.Theme;
 using Class;
 using Other;
@@ -34,7 +34,7 @@ namespace Visuality
             ThemeManager.ThemeChanged += OnThemeChanged;
         }
 
-        private void OnThemeChanged(object sender, System.Windows.Media.Color newColor)
+        private void OnThemeChanged(object? sender, System.Windows.Media.Color newColor)
         {
             Dispatcher.Invoke(() =>
             {
@@ -107,13 +107,17 @@ namespace Visuality
 
                 using HttpClient httpClient = new();
 
-                var response = await httpClient.GetAsync(new Uri(clickedButton.Tag.ToString()));
-                if (response.IsSuccessStatusCode)
+                string? tagString = clickedButton.Tag?.ToString();
+                if (!string.IsNullOrEmpty(tagString))
                 {
-                    var content = await response.Content.ReadAsByteArrayAsync();
-                    await File.WriteAllBytesAsync(FilePath, content);
+                    var response = await httpClient.GetAsync(new Uri(tagString));
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadAsByteArrayAsync();
+                        await File.WriteAllBytesAsync(FilePath, content);
+                    }
+                    LogManager.Log(LogManager.LogLevel.Info, "LG Hub has downloaded, attempting to verify legitimacy of the file.", true);
                 }
-                LogManager.Log(LogManager.LogLevel.Info, "LG Hub has downloaded, attempting to verify legitimacy of the file.", true);
 
                 if (CheckFileValidity())
                 {
