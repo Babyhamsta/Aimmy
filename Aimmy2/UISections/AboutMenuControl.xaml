@@ -126,7 +126,7 @@
 
                     <!-- Developers Container - populated from code -->
                     <UniformGrid x:Name="CoreTeamPanel"
-                                 Columns="3"
+                                 Columns="4"
                                  HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>

@@ -22,9 +22,7 @@ namespace Aimmy2.Controls
             { "Model Settings", false },
             { "Settings Menu", false },
             { "Theme Settings", false },
-            { "Screen Settings", false },
-            { "Anti-Detection", false },
-            { "Identity Randomizer", false }
+            { "Screen Settings", false }
         };
 
         // Public properties for MainWindow access
@@ -53,8 +51,6 @@ namespace Aimmy2.Controls
             LoadSettingsConfig();
             LoadThemeMenu();
             LoadDisplaySelectMenu();
-            LoadAntiDetectionConfig();
-            LoadIdentityRandomizerConfig();
 
             // Apply minimize states after loading
             ApplyMinimizeStates();
@@ -100,8 +96,6 @@ namespace Aimmy2.Controls
             ApplyPanelState("Settings Menu", SettingsConfigPanel);
             ApplyPanelState("Theme Settings", ThemeMenuPanel);
             ApplyPanelState("Screen Settings", DisplaySelectMenuPanel);
-            ApplyPanelState("Anti-Detection", DisplaySelectMenuPanel);
-            ApplyPanelState("Identity Randomizer", DisplaySelectMenuPanel);
         }
 
         private void ApplyPanelState(string stateName, StackPanel panel)
@@ -288,134 +282,7 @@ namespace Aimmy2.Controls
                 .AddSeparator();
         }
 
-        private void LoadAntiDetectionConfig()
-        {
-            try
-            {
-                var uiManager = _mainWindow!.uiManager;
-                var builder = new SectionBuilder(this, DisplaySelectMenu);
-                
-                builder
-                    .AddTitle("Anti-Detection", true, t =>
-                    {
-                        t.Minimize.Click += (s, e) => TogglePanel("Anti-Detection", DisplaySelectMenuPanel);
-                    })
-                    .AddToggle("Anti-Detection", t =>
-                    {
-                        uiManager.T_AntiDetection = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                if (t.IsSwitchedOn)
-                                {
-                                    AntiDetectionManager.Instance.ApplyConfigurationChanges();
-                                    LogManager.Log(LogManager.LogLevel.Info, "反检测功能已启用", true, 3000);
-                                }
-                                else
-                                {
-                                    LogManager.Log(LogManager.LogLevel.Info, "反检测功能已禁用", true, 3000);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                LogManager.Log(LogManager.LogLevel.Error, $"反检测配置更改失败：{ex.Message}", true);
-                            }
-                        };
-                    }, tooltip: "在程序启动时自动对关键特征进行随机化处理，以防止被检测。不会修改进程名称。")
-                    .AddToggle("Memory Randomization", t =>
-                    {
-                        uiManager.T_MemoryRandomization = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                AntiDetectionManager.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "随机化内存布局和特征，包括堆布局、栈特征等。")
-                    .AddToggle("String Obfuscation", t =>
-                    {
-                        uiManager.T_StringObfuscation = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                AntiDetectionManager.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "对关键字符串进行运行时混淆处理。")
-                    .AddToggle("Control Flow Randomization", t =>
-                    {
-                        uiManager.T_ControlFlowRandomization = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                AntiDetectionManager.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "添加随机控制流变化以混淆程序执行流程。（可能影响性能）")
-                    .AddToggle("Metadata Randomization", t =>
-                    {
-                        uiManager.T_MetadataRandomization = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                AntiDetectionManager.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "随机化程序集和类型元数据特征。")
-                    .AddSlider("Randomization Seed", "", 1, 1, 0, int.MaxValue, s =>
-                    {
-                        uiManager.S_RandomizationSeed = s;
-                        s.Slider.PreviewMouseLeftButtonUp += (sender, e) =>
-                        {
-                            try
-                            {
-                                AntiDetectionManager.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "随机化算法的种子值。设置为 0 使用安全随机数生成器。")
-                    .AddSlider("Periodic Randomization Interval", " Minutes", 1, 1, 0, 120, s =>
-                    {
-                        uiManager.S_PeriodicRandomizationInterval = s;
-                        s.Slider.PreviewMouseLeftButtonUp += (sender, e) =>
-                        {
-                            try
-                            {
-                                AntiDetectionManager.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "周期性执行随机化的时间间隔（分钟）。设置为 0 禁用周期性随机化。")
-                    .AddButton("Trigger Randomization Now", b =>
-                    {
-                        b.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                AntiDetectionManager.Instance?.TriggerRandomization();
-                            }
-                            catch (Exception ex)
-                            {
-                                LogManager.Log(LogManager.LogLevel.Error, $"手动触发随机化失败：{ex.Message}", true);
-                            }
-                        };
-                    }, tooltip: "立即手动触发一次特征随机化。")
-                    .AddSeparator();
-            }
-            catch (Exception ex)
-            {
-                LogManager.Log(LogManager.LogLevel.Error, $"加载反检测设置失败：{ex.Message}", true);
-            }
-        }
+
 
         private void LoadDisplaySelectMenu()
         {
@@ -495,114 +362,7 @@ namespace Aimmy2.Controls
             ThemeMenu.Children.Insert(insertIndex, uiManager.ThemeColorWheel);
         }
 
-        private void LoadIdentityRandomizerConfig()
-        {
-            try
-            {
-                var uiManager = _mainWindow!.uiManager;
-                var builder = new SectionBuilder(this, DisplaySelectMenu);
-                
-                builder
-                    .AddTitle("Identity Randomizer", true, t =>
-                    {
-                        t.Minimize.Click += (s, e) => TogglePanel("Identity Randomizer", DisplaySelectMenuPanel);
-                    })
-                    .AddToggle("Randomize Identity", t =>
-                    {
-                        uiManager.T_RandomizeIdentity = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                IdentityRandomizer.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch (Exception ex)
-                            {
-                                LogManager.Log(LogManager.LogLevel.Error, $"身份随机化配置更改失败：{ex.Message}", true);
-                            }
-                        };
-                    }, tooltip: "随机化应用名、窗口标题、描述等身份信息。")
-                    .AddToggle("Advanced Process Name Spoofing", t =>
-                    {
-                        uiManager.T_AdvancedProcessNameSpoofing = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                IdentityRandomizer.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "使用底层Windows API修改PEB中的进程映像名称，绕过任务管理器检测。（需要管理员权限）")
-                    .AddToggle("Randomize Window Title", t =>
-                    {
-                        uiManager.T_RandomizeWindowTitle = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                IdentityRandomizer.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "随机化程序窗口的标题栏文字。")
-                    .AddToggle("Randomize Description", t =>
-                    {
-                        uiManager.T_RandomizeDescription = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                IdentityRandomizer.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "随机化应用描述和横幅文本。")
-                    .AddToggle("Randomize Window Class", t =>
-                    {
-                        uiManager.T_RandomizeWindowClass = t;
-                        t.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                IdentityRandomizer.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "随机化窗口类名（高级功能）")
-                    .AddSlider("Identity Update Interval", " Minutes", 1, 1, 0, 120, s =>
-                    {
-                        uiManager.S_IdentityUpdateInterval = s;
-                        s.Slider.PreviewMouseLeftButtonUp += (sender, e) =>
-                        {
-                            try
-                            {
-                                IdentityRandomizer.Instance?.ApplyConfigurationChanges();
-                            }
-                            catch { }
-                        };
-                    }, tooltip: "周期性更新身份信息的时间间隔（分钟）。设置为 0 禁用周期性更新。")
-                    .AddButton("Randomize Identity Now", b =>
-                    {
-                        b.Reader.Click += (s, e) =>
-                        {
-                            try
-                            {
-                                IdentityRandomizer.Instance?.TriggerRandomization();
-                            }
-                            catch (Exception ex)
-                            {
-                                LogManager.Log(LogManager.LogLevel.Error, $"手动触发身份随机化失败：{ex.Message}", true);
-                            }
-                        };
-                    }, tooltip: "立即手动触发一次身份随机化。")
-                    .AddSeparator();
-            }
-            catch (Exception ex)
-            {
-                LogManager.Log(LogManager.LogLevel.Error, $"加载身份随机化设置失败：{ex.Message}", true);
-            }
-        }
+
 
         #endregion
 
