@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="UILibrary.ADropdown"
+<UserControl x:Class="UILibrary.ADropdown"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -32,6 +32,7 @@
                           Foreground="White"
                           Ant:Input.PlaceholderBrush="#FFC8C8C8"
                           BorderBrush="#3FFFFFFF"
+                          AutomationProperties.Name="DropdownBox"
                           Padding="5,0,5,0"
                           BorderThickness="1,1,1,1"
                           Background="{x:Null}"

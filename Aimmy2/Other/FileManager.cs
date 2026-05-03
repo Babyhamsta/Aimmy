@@ -1,6 +1,7 @@
-﻿using Aimmy2.AILogic;
+using Aimmy2.AILogic;
 using Aimmy2.Class;
 using Aimmy2.Other;
+using Aimmy2.Resources;
 using Class;
 using System.IO;
 using System.Windows;
@@ -70,7 +71,7 @@ namespace Other
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error creating a required directory: {ex}");
+                MessageBox.Show(LocalizationManager.GetString("Msg_DirectoryCreateError", baseDir, ex.Message));
                 Application.Current.Shutdown();
             }
         }
@@ -112,7 +113,7 @@ namespace Other
                 Dictionary.toggleState[keyValuePair.Key] = keyValuePair.Value;
             }
 
-            string content = "Loaded Model: " + selectedModel;
+            string content = string.Format(LocalizationManager.GetString("Common_LoadedModel"), selectedModel);
             SelectedModelNotifier.Content = content;
             LogManager.Log(LogManager.LogLevel.Info, content, true, 2000);
         }
@@ -127,7 +128,7 @@ namespace Other
             SaveDictionary.LoadJSON(Dictionary.sliderSettings, configPath);
             PropertyChanger.PostNewConfig(configPath, true);
 
-            SelectedConfigNotifier.Content = "Loaded Config: " + selectedConfig;
+            SelectedConfigNotifier.Content = string.Format(LocalizationManager.GetString("Common_LoadedConfig"), selectedConfig);
         }
 
         public void InitializeFileWatchers()
@@ -244,7 +245,7 @@ namespace Other
                     {
                         string? lastLoadedModel = Dictionary.lastLoadedModel;
                         if (lastLoadedModel != "N/A" && !ModelListBox.Items.Contains(lastLoadedModel)) { ModelListBox.SelectedItem = lastLoadedModel; }
-                        SelectedModelNotifier.Content = $"Loaded Model: {lastLoadedModel}";
+                        SelectedModelNotifier.Content = string.Format(LocalizationManager.GetString("Common_LoadedModel"), lastLoadedModel);
                     }
                 });
             }
@@ -269,7 +270,7 @@ namespace Other
                         string? lastLoadedConfig = Dictionary.lastLoadedConfig;
                         if (lastLoadedConfig != "N/A" && !ConfigListBox.Items.Contains(lastLoadedConfig)) { ConfigListBox.SelectedItem = lastLoadedConfig; }
 
-                        SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;
+                        SelectedConfigNotifier.Content = string.Format(LocalizationManager.GetString("Common_LoadedConfig"), lastLoadedConfig);
                     }
                 });
             }

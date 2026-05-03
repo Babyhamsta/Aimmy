@@ -1,6 +1,7 @@
 using Aimmy2.AILogic;
 using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
+using Aimmy2.Resources;
 using Aimmy2.UILibrary;
 using Class;
 using InputLogic;
@@ -16,14 +17,11 @@ namespace Aimmy2.Controls
 {
     public partial class AimMenuControl : UserControl
     {
-        //--
         UISections.ColorPicker? colorPickerInstance = null;
         UISections.ColorPicker? fovColorPickerInstance = null;
-        //--
         private MainWindow? _mainWindow;
         private bool _isInitialized;
 
-        // Local minimize state management
         private readonly Dictionary<string, bool> _localMinimizeState = new()
         {
             { "Aim Assist", false },
@@ -34,7 +32,6 @@ namespace Aimmy2.Controls
             { "ESP Config", false }
         };
 
-        // Public properties for MainWindow access
         public StackPanel AimAssistPanel => AimAssist;
         public StackPanel TriggerBotPanel => TriggerBot;
         public StackPanel ESPConfigPanel => ESPConfig;
@@ -55,12 +52,10 @@ namespace Aimmy2.Controls
             _mainWindow = mainWindow;
             _isInitialized = true;
 
-            // Load minimize states from global dictionary if they exist
             LoadMinimizeStatesFromGlobal();
 
             AIManager.ImageSizeUpdated += OnImageSizeChanged;
 
-            // Load all sections
             LoadAimAssist();
             LoadAimConfig();
             LoadPredictions();
@@ -68,7 +63,6 @@ namespace Aimmy2.Controls
             LoadFOVConfig();
             LoadESPConfig();
 
-            // Apply minimize states after loading
             ApplyMinimizeStates();
         }
 
@@ -115,7 +109,6 @@ namespace Aimmy2.Controls
         {
             foreach (UIElement child in panel.Children)
             {
-                // Keep titles, spacers, and bottom rectangles always visible
                 bool shouldStayVisible = child is ATitle || child is ASpacer || child is ARectangleBottom;
 
                 child.Visibility = shouldStayVisible
@@ -128,16 +121,12 @@ namespace Aimmy2.Controls
         {
             if (!_localMinimizeState.ContainsKey(stateName)) return;
 
-            // Toggle the state
             _localMinimizeState[stateName] = !_localMinimizeState[stateName];
 
-            // Apply the new visibility
             SetPanelVisibility(panel, !_localMinimizeState[stateName]);
 
-            // Save to global dictionary
             SaveMinimizeStatesToGlobal();
         }
-
 
         #endregion
 
@@ -149,7 +138,7 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, AimAssist);
 
             builder
-                .AddTitle("Aim Assist", true, t =>
+                .AddTitle(LocalizationManager.GetString("AimAssist_Title"), true, t =>
                 {
                     uiManager.AT_Aim = t;
                     t.Minimize.Click += (s, e) =>
@@ -158,7 +147,7 @@ namespace Aimmy2.Controls
                         _mainWindow?.UpdateAimAssistSliderVisibility();
                     };
                 })
-                .AddToggle("Aim Assist", t =>
+                .AddToggle(LocalizationManager.GetString("Toggle_AimAssist"), "Aim Assist", t =>
                 {
                     uiManager.T_AimAligner = t;
                     t.Reader.Click += (s, e) =>
@@ -167,11 +156,11 @@ namespace Aimmy2.Controls
                         {
                             Dictionary.toggleState["Aim Assist"] = false;
                             _mainWindow.UpdateToggleUI(t, false);
-                            LogManager.Log(LogManager.LogLevel.Warning, "Please load a model first", true);
+                            LogManager.Log(LogManager.LogLevel.Warning, LocalizationManager.GetString("Msg_LoadModelFirst"), true);
                         }
                     };
-                }, tooltip: "Turn aim assist on or off. You must load a model first.")
-                .AddToggle("Constant AI Tracking", t =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_AimAssist"))
+                .AddToggle(LocalizationManager.GetString("Toggle_ConstantAITracking"), "Constant AI Tracking", t =>
                 {
                     uiManager.T_ConstantAITracking = t;
                     t.Reader.Click += (s, e) =>
@@ -191,19 +180,18 @@ namespace Aimmy2.Controls
                             }
                         }
                     };
-                }, tooltip: "Always track targets without holding a key. When off, you must hold the aim keybind.")
-                .AddToggle("Sticky Aim", t => uiManager.T_StickyAim = t,
-                    tooltip: "Lock onto a target until it moves out of range instead of switching targets.")
-                .AddSlider("Sticky Aim Threshold", "Pixels", 1, 1, 0, 100, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_ConstantAITracking"))
+                .AddToggle(LocalizationManager.GetString("Toggle_StickyAim"), "Sticky Aim", t => uiManager.T_StickyAim = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_StickyAim"))
+                .AddSlider(LocalizationManager.GetString("Slider_StickyAimThreshold"), "Sticky Aim Threshold", LocalizationManager.GetString("Unit_Pixels"), 1, 1, 0, 100, s =>
                 {
                     uiManager.S_StickyAimThreshold = s;
-                    // Set initial visibility based on toggle state
                     s.Visibility = Dictionary.toggleState["Sticky Aim"]
                         ? Visibility.Visible : Visibility.Collapsed;
-                }, tooltip: "How far a target must move before switching to a new one. Higher = stays locked longer.")
-                .AddKeyChanger("Aim Keybind", k => uiManager.C_Keybind = k,
-                    tooltip: "The key you hold to activate aim assist.")
-                .AddKeyChanger("Second Aim Keybind", tooltip: "An alternate key to activate aim assist.")
+                }, tooltip: LocalizationManager.GetString("Tooltip_StickyAimThreshold"))
+                .AddKeyChanger(LocalizationManager.GetString("Key_AimKeybind"), "Aim Keybind", k => uiManager.C_Keybind = k,
+                    tooltip: LocalizationManager.GetString("Tooltip_AimKeybind"))
+                .AddKeyChanger(LocalizationManager.GetString("Key_SecondAimKeybind"), "Second Aim Keybind", tooltip: LocalizationManager.GetString("Tooltip_SecondAimKeybind"))
                 .AddSeparator();
         }
 
@@ -213,7 +201,7 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, AimConfig);
 
             builder
-                .AddTitle("Aim Config", true, t =>
+                .AddTitle(LocalizationManager.GetString("AimConfig_Title"), true, t =>
                 {
                     uiManager.AT_AimConfig = t;
                     t.Minimize.Click += (s, e) =>
@@ -222,19 +210,17 @@ namespace Aimmy2.Controls
                         _mainWindow?.UpdateAimConfigSliderVisibility();
                     };
                 })
-                .AddDropdown("Mouse Movement Method", d =>
+                .AddDropdown(LocalizationManager.GetString("Dropdown_MouseMovementMethod"), "Mouse Movement Method", d =>
                 {
                     uiManager.D_MouseMovementMethod = d;
-                    d.DropdownBox.SelectedIndex = -1;  // Prevent auto-selection
+                    d.DropdownBox.SelectedIndex = -1;
 
-                    // Add options
-                    _mainWindow.AddDropdownItem(d, "Mouse Event");
-                    _mainWindow.AddDropdownItem(d, "SendInput");
-                    uiManager.DDI_LGHUB = _mainWindow.AddDropdownItem(d, "LG HUB");
-                    uiManager.DDI_RazerSynapse = _mainWindow.AddDropdownItem(d, "Razer Synapse (Require Razer Peripheral)");
-                    uiManager.DDI_ddxoft = _mainWindow.AddDropdownItem(d, "ddxoft Virtual Input Driver");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_MouseEvent"), "Mouse Event");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_SendInput"), "SendInput");
+                    uiManager.DDI_LGHUB = _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_LGHub"), "LG HUB");
+                    uiManager.DDI_RazerSynapse = _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_RazerSynapse"), "Razer Synapse (Require Razer Peripheral)");
+                    uiManager.DDI_ddxoft = _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_ddxoft"), "ddxoft Virtual Input Driver");
 
-                    // Setup handlers
                     uiManager.DDI_LGHUB.Selected += async (s, e) =>
                     {
                         if (!new LGHubMain().Load())
@@ -252,23 +238,23 @@ namespace Aimmy2.Controls
                         if (!await DdxoftMain.Load())
                             await ResetToMouseEvent();
                     };
-                }, tooltip: "How mouse movements are sent. Try different options if aim assist isn't working.")
-                .AddDropdown("Movement Path", d =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_MouseMovementMethod"))
+                .AddDropdown(LocalizationManager.GetString("Dropdown_MovementPath"), "Movement Path", d =>
                 {
                     d.DropdownBox.SelectedIndex = 0;
                     uiManager.D_MovementPath = d;
-                    _mainWindow.AddDropdownItem(d, "Cubic Bezier");
-                    _mainWindow.AddDropdownItem(d, "Exponential");
-                    _mainWindow.AddDropdownItem(d, "Linear");
-                    _mainWindow.AddDropdownItem(d, "Adaptive");
-                    _mainWindow.AddDropdownItem(d, "Perlin Noise");
-                }, tooltip: "The curve style used when moving to a target. Affects how natural the movement looks.")
-                .AddDropdown("Detection Area Type", d =>
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_CubicBezier"), "Cubic Bezier");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Exponential"), "Exponential");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Linear"), "Linear");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Adaptive"), "Adaptive");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_PerlinNoise"), "Perlin Noise");
+                }, tooltip: LocalizationManager.GetString("Tooltip_MovementPath"))
+                .AddDropdown(LocalizationManager.GetString("Dropdown_DetectionAreaType"), "Detection Area Type", d =>
                 {
                     d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_DetectionAreaType = d;
-                    uiManager.DDI_ClosestToCenterScreen = _mainWindow.AddDropdownItem(d, "Closest to Center Screen");
-                    _mainWindow.AddDropdownItem(d, "Closest to Mouse");
+                    uiManager.DDI_ClosestToCenterScreen = _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_ClosestToCenter"), "Closest to Center Screen");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_ClosestToMouse"), "Closest to Mouse");
 
                     uiManager.DDI_ClosestToCenterScreen.Selected += async (s, e) =>
                     {
@@ -278,17 +264,16 @@ namespace Aimmy2.Controls
                             Convert.ToInt16((WinAPICaller.ScreenHeight / 2) / WinAPICaller.scalingFactorY) - 320,
                             0, 0);
                     };
-                }, tooltip: "How targets are prioritized. Center screen is best for most games.")
-                .AddDropdown("Aiming Boundaries Alignment", d =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_DetectionAreaType"))
+                .AddDropdown(LocalizationManager.GetString("Dropdown_AimingBoundaries"), "Aiming Boundaries Alignment", d =>
                 {
                     d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_AimingBoundariesAlignment = d;
-                    _mainWindow.AddDropdownItem(d, "Center");
-                    _mainWindow.AddDropdownItem(d, "Top");
-                    _mainWindow.AddDropdownItem(d, "Bottom");
-                }, tooltip: "Where to aim on the detected target box. Center is usually best.");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Center"), "Center");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Top"), "Top");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Bottom"), "Bottom");
+                }, tooltip: LocalizationManager.GetString("Tooltip_AimingBoundaries"));
 
-            // Add sliders with validation
             AddConfigSliders(builder, uiManager);
             builder.AddSeparator();
         }
@@ -296,7 +281,7 @@ namespace Aimmy2.Controls
         private void AddConfigSliders(SectionBuilder builder, UI uiManager)
         {
             builder
-                .AddSlider("Mouse Sensitivity (+/-)", "Sensitivity", 0.01, 0.01, 0.01, 1, s =>
+                .AddSlider(LocalizationManager.GetString("Slider_MouseSensitivity"), "Mouse Sensitivity (+/-)", LocalizationManager.GetString("Unit_Sensitivity"), 0.01, 0.01, 0.01, 1, s =>
                 {
                     uiManager.S_MouseSensitivity = s;
                     s.Slider.PreviewMouseLeftButtonUp += (sender, e) =>
@@ -304,46 +289,42 @@ namespace Aimmy2.Controls
                         var value = s.Slider.Value;
                         if (value >= 0.98)
                             LogManager.Log(LogManager.LogLevel.Warning,
-                                "The Mouse Sensitivity you have set can cause Aimmy to be unable to aim, please decrease if you suffer from this problem", true);
+                                LocalizationManager.GetString("Msg_SensitivityTooHigh"), true);
                         else if (value <= 0.1)
                             LogManager.Log(LogManager.LogLevel.Warning,
-                                "The Mouse Sensitivity you have set can cause Aimmy to be unstable to aim, please increase if you suffer from this problem", true);
+                                LocalizationManager.GetString("Msg_SensitivityTooLow"), true);
                     };
-                }, tooltip: "How fast the aim moves. Lower = faster and snappier, higher = slower and smoother.")
-                .AddSlider("Mouse Jitter", "Jitter", 1, 1, 0, 15, s => uiManager.S_MouseJitter = s,
-                    tooltip: "Adds random small movements to make aim look more human-like.")
-                .AddToggle("Y Axis Percentage Adjustment", t => uiManager.T_YAxisPercentageAdjustment = t,
-                    tooltip: "Enable the Y Offset (%) slider to adjust aim vertically by percentage.")
-                .AddToggle("X Axis Percentage Adjustment", t => uiManager.T_XAxisPercentageAdjustment = t,
-                    tooltip: "Enable the X Offset (%) slider to adjust aim horizontally by percentage.")
-                .AddSlider("Y Offset (Up/Down)", "Offset", 1, 1, -150, 150, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_MouseSensitivity"))
+                .AddSlider(LocalizationManager.GetString("Slider_MouseJitter"), "Mouse Jitter", LocalizationManager.GetString("Unit_Jitter"), 1, 1, 0, 15, s => uiManager.S_MouseJitter = s,
+                    tooltip: LocalizationManager.GetString("Tooltip_MouseJitter"))
+                .AddToggle(LocalizationManager.GetString("Toggle_YAxisPercent"), "Y Axis Percentage Adjustment", t => uiManager.T_YAxisPercentageAdjustment = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_YAxisPercent"))
+                .AddToggle(LocalizationManager.GetString("Toggle_XAxisPercent"), "X Axis Percentage Adjustment", t => uiManager.T_XAxisPercentageAdjustment = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_XAxisPercent"))
+                .AddSlider(LocalizationManager.GetString("Slider_YOffset"), "Y Offset (Up/Down)", LocalizationManager.GetString("Unit_Offset"), 1, 1, -150, 150, s =>
                 {
                     uiManager.S_YOffset = s;
-                    // Set initial visibility based on toggle state
                     s.Visibility = Dictionary.toggleState["Y Axis Percentage Adjustment"]
                         ? Visibility.Collapsed : Visibility.Visible;
-                }, tooltip: "Move aim point up (negative) or down (positive) in pixels.")
-                .AddSlider("Y Offset (%)", "Percent", 1, 1, 0, 100, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_YOffset"))
+                .AddSlider(LocalizationManager.GetString("Slider_YOffsetPercent"), "Y Offset (%)", LocalizationManager.GetString("Unit_Percent"), 1, 1, 0, 100, s =>
                 {
                     uiManager.S_YOffsetPercent = s;
-                    // Set initial visibility based on toggle state
                     s.Visibility = Dictionary.toggleState["Y Axis Percentage Adjustment"]
                         ? Visibility.Visible : Visibility.Collapsed;
-                }, tooltip: "Move aim point up or down as a percentage of the target box height.")
-                .AddSlider("X Offset (Left/Right)", "Offset", 1, 1, -150, 150, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_YOffsetPercent"))
+                .AddSlider(LocalizationManager.GetString("Slider_XOffset"), "X Offset (Left/Right)", LocalizationManager.GetString("Unit_Offset"), 1, 1, -150, 150, s =>
                 {
                     uiManager.S_XOffset = s;
-                    // Set initial visibility based on toggle state
                     s.Visibility = Dictionary.toggleState["X Axis Percentage Adjustment"]
                         ? Visibility.Collapsed : Visibility.Visible;
-                }, tooltip: "Move aim point left (negative) or right (positive) in pixels.")
-                .AddSlider("X Offset (%)", "Percent", 1, 1, 0, 100, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_XOffset"))
+                .AddSlider(LocalizationManager.GetString("Slider_XOffsetPercent"), "X Offset (%)", LocalizationManager.GetString("Unit_Percent"), 1, 1, 0, 100, s =>
                 {
                     uiManager.S_XOffsetPercent = s;
-                    // Set initial visibility based on toggle state
                     s.Visibility = Dictionary.toggleState["X Axis Percentage Adjustment"]
                         ? Visibility.Visible : Visibility.Collapsed;
-                }, tooltip: "Move aim point left or right as a percentage of the target box width.");
+                }, tooltip: LocalizationManager.GetString("Tooltip_XOffsetPercent"));
         }
 
         private void LoadPredictions()
@@ -352,7 +333,7 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, Predictions);
 
             builder
-                .AddTitle("Predictions", true, t =>
+                .AddTitle(LocalizationManager.GetString("Predictions_Title"), true, t =>
                 {
                     uiManager.AT_Predictions = t;
                     t.Minimize.Click += (s, e) =>
@@ -361,40 +342,36 @@ namespace Aimmy2.Controls
                         _mainWindow?.UpdatePredictionSliderVisibility();
                     };
                 })
-                .AddToggle("Predictions", t => uiManager.T_Predictions = t,
-                    tooltip: "Predict where a moving target will be. Helps track fast-moving targets.")
-                .AddDropdown("Prediction Method", d =>
+                .AddToggle(LocalizationManager.GetString("Toggle_Predictions"), "Predictions", t => uiManager.T_Predictions = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_PredictionsToggle"))
+                .AddDropdown(LocalizationManager.GetString("Dropdown_PredictionMethod"), "Prediction Method", d =>
                 {
                     d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_PredictionMethod = d;
-                    _mainWindow.AddDropdownItem(d, "Kalman Filter");
-                    _mainWindow.AddDropdownItem(d, "Shall0e's Prediction");
-                    _mainWindow.AddDropdownItem(d, "wisethef0x's EMA Prediction");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_KalmanFilter"), "Kalman Filter");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_ShalloePrediction"), "Shall0e's Prediction");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Wisethef0xEMA"), "wisethef0x's EMA Prediction");
 
-                    // Update slider visibility when prediction method changes
                     d.DropdownBox.SelectionChanged += (s, e) => _mainWindow?.UpdatePredictionSliderVisibility();
-                }, tooltip: "The algorithm used to predict target movement. Try different ones to see what works best.")
-                .AddSlider("Kalman Lead Time", "Seconds", 0.01, 0.01, 0.02, 0.30, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_PredictionMethod"))
+                .AddSlider(LocalizationManager.GetString("Slider_KalmanLeadTime"), "Kalman Lead Time", LocalizationManager.GetString("Unit_Seconds"), 0.01, 0.01, 0.02, 0.30, s =>
                 {
                     uiManager.S_KalmanLeadTime = s;
-                    // Start collapsed - visibility will be set by LoadDropdownStates
                     s.Visibility = Visibility.Collapsed;
-                }, tooltip: "How far ahead to predict target position. Higher = more prediction, may overshoot.")
-                .AddSlider("WiseTheFox Lead Time", "Seconds", 0.01, 0.01, 0.02, 0.30, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_KalmanLeadTime"))
+                .AddSlider(LocalizationManager.GetString("Slider_WiseTheFoxLeadTime"), "WiseTheFox Lead Time", LocalizationManager.GetString("Unit_Seconds"), 0.01, 0.01, 0.02, 0.30, s =>
                 {
                     uiManager.S_WiseTheFoxLeadTime = s;
-                    // Start collapsed - visibility will be set by LoadDropdownStates
                     s.Visibility = Visibility.Collapsed;
-                }, tooltip: "How far ahead to predict target position. Higher = more prediction, may overshoot.")
-                .AddSlider("Shalloe Lead Multiplier", "Frames", 0.5, 0.5, 1, 10, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_WiseTheFoxLeadTime"))
+                .AddSlider(LocalizationManager.GetString("Slider_ShalloeLeadMultiplier"), "Shalloe Lead Multiplier", LocalizationManager.GetString("Unit_Frames"), 0.5, 0.5, 1, 10, s =>
                 {
                     uiManager.S_ShalloeLeadMultiplier = s;
-                    // Start collapsed - visibility will be set by LoadDropdownStates
                     s.Visibility = Visibility.Collapsed;
-                }, tooltip: "How many frames ahead to predict. Higher = more prediction, may overshoot.")
-                .AddToggle("EMA Smoothening", t => uiManager.T_EMASmoothing = t,
-                    tooltip: "Smooth out aim movements to reduce jitter and make tracking steadier.")
-                .AddSlider("EMA Smoothening", "Amount", 0.01, 0.01, 0.01, 1, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_ShalloeLeadMultiplier"))
+                .AddToggle(LocalizationManager.GetString("Toggle_EMASmoothing"), "EMA Smoothening", t => uiManager.T_EMASmoothing = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_EMASmoothingToggle"))
+                .AddSlider(LocalizationManager.GetString("Slider_EMASmoothing"), "EMA Smoothening", LocalizationManager.GetString("Unit_Amount"), 0.01, 0.01, 0.01, 1, s =>
                 {
                     uiManager.S_EMASmoothing = s;
                     s.Slider.ValueChanged += (sender, e) =>
@@ -404,7 +381,7 @@ namespace Aimmy2.Controls
                             MouseManager.smoothingFactor = s.Slider.Value;
                         }
                     };
-                }, tooltip: "How much smoothing to apply. Lower = smoother but slower, higher = faster but jittery.")
+                }, tooltip: LocalizationManager.GetString("Tooltip_EMASmoothing"))
                 .AddSeparator();
         }
 
@@ -414,20 +391,19 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, TriggerBot);
 
             builder
-                .AddTitle("Auto Trigger", true, t =>
+                .AddTitle(LocalizationManager.GetString("AutoTrigger_Title"), true, t =>
                 {
                     uiManager.AT_TriggerBot = t;
                     t.Minimize.Click += (s, e) => TogglePanel("Auto Trigger", TriggerBotPanel);
                 })
-                .AddToggle("Auto Trigger", t => uiManager.T_AutoTrigger = t,
-                    tooltip: "Automatically click when a target is detected in your crosshair area.")
-                .AddToggle("Cursor Check", t => uiManager.T_CursorCheck = t,
-                    tooltip: "Only trigger when cursor is directly on target. More accurate but may miss some shots.")
-                .AddToggle("Spray Mode", t => uiManager.T_SprayMode = t,
-                    tooltip: "Hold down fire instead of single clicks. Good for automatic weapons.")
-                //.AddToggle("Only When Held", t => uiManager.T_OnlyWhenHeld = t)
-                .AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 1, s => uiManager.S_AutoTriggerDelay = s,
-                    tooltip: "Wait time before firing after detecting a target. Helps avoid accidental shots.")
+                .AddToggle(LocalizationManager.GetString("Toggle_AutoTrigger"), "Auto Trigger", t => uiManager.T_AutoTrigger = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_AutoTrigger"))
+                .AddToggle(LocalizationManager.GetString("Toggle_CursorCheck"), "Cursor Check", t => uiManager.T_CursorCheck = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_CursorCheck"))
+                .AddToggle(LocalizationManager.GetString("Toggle_SprayMode"), "Spray Mode", t => uiManager.T_SprayMode = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_SprayMode"))
+                .AddSlider(LocalizationManager.GetString("Slider_AutoTriggerDelay"), "Auto Trigger Delay", LocalizationManager.GetString("Unit_Seconds"), 0.01, 0.1, 0.01, 1, s => uiManager.S_AutoTriggerDelay = s,
+                    tooltip: LocalizationManager.GetString("Tooltip_AutoTriggerDelay"))
                 .AddSeparator();
         }
 
@@ -437,25 +413,25 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, FOVConfig);
 
             builder
-                .AddTitle("FOV Config", true, t =>
+                .AddTitle(LocalizationManager.GetString("FOVConfig_Title"), true, t =>
                 {
                     uiManager.AT_FOV = t;
                     t.Minimize.Click += (s, e) => TogglePanel("FOV Config", FOVConfigPanel);
                 })
-                .AddToggle("FOV", t => uiManager.T_FOV = t,
-                    tooltip: "Show a circle on screen indicating the detection area.")
-                .AddToggle("Dynamic FOV", t => uiManager.T_DynamicFOV = t,
-                    tooltip: "Change FOV size when holding a key. Useful for scoping in.")
-                .AddToggle("Third Person Support", t => uiManager.T_ThirdPersonSupport = t,
-                    tooltip: "Adjust FOV position for third-person camera games.")
-                .AddKeyChanger("Dynamic FOV Keybind", k => uiManager.C_DynamicFOV = k,
-                    tooltip: "The key to hold for switching to the dynamic FOV size.")
-                .AddDropdown("FOV Style", d =>
+                .AddToggle(LocalizationManager.GetString("Toggle_FOV"), "FOV", t => uiManager.T_FOV = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_FOVToggle"))
+                .AddToggle(LocalizationManager.GetString("Toggle_DynamicFOV"), "Dynamic FOV", t => uiManager.T_DynamicFOV = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_DynamicFOV"))
+                .AddToggle(LocalizationManager.GetString("Toggle_ThirdPersonSupport"), "Third Person Support", t => uiManager.T_ThirdPersonSupport = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_ThirdPerson"))
+                .AddKeyChanger(LocalizationManager.GetString("Key_DynamicFOVKeybind"), "Dynamic FOV Keybind", k => uiManager.C_DynamicFOV = k,
+                    tooltip: LocalizationManager.GetString("Tooltip_DynamicFOVKeybind"))
+                .AddDropdown(LocalizationManager.GetString("Dropdown_FOVStyle"), "FOV Style", d =>
                 {
                     uiManager.D_FOVSTYLE = d;
 
-                    var circleItem = _mainWindow.AddDropdownItem(d, "Circle");
-                    var rectangleItem = _mainWindow.AddDropdownItem(d, "Rectangle");
+                    var circleItem = _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Circle"), "Circle");
+                    var rectangleItem = _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Rectangle"), "Rectangle");
 
                     circleItem.Selected += (s, e) =>
                     {
@@ -468,8 +444,8 @@ namespace Aimmy2.Controls
                         MainWindow.FOVWindow.Circle.Visibility = Visibility.Collapsed;
                         MainWindow.FOVWindow.RectangleShape.Visibility = Visibility.Visible;
                     };
-                }, tooltip: "Shape of the FOV overlay. Circle is most common.")
-                .AddColorChanger("FOV Color", c =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_FOVStyle"))
+                .AddColorChanger(LocalizationManager.GetString("Color_FOVColor"), "FOV Color", c =>
                 {
                     c.Reader.Click += (s, e) =>
                     {
@@ -482,13 +458,11 @@ namespace Aimmy2.Controls
                         Color initialColor = Colors.White;
                         if (c.ColorChangingBorder.Background is SolidColorBrush scb)
                             initialColor = scb.Color;
-                        fovColorPickerInstance = new UISections.ColorPicker(initialColor, "FOV Color");
+                        fovColorPickerInstance = new UISections.ColorPicker(initialColor, LocalizationManager.GetString("Color_FOVColor"));
 
                         fovColorPickerInstance.ColorChanged += (color) =>
                         {
-                            // Update the color square
                             c.ColorChangingBorder.Background = new SolidColorBrush(color);
-                            // Save to dictionary for persistence
                             Dictionary.colorState["FOV Color"] = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
                             PropertyChanger.PostColor(color);
                         };
@@ -501,7 +475,7 @@ namespace Aimmy2.Controls
                         fovColorPickerInstance.Show();
                     };
                 })
-                .AddSlider("FOV Size", "Size", 1, 1, 10, 640, s =>
+                .AddSlider(LocalizationManager.GetString("Slider_FOVSize"), "FOV Size", LocalizationManager.GetString("Unit_Size"), 1, 1, 10, 640, s =>
                 {
                     uiManager.S_FOVSize = s;
                     s.Slider.ValueChanged += (sender, e) =>
@@ -509,8 +483,8 @@ namespace Aimmy2.Controls
                         _mainWindow.ActualFOV = s.Slider.Value;
                         PropertyChanger.PostNewFOVSize(_mainWindow.ActualFOV);
                     };
-                }, tooltip: "Size of the detection area. Smaller = more precise, larger = wider coverage.")
-                .AddSlider("Dynamic FOV Size", "Size", 1, 1, 10, 640, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_FOVSize"))
+                .AddSlider(LocalizationManager.GetString("Slider_DynamicFOVSize"), "Dynamic FOV Size", LocalizationManager.GetString("Unit_Size"), 1, 1, 10, 640, s =>
                 {
                     uiManager.S_DynamicFOVSize = s;
                     s.Slider.ValueChanged += (sender, e) =>
@@ -518,7 +492,7 @@ namespace Aimmy2.Controls
                         if (Dictionary.toggleState["Dynamic FOV"])
                             PropertyChanger.PostNewFOVSize(s.Slider.Value);
                     };
-                }, tooltip: "FOV size when holding the Dynamic FOV key. Usually smaller for scoped aim.")
+                }, tooltip: LocalizationManager.GetString("Tooltip_DynamicFOVSize"))
                 .AddSeparator();
         }
 
@@ -528,35 +502,32 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, ESPConfig);
 
             builder
-                .AddTitle("ESP Config", true, t =>
+                .AddTitle(LocalizationManager.GetString("ESPConfig_Title"), true, t =>
                 {
                     uiManager.AT_DetectedPlayer = t;
                     t.Minimize.Click += (s, e) => TogglePanel("ESP Config", ESPConfigPanel);
                 })
-                .AddToggle("Show Detected Player", t => uiManager.T_ShowDetectedPlayer = t,
-                    tooltip: "Draw a box around detected targets on screen.")
-                .AddToggle("Show AI Confidence", t => uiManager.T_ShowAIConfidence = t,
-                    tooltip: "Display how confident the AI is about each detection (0-100%).")
-                .AddToggle("Show Tracers", t => uiManager.T_ShowTracers = t,
-                    tooltip: "Draw lines from screen edge to detected targets.");
+                .AddToggle(LocalizationManager.GetString("Toggle_ShowDetectedPlayer"), "Show Detected Player", t => uiManager.T_ShowDetectedPlayer = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_ShowDetectedPlayer"))
+                .AddToggle(LocalizationManager.GetString("Toggle_ShowAIConfidence"), "Show AI Confidence", t => uiManager.T_ShowAIConfidence = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_ShowAIConfidence"))
+                .AddToggle(LocalizationManager.GetString("Toggle_ShowTracers"), "Show Tracers", t => uiManager.T_ShowTracers = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_ShowTracers"));
 
-            builder.AddDropdown("Tracer Position", d =>
+            builder.AddDropdown(LocalizationManager.GetString("Dropdown_TracerPosition"), "Tracer Position", d =>
             {
                 d.DropdownBox.SelectedIndex = 0;
                 uiManager.D_TracerPosition = d;
-                // Changed the positions of these as top is above middle & bottom - ts (this) bothered me so i had to
-                _mainWindow.AddDropdownItem(d, "Top");
-                _mainWindow.AddDropdownItem(d, "Middle");
-                _mainWindow.AddDropdownItem(d, "Bottom");
+                _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Top"), "Top");
+                _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Middle"), "Middle");
+                _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Bottom"), "Bottom");
                 d.DropdownBox.SelectionChanged += (s, e) =>
                 {
                     if (Dictionary.toggleState["Show Detected Player"])
                     {
-                        // simulate a click to turn it off - this is to force a reload of the ui cause tracer doesn't update otherwise - helz
                         if (uiManager.T_ShowDetectedPlayer?.Reader != null)
                         {
                             uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                            // simulate a click to turn it back on - same as before ^ - helz
                             uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
                         }
                     }
@@ -568,10 +539,10 @@ namespace Aimmy2.Controls
                         }
                     }
                 };
-            }, tooltip: "Where tracer lines start from on the screen.");
+            }, tooltip: LocalizationManager.GetString("Tooltip_TracerPosition"));
 
             builder
-                .AddColorChanger("Detected Player Color", c =>
+                .AddColorChanger(LocalizationManager.GetString("Color_DetectedPlayerColor"), "Detected Player Color", c =>
                 {
                     c.Reader.Click += (s, e) =>
                     {
@@ -584,13 +555,11 @@ namespace Aimmy2.Controls
                         Color initialColor = Colors.White;
                         if (c.ColorChangingBorder.Background is SolidColorBrush scb)
                             initialColor = scb.Color;
-                        colorPickerInstance = new UISections.ColorPicker(initialColor, "ESP Color");
+                        colorPickerInstance = new UISections.ColorPicker(initialColor, LocalizationManager.GetString("Color_DetectedPlayerColor"));
 
                         colorPickerInstance.ColorChanged += (color) =>
                         {
-                            // Update the color square
                             c.ColorChangingBorder.Background = new SolidColorBrush(color);
-                            // Save to dictionary for persistence
                             Dictionary.colorState["Detected Player Color"] = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
                             PropertyChanger.PostDPColor(color);
                         };
@@ -603,26 +572,26 @@ namespace Aimmy2.Controls
                         colorPickerInstance.Show();
                     };
                 })
-                .AddSlider("AI Confidence Font Size", "Size", 1, 1, 1, 30, s =>
+                .AddSlider(LocalizationManager.GetString("Slider_AIConfidenceFontSize"), "AI Confidence Font Size", LocalizationManager.GetString("Unit_Size"), 1, 1, 1, 30, s =>
                 {
                     uiManager.S_DPFontSize = s;
                     s.Slider.ValueChanged += (sender, e) => PropertyChanger.PostDPFontSize((int)s.Slider.Value);
-                }, tooltip: "Text size for the confidence percentage display.")
-                .AddSlider("Corner Radius", "Radius", 1, 1, 0, 100, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_AIConfidenceFontSize"))
+                .AddSlider(LocalizationManager.GetString("Slider_CornerRadius"), "Corner Radius", LocalizationManager.GetString("Unit_Radius"), 1, 1, 0, 100, s =>
                 {
                     uiManager.S_DPCornerRadius = s;
                     s.Slider.ValueChanged += (sender, e) => PropertyChanger.PostDPWCornerRadius((int)s.Slider.Value);
-                }, tooltip: "How rounded the detection box corners are. 0 = sharp corners.")
-                .AddSlider("Border Thickness", "Thickness", 0.1, 1, 0.1, 10, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_CornerRadius"))
+                .AddSlider(LocalizationManager.GetString("Slider_BorderThickness"), "Border Thickness", LocalizationManager.GetString("Unit_Thickness"), 0.1, 1, 0.1, 10, s =>
                 {
                     uiManager.S_DPBorderThickness = s;
                     s.Slider.ValueChanged += (sender, e) => PropertyChanger.PostDPWBorderThickness(s.Slider.Value);
-                }, tooltip: "How thick the detection box outline is.")
-                .AddSlider("Opacity", "Opacity", 0.1, 0.1, 0, 1, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_BorderThickness"))
+                .AddSlider(LocalizationManager.GetString("Slider_Opacity"), "Opacity", LocalizationManager.GetString("Unit_Opacity_Unit"), 0.1, 0.1, 0, 1, s =>
                 {
                     uiManager.S_DPOpacity = s;
                     s.Slider.ValueChanged += (sender, e) => PropertyChanger.PostDPWOpacity(s.Slider.Value);
-                }, tooltip: "How see-through the detection box is. 0 = invisible, 1 = solid.")
+                }, tooltip: LocalizationManager.GetString("Tooltip_Opacity"))
                 .AddSeparator();
         }
 
@@ -632,7 +601,7 @@ namespace Aimmy2.Controls
 
         private void OnImageSizeChanged(int imageSize)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            Application.Current.Dispatcher.BeginInvoke(() =>
             {
                 if (_mainWindow?.uiManager.S_FOVSize != null && _mainWindow?.uiManager.S_DynamicFOVSize != null)
                 {
@@ -641,6 +610,7 @@ namespace Aimmy2.Controls
                 }
             });
         }
+
         private void UpdateFovSizeSlider(ASlider slider, int imageSize = 640)
         {
             if (slider.Slider == null) return;
@@ -671,8 +641,28 @@ namespace Aimmy2.Controls
 
         public void Dispose()
         {
-            // Save minimize states before disposing
             SaveMinimizeStatesToGlobal();
+        }
+
+        public void RebuildSections()
+        {
+            if (!_isInitialized) return;
+
+            AimAssist.Children.Clear();
+            AimConfig.Children.Clear();
+            Predictions.Children.Clear();
+            TriggerBot.Children.Clear();
+            FOVConfig.Children.Clear();
+            ESPConfig.Children.Clear();
+
+            LoadAimAssist();
+            LoadAimConfig();
+            LoadPredictions();
+            LoadTriggerBot();
+            LoadFOVConfig();
+            LoadESPConfig();
+
+            ApplyMinimizeStates();
         }
 
         #endregion
@@ -698,43 +688,43 @@ namespace Aimmy2.Controls
                 return this;
             }
 
-            public SectionBuilder AddToggle(string title, Action<AToggle>? configure = null, string? tooltip = null)
+            public SectionBuilder AddToggle(string title, string stableKey, Action<AToggle>? configure = null, string? tooltip = null)
             {
-                var toggle = _parent.CreateToggle(title, tooltip);
+                var toggle = _parent.CreateToggle(title, stableKey, tooltip);
                 configure?.Invoke(toggle);
                 _panel.Children.Add(toggle);
                 return this;
             }
 
-            public SectionBuilder AddKeyChanger(string title, Action<AKeyChanger>? configure = null, string? defaultKey = null, string? tooltip = null)
+            public SectionBuilder AddKeyChanger(string title, string stableKey, Action<AKeyChanger>? configure = null, string? defaultKey = null, string? tooltip = null)
             {
-                var key = defaultKey ?? Dictionary.bindingSettings[title];
-                var keyChanger = _parent.CreateKeyChanger(title, key, tooltip);
+                var key = defaultKey ?? Dictionary.bindingSettings[stableKey];
+                var keyChanger = _parent.CreateKeyChanger(title, stableKey, key, tooltip);
                 configure?.Invoke(keyChanger);
                 _panel.Children.Add(keyChanger);
                 return this;
             }
 
-            public SectionBuilder AddSlider(string title, string label, double frequency, double buttonSteps,
+            public SectionBuilder AddSlider(string title, string stableKey, string label, double frequency, double buttonSteps,
                 double min, double max, Action<ASlider>? configure = null, string? tooltip = null)
             {
-                var slider = _parent.CreateSlider(title, label, frequency, buttonSteps, min, max, tooltip);
+                var slider = _parent.CreateSlider(title, stableKey, label, frequency, buttonSteps, min, max, tooltip);
                 configure?.Invoke(slider);
                 _panel.Children.Add(slider);
                 return this;
             }
 
-            public SectionBuilder AddDropdown(string title, Action<ADropdown>? configure = null, string? tooltip = null)
+            public SectionBuilder AddDropdown(string title, string dictionaryKey, Action<ADropdown>? configure = null, string? tooltip = null)
             {
-                var dropdown = _parent.CreateDropdown(title, tooltip);
+                var dropdown = _parent.CreateDropdown(title, dictionaryKey, tooltip);
                 configure?.Invoke(dropdown);
                 _panel.Children.Add(dropdown);
                 return this;
             }
 
-            public SectionBuilder AddColorChanger(string title, Action<AColorChanger>? configure = null)
+            public SectionBuilder AddColorChanger(string title, string stableKey, Action<AColorChanger>? configure = null)
             {
-                var colorChanger = _parent.CreateColorChanger(title);
+                var colorChanger = _parent.CreateColorChanger(title, stableKey);
                 configure?.Invoke(colorChanger);
                 _panel.Children.Add(colorChanger);
                 return this;
@@ -769,41 +759,39 @@ namespace Aimmy2.Controls
 
         #region Control Creation Methods
 
-        private AToggle CreateToggle(string title, string? tooltip = null)
+        private AToggle CreateToggle(string title, string stableKey, string? tooltip = null)
         {
             var toggle = new AToggle(title, tooltip);
-            _mainWindow!.toggleInstances[title] = toggle;
+            _mainWindow!.toggleInstances[stableKey] = toggle;
 
-            // Set initial state
-            if (Dictionary.toggleState[title])
+            if (Dictionary.toggleState.TryGetValue(stableKey, out var ts) && ts)
                 toggle.EnableSwitch();
             else
                 toggle.DisableSwitch();
 
-            // Handle click
             toggle.Reader.Click += (sender, e) =>
             {
-                Dictionary.toggleState[title] = !Dictionary.toggleState[title];
-                _mainWindow.UpdateToggleUI(toggle, Dictionary.toggleState[title]);
-                _mainWindow.Toggle_Action(title);
+                Dictionary.toggleState[stableKey] = !(Dictionary.toggleState.TryGetValue(stableKey, out var ts2) && ts2);
+                _mainWindow.UpdateToggleUI(toggle, Dictionary.toggleState.TryGetValue(stableKey, out var ts3) && ts3);
+                _mainWindow.Toggle_Action(stableKey);
             };
 
             return toggle;
         }
 
-        private AKeyChanger CreateKeyChanger(string title, string keybind, string? tooltip = null)
+        private AKeyChanger CreateKeyChanger(string title, string stableKey, string keybind, string? tooltip = null)
         {
             var keyChanger = new AKeyChanger(title, keybind, tooltip);
 
             keyChanger.Reader.Click += (sender, e) =>
             {
                 keyChanger.KeyNotifier.Content = "...";
-                _mainWindow!.bindingManager.StartListeningForBinding(title);
+                _mainWindow!.bindingManager.StartListeningForBinding(stableKey);
 
                 Action<string, string>? bindingSetHandler = null;
                 bindingSetHandler = (bindingId, key) =>
                 {
-                    if (bindingId == title)
+                    if (bindingId == stableKey)
                     {
                         keyChanger.KeyNotifier.Content = KeybindNameManager.ConvertToRegularKey(key);
                         Dictionary.bindingSettings[bindingId] = key;
@@ -817,7 +805,7 @@ namespace Aimmy2.Controls
             return keyChanger;
         }
 
-        private ASlider CreateSlider(string title, string label, double frequency, double buttonSteps,
+        private ASlider CreateSlider(string title, string stableKey, string label, double frequency, double buttonSteps,
             double min, double max, string? tooltip = null)
         {
             var slider = new ASlider(title, label, buttonSteps, tooltip)
@@ -825,19 +813,21 @@ namespace Aimmy2.Controls
                 Slider = { Minimum = min, Maximum = max, TickFrequency = frequency }
             };
 
-            slider.Slider.Value = Dictionary.sliderSettings.TryGetValue(title, out var value) ? value : min;
-            slider.Slider.ValueChanged += (s, e) => Dictionary.sliderSettings[title] = slider.Slider.Value;
+            slider.Slider.Value = Dictionary.sliderSettings.TryGetValue(stableKey, out var value) ? value : min;
+            slider.Slider.ValueChanged += (s, e) => Dictionary.sliderSettings[stableKey] = slider.Slider.Value;
 
             return slider;
         }
 
-        private ADropdown CreateDropdown(string title, string? tooltip = null) => new(title, title, tooltip);
+        private ADropdown CreateDropdown(string title, string dictionaryKey, string? tooltip = null) => new(title, dictionaryKey, tooltip);
 
-        private AColorChanger CreateColorChanger(string title)
+        private AColorChanger CreateColorChanger(string title, string stableKey)
         {
             var colorChanger = new AColorChanger(title);
-            colorChanger.ColorChangingBorder.Background =
-                (Brush)new BrushConverter().ConvertFromString(Dictionary.colorState[title]);
+            var colorBrush = Dictionary.colorState.TryGetValue(stableKey, out var colorVal)
+                ? (Brush)new BrushConverter().ConvertFromString(colorVal)
+                : Brushes.White;
+            colorChanger.ColorChangingBorder.Background = colorBrush;
             return colorChanger;
         }
 

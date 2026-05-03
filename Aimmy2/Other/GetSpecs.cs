@@ -1,4 +1,5 @@
-﻿using System.Management;
+using Aimmy2.Resources;
+using System.Management;
 using Visuality;
 using Vortice.DXGI;
 
@@ -21,12 +22,12 @@ namespace Aimmy2.Class
                 {
                     return Convert.ToString(MJ[Syntax])?.Trim();
                 }
-                return "Not Found";
+                return LocalizationManager.GetString("Common_NotFound");
             }
             catch (Exception e)
             {
-                new NoticeBar(e.Message, 10000).Show();
-                return "Not Found";
+                new NoticeBar(LocalizationManager.GetString("Msg_GeneralError", e.Message), 10000).Show();
+                return LocalizationManager.GetString("Common_NotFound");
             }
         }
         private static string GetActiveGpuName()
@@ -44,12 +45,12 @@ namespace Aimmy2.Class
                     }
                 }
 
-                return "GPU Not Found";
+                return LocalizationManager.GetString("Common_GpuNotFound");
             }
             catch (Exception e)
             {
-                new NoticeBar($"DXGI Error: {e.Message}", 10000).Show();
-                return "GPU Error";
+                new NoticeBar(LocalizationManager.GetString("Msg_DXGIError", e.Message, e.HResult), 10000).Show();
+                return LocalizationManager.GetString("Common_GpuError");
             }
         }
     }

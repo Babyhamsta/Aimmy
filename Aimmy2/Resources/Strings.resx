@@ -1,0 +1,1062 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ==================== Window/App ==================== -->
+  <data name="App_Title" xml:space="preserve">
+    <value>Aimmy</value>
+  </data>
+  <data name="App_TitleFull" xml:space="preserve">
+    <value>Aimmy AI</value>
+  </data>
+
+  <!-- ==================== Startup Window ==================== -->
+  <data name="Startup_Title" xml:space="preserve">
+    <value>AIMMY</value>
+  </data>
+  <data name="Startup_Subtitle" xml:space="preserve">
+    <value>AI PRECISION TARGETING</value>
+  </data>
+  <data name="Startup_Loading" xml:space="preserve">
+    <value>INITIALIZING AIMMY AI</value>
+  </data>
+  <data name="Startup_Launching" xml:space="preserve">
+    <value>LAUNCHING INTERFACE</value>
+  </data>
+
+  <!-- ==================== Section/Menu Titles ==================== -->
+  <data name="AimAssist_Title" xml:space="preserve">
+    <value>Aim Assist</value>
+  </data>
+  <data name="AimConfig_Title" xml:space="preserve">
+    <value>Aim Config</value>
+  </data>
+  <data name="Predictions_Title" xml:space="preserve">
+    <value>Predictions</value>
+  </data>
+  <data name="AutoTrigger_Title" xml:space="preserve">
+    <value>Auto Trigger</value>
+  </data>
+  <data name="FOVConfig_Title" xml:space="preserve">
+    <value>FOV Config</value>
+  </data>
+  <data name="ESPConfig_Title" xml:space="preserve">
+    <value>ESP Config</value>
+  </data>
+  <data name="Section_ModelSettings" xml:space="preserve">
+    <value>Model Settings</value>
+  </data>
+  <data name="Section_SettingsMenu" xml:space="preserve">
+    <value>Settings Menu</value>
+  </data>
+  <data name="Section_ThemeSettings" xml:space="preserve">
+    <value>Theme Settings</value>
+  </data>
+  <data name="Section_ScreenSettings" xml:space="preserve">
+    <value>Screen Settings</value>
+  </data>
+
+  <!-- ==================== Toggle Labels ==================== -->
+  <data name="Toggle_AimAssist" xml:space="preserve">
+    <value>Aim Assist</value>
+  </data>
+  <data name="Toggle_ConstantAITracking" xml:space="preserve">
+    <value>Constant AI Tracking</value>
+  </data>
+  <data name="Toggle_StickyAim" xml:space="preserve">
+    <value>Sticky Aim</value>
+  </data>
+  <data name="Toggle_Predictions" xml:space="preserve">
+    <value>Predictions</value>
+  </data>
+  <data name="Toggle_EMASmoothing" xml:space="preserve">
+    <value>EMA Smoothening</value>
+  </data>
+  <data name="Toggle_EnableModelSwitchKeybind" xml:space="preserve">
+    <value>Enable Model Switch Keybind</value>
+  </data>
+  <data name="Toggle_AutoTrigger" xml:space="preserve">
+    <value>Auto Trigger</value>
+  </data>
+  <data name="Toggle_CursorCheck" xml:space="preserve">
+    <value>Cursor Check</value>
+  </data>
+  <data name="Toggle_SprayMode" xml:space="preserve">
+    <value>Spray Mode</value>
+  </data>
+  <data name="Toggle_FOV" xml:space="preserve">
+    <value>FOV</value>
+  </data>
+  <data name="Toggle_DynamicFOV" xml:space="preserve">
+    <value>Dynamic FOV</value>
+  </data>
+  <data name="Toggle_ThirdPersonSupport" xml:space="preserve">
+    <value>Third Person Support</value>
+  </data>
+  <data name="Toggle_ShowDetectedPlayer" xml:space="preserve">
+    <value>Show Detected Player</value>
+  </data>
+  <data name="Toggle_ShowAIConfidence" xml:space="preserve">
+    <value>Show AI Confidence</value>
+  </data>
+  <data name="Toggle_ShowTracers" xml:space="preserve">
+    <value>Show Tracers</value>
+  </data>
+  <data name="Toggle_CollectData" xml:space="preserve">
+    <value>Collect Data While Playing</value>
+  </data>
+  <data name="Toggle_AutoLabelData" xml:space="preserve">
+    <value>Auto Label Data</value>
+  </data>
+  <data name="Toggle_MouseBackgroundEffect" xml:space="preserve">
+    <value>Mouse Background Effect</value>
+  </data>
+  <data name="Toggle_UITopMost" xml:space="preserve">
+    <value>UI TopMost</value>
+  </data>
+  <data name="Toggle_DebugMode" xml:space="preserve">
+    <value>Debug Mode</value>
+  </data>
+  <data name="Toggle_StreamGuard" xml:space="preserve">
+    <value>StreamGuard</value>
+  </data>
+  <data name="Toggle_XAxisPercent" xml:space="preserve">
+    <value>X Axis Percentage Adjustment</value>
+  </data>
+  <data name="Toggle_YAxisPercent" xml:space="preserve">
+    <value>Y Axis Percentage Adjustment</value>
+  </data>
+
+  <!-- ==================== KeyChanger Labels ==================== -->
+  <data name="Key_AimKeybind" xml:space="preserve">
+    <value>Aim Keybind</value>
+  </data>
+  <data name="Key_SecondAimKeybind" xml:space="preserve">
+    <value>Second Aim Keybind</value>
+  </data>
+  <data name="Key_DynamicFOVKeybind" xml:space="preserve">
+    <value>Dynamic FOV Keybind</value>
+  </data>
+  <data name="Key_ModelSwitchKeybind" xml:space="preserve">
+    <value>Model Switch Keybind</value>
+  </data>
+  <data name="Key_EmergencyStopKeybind" xml:space="preserve">
+    <value>Emergency Stop Keybind</value>
+  </data>
+
+  <!-- ==================== Dropdown Labels ==================== -->
+  <data name="Dropdown_MouseMovementMethod" xml:space="preserve">
+    <value>Mouse Movement Method</value>
+  </data>
+  <data name="Dropdown_MovementPath" xml:space="preserve">
+    <value>Movement Path</value>
+  </data>
+  <data name="Dropdown_DetectionAreaType" xml:space="preserve">
+    <value>Detection Area Type</value>
+  </data>
+  <data name="Dropdown_AimingBoundaries" xml:space="preserve">
+    <value>Aiming Boundaries Alignment</value>
+  </data>
+  <data name="Dropdown_ImageSize" xml:space="preserve">
+    <value>Image Size</value>
+  </data>
+  <data name="Dropdown_TargetClass" xml:space="preserve">
+    <value>Target Class</value>
+  </data>
+  <data name="Dropdown_PredictionMethod" xml:space="preserve">
+    <value>Prediction Method</value>
+  </data>
+  <data name="Dropdown_ScreenCaptureMethod" xml:space="preserve">
+    <value>Screen Capture Method</value>
+  </data>
+  <data name="Dropdown_FOVStyle" xml:space="preserve">
+    <value>FOV Style</value>
+  </data>
+  <data name="Dropdown_TracerPosition" xml:space="preserve">
+    <value>Tracer Position</value>
+  </data>
+  <data name="Dropdown_Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+
+  <!-- ==================== Dropdown Options ==================== -->
+  <data name="DropdownOption_MouseEvent" xml:space="preserve">
+    <value>Mouse Event</value>
+  </data>
+  <data name="DropdownOption_SendInput" xml:space="preserve">
+    <value>SendInput</value>
+  </data>
+  <data name="DropdownOption_LGHub" xml:space="preserve">
+    <value>LG HUB</value>
+  </data>
+  <data name="DropdownOption_RazerSynapse" xml:space="preserve">
+    <value>Razer Synapse (Require Razer Peripheral)</value>
+  </data>
+  <data name="DropdownOption_ddxoft" xml:space="preserve">
+    <value>ddxoft Virtual Input Driver</value>
+  </data>
+  <data name="DropdownOption_CubicBezier" xml:space="preserve">
+    <value>Cubic Bezier</value>
+  </data>
+  <data name="DropdownOption_Exponential" xml:space="preserve">
+    <value>Exponential</value>
+  </data>
+  <data name="DropdownOption_Linear" xml:space="preserve">
+    <value>Linear</value>
+  </data>
+  <data name="DropdownOption_Adaptive" xml:space="preserve">
+    <value>Adaptive</value>
+  </data>
+  <data name="DropdownOption_PerlinNoise" xml:space="preserve">
+    <value>Perlin Noise</value>
+  </data>
+  <data name="DropdownOption_ClosestToCenter" xml:space="preserve">
+    <value>Closest to Center Screen</value>
+  </data>
+  <data name="DropdownOption_ClosestToMouse" xml:space="preserve">
+    <value>Closest to Mouse</value>
+  </data>
+  <data name="DropdownOption_Center" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="DropdownOption_Top" xml:space="preserve">
+    <value>Top</value>
+  </data>
+  <data name="DropdownOption_Bottom" xml:space="preserve">
+    <value>Bottom</value>
+  </data>
+  <data name="DropdownOption_Middle" xml:space="preserve">
+    <value>Middle</value>
+  </data>
+  <data name="DropdownOption_KalmanFilter" xml:space="preserve">
+    <value>Kalman Filter</value>
+  </data>
+  <data name="DropdownOption_ShalloePrediction" xml:space="preserve">
+    <value>Shall0e's Prediction</value>
+  </data>
+  <data name="DropdownOption_Wisethef0xEMA" xml:space="preserve">
+    <value>wisethef0x's EMA Prediction</value>
+  </data>
+  <data name="DropdownOption_Circle" xml:space="preserve">
+    <value>Circle</value>
+  </data>
+  <data name="DropdownOption_Rectangle" xml:space="preserve">
+    <value>Rectangle</value>
+  </data>
+  <data name="DropdownOption_DirectX" xml:space="preserve">
+    <value>DirectX</value>
+  </data>
+  <data name="DropdownOption_GDIPlus" xml:space="preserve">
+    <value>GDI+</value>
+  </data>
+  <data name="DropdownOption_BestConfidence" xml:space="preserve">
+    <value>Best Confidence</value>
+  </data>
+  <data name="DropdownOption_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="DropdownOption_Chinese" xml:space="preserve">
+    <value>中文</value>
+  </data>
+
+  <!-- ==================== Slider Labels ==================== -->
+  <data name="Slider_MouseSensitivity" xml:space="preserve">
+    <value>Mouse Sensitivity (+/-)</value>
+  </data>
+  <data name="Slider_MouseJitter" xml:space="preserve">
+    <value>Mouse Jitter</value>
+  </data>
+  <data name="Slider_StickyAimThreshold" xml:space="preserve">
+    <value>Sticky Aim Threshold</value>
+  </data>
+  <data name="Slider_YOffset" xml:space="preserve">
+    <value>Y Offset (Up/Down)</value>
+  </data>
+  <data name="Slider_YOffsetPercent" xml:space="preserve">
+    <value>Y Offset (%)</value>
+  </data>
+  <data name="Slider_XOffset" xml:space="preserve">
+    <value>X Offset (Left/Right)</value>
+  </data>
+  <data name="Slider_XOffsetPercent" xml:space="preserve">
+    <value>X Offset (%)</value>
+  </data>
+  <data name="Slider_EMASmoothing" xml:space="preserve">
+    <value>EMA Smoothening</value>
+  </data>
+  <data name="Slider_KalmanLeadTime" xml:space="preserve">
+    <value>Kalman Lead Time</value>
+  </data>
+  <data name="Slider_WiseTheFoxLeadTime" xml:space="preserve">
+    <value>WiseTheFox Lead Time</value>
+  </data>
+  <data name="Slider_ShalloeLeadMultiplier" xml:space="preserve">
+    <value>Shalloe Lead Multiplier</value>
+  </data>
+  <data name="Slider_AutoTriggerDelay" xml:space="preserve">
+    <value>Auto Trigger Delay</value>
+  </data>
+  <data name="Slider_AIMinimumConfidence" xml:space="preserve">
+    <value>AI Minimum Confidence</value>
+  </data>
+  <data name="Slider_AIConfidenceFontSize" xml:space="preserve">
+    <value>AI Confidence Font Size</value>
+  </data>
+  <data name="Slider_CornerRadius" xml:space="preserve">
+    <value>Corner Radius</value>
+  </data>
+  <data name="Slider_BorderThickness" xml:space="preserve">
+    <value>Border Thickness</value>
+  </data>
+  <data name="Slider_Opacity" xml:space="preserve">
+    <value>Opacity</value>
+  </data>
+  <data name="Slider_FOVSize" xml:space="preserve">
+    <value>FOV Size</value>
+  </data>
+  <data name="Slider_DynamicFOVSize" xml:space="preserve">
+    <value>Dynamic FOV Size</value>
+  </data>
+
+  <!-- ==================== Slider Units ==================== -->
+  <data name="Unit_Pixels" xml:space="preserve">
+    <value>Pixels</value>
+  </data>
+  <data name="Unit_Sensitivity" xml:space="preserve">
+    <value>Sensitivity</value>
+  </data>
+  <data name="Unit_Jitter" xml:space="preserve">
+    <value>Jitter</value>
+  </data>
+  <data name="Unit_Offset" xml:space="preserve">
+    <value>Offset</value>
+  </data>
+  <data name="Unit_Percent" xml:space="preserve">
+    <value>Percent</value>
+  </data>
+  <data name="Unit_Seconds" xml:space="preserve">
+    <value>Seconds</value>
+  </data>
+  <data name="Unit_Frames" xml:space="preserve">
+    <value>Frames</value>
+  </data>
+  <data name="Unit_Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="Unit_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Unit_Radius" xml:space="preserve">
+    <value>Radius</value>
+  </data>
+  <data name="Unit_Thickness" xml:space="preserve">
+    <value>Thickness</value>
+  </data>
+  <data name="Unit_Opacity_Unit" xml:space="preserve">
+    <value>Opacity</value>
+  </data>
+  <data name="Unit_ConfidencePercent" xml:space="preserve">
+    <value>% Confidence</value>
+  </data>
+
+  <!-- ==================== Button Labels ==================== -->
+  <data name="Button_SaveConfig" xml:space="preserve">
+    <value>Save Config</value>
+  </data>
+  <data name="Button_RefreshDisplays" xml:space="preserve">
+    <value>Refresh Displays</value>
+  </data>
+  <data name="Button_CheckForUpdates" xml:space="preserve">
+    <value>Check for Updates</value>
+  </data>
+
+  <!-- ==================== Color Changer Labels ==================== -->
+  <data name="Color_FOVColor" xml:space="preserve">
+    <value>FOV Color</value>
+  </data>
+  <data name="Color_DetectedPlayerColor" xml:space="preserve">
+    <value>Detected Player Color</value>
+  </data>
+
+  <!-- ==================== Model Menu Strings ==================== -->
+  <data name="Tab_LocalModels" xml:space="preserve">
+    <value>Local Models</value>
+  </data>
+  <data name="Tab_LocalConfigs" xml:space="preserve">
+    <value>Local Configs</value>
+  </data>
+  <data name="Tab_DownloadableModels" xml:space="preserve">
+    <value>Downloadable Models</value>
+  </data>
+  <data name="Tab_DownloadableConfigs" xml:space="preserve">
+    <value>Downloadable Configs</value>
+  </data>
+  <data name="Model_LoadedModel" xml:space="preserve">
+    <value>Loaded Model: N/A</value>
+  </data>
+  <data name="Model_LoadedConfig" xml:space="preserve">
+    <value>Loaded Config: N/A</value>
+  </data>
+  <data name="Model_NoDownloadableModels" xml:space="preserve">
+    <value>There is no downloadable models at the moment, please check again later.</value>
+  </data>
+  <data name="Model_NoDownloadableConfigs" xml:space="preserve">
+    <value>There is no downloadable configs at the moment, please check again later.</value>
+  </data>
+  <data name="Model_LoadingStore" xml:space="preserve">
+    <value>Loading store...</value>
+  </data>
+  <data name="Model_FailedToLoadStore" xml:space="preserve">
+    <value>Failed to load store</value>
+  </data>
+  <data name="Model_Tab_LocalModels" xml:space="preserve">
+    <value>Local Models</value>
+  </data>
+  <data name="Model_Tab_LocalConfigs" xml:space="preserve">
+    <value>Local Configs</value>
+  </data>
+  <data name="Model_Tab_DownloadableModels" xml:space="preserve">
+    <value>Downloadable Models</value>
+  </data>
+  <data name="Model_Tab_DownloadableConfigs" xml:space="preserve">
+    <value>Downloadable Configs</value>
+  </data>
+
+  <!-- ==================== About Menu Strings ==================== -->
+  <data name="Common_LoadedModel" xml:space="preserve">
+    <value>Loaded Model: {0}</value>
+  </data>
+  <data name="Common_LoadedConfig" xml:space="preserve">
+    <value>Loaded Config: {0}</value>
+  </data>
+  <data name="Common_NoDisplaysDetected" xml:space="preserve">
+    <value>No displays detected</value>
+  </data>
+  <data name="Common_DisplaySelected" xml:space="preserve">
+    <value>Display {0} Selected</value>
+  </data>
+  <data name="Common_Primary" xml:space="preserve">
+    <value> (Primary)</value>
+  </data>
+  <data name="Common_NotFound" xml:space="preserve">
+    <value>Not Found</value>
+  </data>
+  <data name="Common_GpuNotFound" xml:space="preserve">
+    <value>GPU Not Found</value>
+  </data>
+  <data name="Common_GpuError" xml:space="preserve">
+    <value>GPU Error</value>
+  </data>
+  <data name="ColorWheel_Brightness" xml:space="preserve">
+    <value>Brightness</value>
+  </data>
+  <data name="ColorWheel_CurrentThemeColor" xml:space="preserve">
+    <value>Current Theme Color</value>
+  </data>
+  <data name="ColorWheel_MediaControl" xml:space="preserve">
+    <value>Media Control</value>
+  </data>
+  <data name="ColorWheel_DragDropMedia" xml:space="preserve">
+    <value>Drag &amp; Drop Media Here</value>
+  </data>
+  <data name="ColorWheel_InvalidMediaFile" xml:space="preserve">
+    <value>Invalid Media File</value>
+  </data>
+  <data name="ConfigSaver_SaveConfiguration" xml:space="preserve">
+    <value>Save Configuration</value>
+  </data>
+  <data name="ConfigSaver_InsertConfigName" xml:space="preserve">
+    <value>Insert Config Name Here</value>
+  </data>
+  <data name="ConfigSaver_InsertRecommendedModel" xml:space="preserve">
+    <value>Insert Recommended Model Name Here</value>
+  </data>
+  <data name="ConfigSaver_DownloadableModelsQuestion" xml:space="preserve">
+    <value>Can this model be found in the "Downloadable Models" Menu?</value>
+  </data>
+  <data name="ConfigSaver_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ConfigSaver_SavedNotification" xml:space="preserve">
+    <value>Config has been saved to bin/configs.</value>
+  </data>
+  <data name="ConfigSaver_FoundInDownloadable" xml:space="preserve">
+    <value> (Found in Downloadable Model menu)</value>
+  </data>
+  <data name="Display_FocusDisplay" xml:space="preserve">
+    <value>Focus Display</value>
+  </data>
+  <data name="Display_PrimaryDisplaySelected" xml:space="preserve">
+    <value>Primary Display Selected</value>
+  </data>
+  <data name="Display_Primary" xml:space="preserve">
+    <value>Primary</value>
+  </data>
+  <data name="LG_LGDownloader" xml:space="preserve">
+    <value>LG Downloader</value>
+  </data>
+  <data name="LG_ClickToDownload" xml:space="preserve">
+    <value>Please click on a button below to download LG Hub.</value>
+  </data>
+  <data name="LG_LGDirect" xml:space="preserve">
+    <value>LG Direct</value>
+  </data>
+  <data name="LG_SupercometCDN" xml:space="preserve">
+    <value>Supercomet CDN</value>
+  </data>
+  <data name="LG_DeveloperGitHub" xml:space="preserve">
+    <value>99'developer's GitHub</value>
+  </data>
+  <data name="About_FreeNotice" xml:space="preserve">
+    <value>Aimmy is free and open source</value>
+  </data>
+  <data name="About_UniversalSecondEye" xml:space="preserve">
+    <value>Universal Second Eye</value>
+  </data>
+  <data name="About_CoreTeam" xml:space="preserve">
+    <value>CORE TEAM</value>
+  </data>
+  <data name="About_KeyContributors" xml:space="preserve">
+    <value>KEY CONTRIBUTORS</value>
+  </data>
+  <data name="About_Community" xml:space="preserve">
+    <value>And the entire Aimmy community</value>
+  </data>
+  <data name="About_ThankYou" xml:space="preserve">
+    <value>Thank you for your support!</value>
+  </data>
+  <data name="About_ViewOnGitHub" xml:space="preserve">
+    <value>View on GitHub</value>
+  </data>
+  <data name="About_JoinDiscord" xml:space="preserve">
+    <value>Join our Discord</value>
+  </data>
+
+  <!-- ==================== Tooltips ==================== -->
+  <data name="Tooltip_AimAssist" xml:space="preserve">
+    <value>Turn aim assist on or off. You must load a model first.</value>
+  </data>
+  <data name="Tooltip_ConstantAITracking" xml:space="preserve">
+    <value>Always track targets without holding a key. When off, you must hold the aim keybind.</value>
+  </data>
+  <data name="Tooltip_StickyAim" xml:space="preserve">
+    <value>Lock onto a target until it moves out of range instead of switching targets.</value>
+  </data>
+  <data name="Tooltip_StickyAimThreshold" xml:space="preserve">
+    <value>How far a target must move before switching to a new one. Higher = stays locked longer.</value>
+  </data>
+  <data name="Tooltip_AimKeybind" xml:space="preserve">
+    <value>The key you hold to activate aim assist.</value>
+  </data>
+  <data name="Tooltip_SecondAimKeybind" xml:space="preserve">
+    <value>An alternate key to activate aim assist.</value>
+  </data>
+  <data name="Tooltip_MouseMovementMethod" xml:space="preserve">
+    <value>How mouse movements are sent. Try different options if aim assist isn't working.</value>
+  </data>
+  <data name="Tooltip_MovementPath" xml:space="preserve">
+    <value>The curve style used when moving to a target. Affects how natural the movement looks.</value>
+  </data>
+  <data name="Tooltip_DetectionAreaType" xml:space="preserve">
+    <value>How targets are prioritized. Center screen is best for most games.</value>
+  </data>
+  <data name="Tooltip_AimingBoundaries" xml:space="preserve">
+    <value>Where to aim on the detected target box. Center is usually best.</value>
+  </data>
+  <data name="Tooltip_MouseSensitivity" xml:space="preserve">
+    <value>How fast the aim moves. Lower = faster and snappier, higher = slower and smoother.</value>
+  </data>
+  <data name="Tooltip_MouseJitter" xml:space="preserve">
+    <value>Adds random small movements to make aim look more human-like.</value>
+  </data>
+  <data name="Tooltip_XAxisPercent" xml:space="preserve">
+    <value>Enable the X Offset (%) slider to adjust aim horizontally by percentage.</value>
+  </data>
+  <data name="Tooltip_YAxisPercent" xml:space="preserve">
+    <value>Enable the Y Offset (%) slider to adjust aim vertically by percentage.</value>
+  </data>
+  <data name="Tooltip_YOffset" xml:space="preserve">
+    <value>Move aim point up (negative) or down (positive) in pixels.</value>
+  </data>
+  <data name="Tooltip_YOffsetPercent" xml:space="preserve">
+    <value>Move aim point up or down as a percentage of the target box height.</value>
+  </data>
+  <data name="Tooltip_XOffset" xml:space="preserve">
+    <value>Move aim point left (negative) or right (positive) in pixels.</value>
+  </data>
+  <data name="Tooltip_XOffsetPercent" xml:space="preserve">
+    <value>Move aim point left or right as a percentage of the target box width.</value>
+  </data>
+  <data name="Tooltip_PredictionsToggle" xml:space="preserve">
+    <value>Predict where a moving target will be. Helps track fast-moving targets.</value>
+  </data>
+  <data name="Tooltip_PredictionMethod" xml:space="preserve">
+    <value>The algorithm used to predict target movement. Try different ones to see what works best.</value>
+  </data>
+  <data name="Tooltip_KalmanLeadTime" xml:space="preserve">
+    <value>How far ahead to predict target position. Higher = more prediction, may overshoot.</value>
+  </data>
+  <data name="Tooltip_WiseTheFoxLeadTime" xml:space="preserve">
+    <value>How far ahead to predict target position. Higher = more prediction, may overshoot.</value>
+  </data>
+  <data name="Tooltip_ShalloeLeadMultiplier" xml:space="preserve">
+    <value>How many frames ahead to predict. Higher = more prediction, may overshoot.</value>
+  </data>
+  <data name="Tooltip_EMASmoothingToggle" xml:space="preserve">
+    <value>Smooth out aim movements to reduce jitter and make tracking steadier.</value>
+  </data>
+  <data name="Tooltip_EMASmoothing" xml:space="preserve">
+    <value>How much smoothing to apply. Lower = smoother but slower, higher = faster but jittery.</value>
+  </data>
+  <data name="Tooltip_AutoTrigger" xml:space="preserve">
+    <value>Automatically click when a target is detected in your crosshair area.</value>
+  </data>
+  <data name="Tooltip_CursorCheck" xml:space="preserve">
+    <value>Only trigger when cursor is directly on target. More accurate but may miss some shots.</value>
+  </data>
+  <data name="Tooltip_SprayMode" xml:space="preserve">
+    <value>Hold down fire instead of single clicks. Good for automatic weapons.</value>
+  </data>
+  <data name="Tooltip_AutoTriggerDelay" xml:space="preserve">
+    <value>Wait time before firing after detecting a target. Helps avoid accidental shots.</value>
+  </data>
+  <data name="Tooltip_FOVToggle" xml:space="preserve">
+    <value>Show a circle on screen indicating the detection area.</value>
+  </data>
+  <data name="Tooltip_DynamicFOV" xml:space="preserve">
+    <value>Change FOV size when holding a key. Useful for scoping in.</value>
+  </data>
+  <data name="Tooltip_ThirdPerson" xml:space="preserve">
+    <value>Adjust FOV position for third-person camera games.</value>
+  </data>
+  <data name="Tooltip_DynamicFOVKeybind" xml:space="preserve">
+    <value>The key to hold for switching to the dynamic FOV size.</value>
+  </data>
+  <data name="Tooltip_FOVStyle" xml:space="preserve">
+    <value>Shape of the FOV overlay. Circle is most common.</value>
+  </data>
+  <data name="Tooltip_FOVSize" xml:space="preserve">
+    <value>Size of the detection area. Smaller = more precise, larger = wider coverage.</value>
+  </data>
+  <data name="Tooltip_DynamicFOVSize" xml:space="preserve">
+    <value>FOV size when holding the Dynamic FOV key. Usually smaller for scoped aim.</value>
+  </data>
+  <data name="Tooltip_ShowDetectedPlayer" xml:space="preserve">
+    <value>Draw a box around detected targets on screen.</value>
+  </data>
+  <data name="Tooltip_ShowAIConfidence" xml:space="preserve">
+    <value>Display how confident the AI is about each detection (0-100%).</value>
+  </data>
+  <data name="Tooltip_ShowTracers" xml:space="preserve">
+    <value>Draw lines from screen edge to detected targets.</value>
+  </data>
+  <data name="Tooltip_TracerPosition" xml:space="preserve">
+    <value>Where tracer lines start from on the screen.</value>
+  </data>
+  <data name="Tooltip_AIConfidenceFontSize" xml:space="preserve">
+    <value>Text size for the confidence percentage display.</value>
+  </data>
+  <data name="Tooltip_CornerRadius" xml:space="preserve">
+    <value>How rounded the detection box corners are. 0 = sharp corners.</value>
+  </data>
+  <data name="Tooltip_BorderThickness" xml:space="preserve">
+    <value>How thick the detection box outline is.</value>
+  </data>
+  <data name="Tooltip_Opacity" xml:space="preserve">
+    <value>How see-through the detection box is. 0 = invisible, 1 = solid.</value>
+  </data>
+  <data name="Tooltip_ImageSize" xml:space="preserve">
+    <value>Resolution the AI uses for detection. Smaller = faster but less accurate.</value>
+  </data>
+  <data name="Tooltip_TargetClass" xml:space="preserve">
+    <value>Which type of target to aim at. Best Confidence picks the most certain detection.</value>
+  </data>
+  <data name="Tooltip_AIMinimumConfidence" xml:space="preserve">
+    <value>How sure the AI must be before targeting. Higher = fewer false detections but may miss targets.</value>
+  </data>
+  <data name="Tooltip_EnableModelSwitch" xml:space="preserve">
+    <value>Allow switching between AI models using a hotkey.</value>
+  </data>
+  <data name="Tooltip_ModelSwitchKeybind" xml:space="preserve">
+    <value>Press this key to cycle through available AI models.</value>
+  </data>
+  <data name="Tooltip_EmergencyStopKeybind" xml:space="preserve">
+    <value>Press this key to immediately stop all aim assist functions.</value>
+  </data>
+  <data name="Tooltip_CollectData" xml:space="preserve">
+    <value>Save screenshots of detections for training new AI models.</value>
+  </data>
+  <data name="Tooltip_AutoLabelData" xml:space="preserve">
+    <value>Automatically label collected screenshots with detection data.</value>
+  </data>
+  <data name="Tooltip_MouseBgEffect" xml:space="preserve">
+    <value>Show a visual effect on the UI when moving your mouse.</value>
+  </data>
+  <data name="Tooltip_UITopMost" xml:space="preserve">
+    <value>Keep this window above all other windows.</value>
+  </data>
+  <data name="Tooltip_DebugMode" xml:space="preserve">
+    <value>Show extra information useful for troubleshooting problems.</value>
+  </data>
+  <data name="Tooltip_SaveConfig" xml:space="preserve">
+    <value>Save your current settings to a file you can load later.</value>
+  </data>
+  <data name="Tooltip_ScreenCaptureMethod" xml:space="preserve">
+    <value>How the screen is captured. DirectX is faster, GDI+ works on more systems.</value>
+  </data>
+  <data name="Tooltip_StreamGuard" xml:space="preserve">
+    <value>Hide the overlay from screen recordings and streams. - Appears in system tray.</value>
+  </data>
+  <data name="Tooltip_RefreshDisplays" xml:space="preserve">
+    <value>Update the list of available monitors.</value>
+  </data>
+
+  <!-- ==================== Messages ==================== -->
+  <data name="Msg_PleaseExtractZip" xml:space="preserve">
+    <value>Hi, it is made aware that you are running Aimmy without extracting it from the zip file. Please extract Aimmy from the zip file or Aimmy will not be able to run properly.
+
+Thank you.</value>
+  </data>
+  <data name="Msg_StartupFailed" xml:space="preserve">
+    <value>Startup animation failed: {0}
+Launching main application...</value>
+  </data>
+  <data name="Msg_ErrorStartup" xml:space="preserve">
+    <value>Error during startup: {0}</value>
+  </data>
+  <data name="Msg_ErrorTitle" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Msg_StackTrace" xml:space="preserve">
+    <value>Stack trace:</value>
+  </data>
+  <data name="Msg_ConfigError" xml:space="preserve">
+    <value>Error loading config, possibly outdated
+{0}</value>
+  </data>
+  <data name="Msg_SuggestedModel" xml:space="preserve">
+    <value>The creator of this model suggests you use this model:
+{0}</value>
+  </data>
+  <data name="Msg_PleaseLoadModel" xml:space="preserve">
+    <value>Please load a model first</value>
+  </data>
+  <data name="Msg_SensitivityHigh" xml:space="preserve">
+    <value>The Mouse Sensitivity you have set can cause Aimmy to be unable to aim, please decrease if you suffer from this problem</value>
+  </data>
+  <data name="Msg_SensitivityLow" xml:space="preserve">
+    <value>The Mouse Sensitivity you have set can cause Aimmy to be unstable to aim, please increase if you suffer from this problem</value>
+  </data>
+  <data name="Msg_ConfidenceTooHigh" xml:space="preserve">
+    <value>The minimum confidence you have set for Aimmy to be too high and may be unable to detect players.</value>
+  </data>
+  <data name="Msg_ConfidenceTooLow" xml:space="preserve">
+    <value>The minimum confidence you have set for Aimmy may be too low can cause false positives.</value>
+  </data>
+  <data name="Msg_StoreLoadFailed" xml:space="preserve">
+    <value>Failed to load store: {0}</value>
+  </data>
+  <data name="Msg_DirectoryNotFound" xml:space="preserve">
+    <value>Directory not found: {0}</value>
+  </data>
+  <data name="Msg_FailedToOpenFolder" xml:space="preserve">
+    <value>Failed to open folder: {0}</value>
+  </data>
+  <data name="Msg_DuplicateModelRenamed" xml:space="preserve">
+    <value>Duplicate model renamed: {0}</value>
+  </data>
+  <data name="Msg_ModelMoved" xml:space="preserve">
+    <value>Model moved: {0}</value>
+  </data>
+  <data name="Msg_ErrorMovingModel" xml:space="preserve">
+    <value>Error moving model: {0}</value>
+  </data>
+  <data name="Msg_DuplicateConfigRenamed" xml:space="preserve">
+    <value>Duplicate config renamed: {0}</value>
+  </data>
+  <data name="Msg_ConfigMoved" xml:space="preserve">
+    <value>Config moved: {0}</value>
+  </data>
+  <data name="Msg_ErrorMovingConfig" xml:space="preserve">
+    <value>Error moving config: {0}</value>
+  </data>
+  <data name="Msg_ImageSizeSet" xml:space="preserve">
+    <value>Image size set to {0}x{0} (no model loaded)</value>
+  </data>
+  <data name="Msg_ImageSizeChanging" xml:space="preserve">
+    <value>Image size changing to {0}</value>
+  </data>
+  <data name="Msg_ImageSizeChanged" xml:space="preserve">
+    <value>Successfully changed image size to {0}x{0}</value>
+  </data>
+  <data name="Msg_ImageSizeError" xml:space="preserve">
+    <value>Error changing image size: {0}</value>
+  </data>
+  <data name="Msg_DisplayRefreshed" xml:space="preserve">
+    <value>Display list refreshed successfully.</value>
+  </data>
+  <data name="Msg_DisplayRefreshError" xml:space="preserve">
+    <value>Error refreshing displays: {0}</value>
+  </data>
+  <data name="Msg_AIFocusSwitched" xml:space="preserve">
+    <value>AI focus switched to Display {0} ({1}x{2})</value>
+  </data>
+  <data name="Msg_EmergencyStop" xml:space="preserve">
+    <value>[Emergency Stop Keybind] Disabled all AI features.</value>
+  </data>
+  <data name="Msg_LGHubNotRunning" xml:space="preserve">
+    <value>LG HUB is not currently running.</value>
+  </data>
+  <data name="Msg_LGHubInstall" xml:space="preserve">
+    <value>LG HUB is not installed on the computer appropriately. Would you like to install LG HUB?</value>
+  </data>
+  <data name="Msg_LGHubNotInstalled" xml:space="preserve">
+    <value>LG HUB is not installed on this computer appropriately.</value>
+  </data>
+  <data name="Msg_LGHubNotFound" xml:space="preserve">
+    <value>LG HUB is not found installed.</value>
+  </data>
+  <data name="Msg_LGHubMouseMode" xml:space="preserve">
+    <value>LG HUB could not switch to mouse mode to function adequately.</value>
+  </data>
+  <data name="Msg_MemoryIntegrity" xml:space="preserve">
+    <value>Memory Integrity (Core Isolation) is currently enabled. This prevents the LG HUB mouse driver from functioning. Would you like to disable it?</value>
+  </data>
+  <data name="Msg_ddxoftAdmin" xml:space="preserve">
+    <value>ddxoft virtual input requires Aimmy to be ran as administrator.</value>
+  </data>
+  <data name="Msg_ddxoftIncompatible" xml:space="preserve">
+    <value>ddxoft is not compatible with the current version of Windows.</value>
+  </data>
+  <data name="Msg_ddxoftLoadFailed" xml:space="preserve">
+    <value>ddxoft failed to load. Please try again or use "Mouse Event".</value>
+  </data>
+  <data name="Msg_RazerNotRunning" xml:space="preserve">
+    <value>Razer Synapse is not currently running, please check the tray area.</value>
+  </data>
+  <data name="Msg_RazerNotInstalled" xml:space="preserve">
+    <value>Razer Synapse is not installed on the computer. Would you like to download it?</value>
+  </data>
+  <data name="Msg_RazerNoDevice" xml:space="preserve">
+    <value>No Razer peripheral is detected. Please plug in a Razer product.</value>
+  </data>
+  <data name="Msg_rzctlIncompatible" xml:space="preserve">
+    <value>Your rzctl.dll is not currently compatible with Aimmy, replacing with compatible version...</value>
+  </data>
+  <data name="Msg_rzctlReplaced" xml:space="preserve">
+    <value>rzctl.dll replaced successfully. Aimmy will now be able to use Razer Synapse support.</value>
+  </data>
+  <data name="Msg_RazerDownloadFailed" xml:space="preserve">
+    <value>Failed to download Razer Synapse 3: {0}</value>
+  </data>
+  <data name="Msg_RazerDownloaded" xml:space="preserve">
+    <value>Your Razer Synapse 3 has been downloaded. Please install it before attempting to use Razer Synapse in Aimmy.</value>
+  </data>
+  <data name="Msg_RazerInstallError" xml:space="preserve">
+    <value>An error occurred while downloading Razer Synapse 3: {0}</value>
+  </data>
+  <data name="Msg_RedistMissing" xml:space="preserve">
+    <value>Visual C++ 2015-2022 x64 Redistributable is not installed. Would you like to download it? This is required for Razer Synapse to function.</value>
+  </data>
+  <data name="Msg_rzctlMissing" xml:space="preserve">
+    <value>rzctl.dll appears to be missing. Would you like to download it?</value>
+  </data>
+  <data name="Msg_rzctlDownloadFailed" xml:space="preserve">
+    <value>Failed to download rzctl.dll: {0}</value>
+  </data>
+  <data name="Msg_rzctlDownloaded" xml:space="preserve">
+    <value>rzctl.dll successfully downloaded. Razer Synapse support is now ready.</value>
+  </data>
+  <data name="Msg_rzctlDownloadError" xml:space="preserve">
+    <value>An error occurred while downloading rzctl.dll: {0}</value>
+  </data>
+  <data name="Msg_UnsupportedImageFormat" xml:space="preserve">
+    <value>Unsupported image format. Please use a PNG or JPG file.</value>
+  </data>
+  <data name="Msg_SpecsError" xml:space="preserve">
+    <value>Could not retrieve {0}: {1}</value>
+  </data>
+  <data name="Msg_DXGIError" xml:space="preserve">
+    <value>DXGI Error: {0} (HRESULT: 0x{1:X8})</value>
+  </data>
+  <data name="Msg_GeneralError" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="Msg_DirectoryCreateError" xml:space="preserve">
+    <value>Could not create directory at {0}: {1}</value>
+  </data>
+  <data name="Msg_JsonWriteError" xml:space="preserve">
+    <value>Could not write JSON file to {0}: {1}</value>
+  </data>
+  <data name="Msg_JsonLoadError" xml:space="preserve">
+    <value>Could not load JSON file from {0}: {1}</value>
+  </data>
+  <data name="Msg_MediaClearError" xml:space="preserve">
+    <value>Error clearing media: {0}</value>
+  </data>
+  <data name="Msg_SliderDebug" xml:space="preserve">
+    <value>Slider: {0}, Value: {1}, Actual Value: {2}</value>
+  </data>
+  <data name="Msg_ConfigConfirmOverwrite" xml:space="preserve">
+    <value>A config with this name already exists. Do you want to overwrite it?</value>
+  </data>
+  <data name="Msg_ConfigSaving" xml:space="preserve">
+    <value>Saving configuration...</value>
+  </data>
+  <data name="Msg_ConfigSaved" xml:space="preserve">
+    <value>Configuration saved successfully!</value>
+  </data>
+  <data name="Msg_NoLabelsFound" xml:space="preserve">
+    <value>No labels found. Create a 'labels.txt' file.</value>
+  </data>
+  <data name="Msg_SuggestedModelTitle" xml:space="preserve">
+    <value>Suggested Model - Aimmy</value>
+  </data>
+  <data name="Msg_SystemSpecsLoading" xml:space="preserve">
+    <value>Loading system specs...</value>
+  </data>
+  <data name="Msg_UpdateAvailable" xml:space="preserve">
+    <value>There is an update available! Version {0} is ready. Would you like to download it?</value>
+  </data>
+  <data name="Msg_NoUpdate" xml:space="preserve">
+    <value>You are already on the latest version.</value>
+  </data>
+  <data name="Msg_UpdateCheckFailed" xml:space="preserve">
+    <value>Could not check for updates.</value>
+  </data>
+  <data name="Msg_LGHubDownloading" xml:space="preserve">
+    <value>Downloading LG HUB...</value>
+  </data>
+  <data name="Msg_LGHubVerifying" xml:space="preserve">
+    <value>Verifying LG HUB installation...</value>
+  </data>
+  <data name="Msg_LGHubVerified" xml:space="preserve">
+    <value>LG HUB has been verified. Please install LG HUB when it opens.</value>
+  </data>
+  <data name="Msg_LGHubFileError" xml:space="preserve">
+    <value>LG HUB files are not correct. Error: {0}</value>
+  </data>
+  <data name="Msg_ddxoftDownloading" xml:space="preserve">
+    <value>Downloading ddxoft virtual input driver...</value>
+  </data>
+  <data name="Msg_ddxoftDownloaded" xml:space="preserve">
+    <value>ddxoft driver has been downloaded. Please install it before using this option.</value>
+  </data>
+  <data name="Msg_ddxoftDownloadFailed" xml:space="preserve">
+    <value>ddxoft driver download failed: {0}</value>
+  </data>
+  <data name="Msg_Downloading" xml:space="preserve">
+    <value>Downloading {0}...</value>
+  </data>
+  <data name="Msg_DownloadError" xml:space="preserve">
+    <value>Error downloading {0}: {1}</value>
+  </data>
+  <data name="Msg_Capture_DisplayChanged" xml:space="preserve">
+    <value>Display change detected, reinitializing capture...</value>
+  </data>
+  <data name="Msg_Capture_NoDisplays" xml:space="preserve">
+    <value>No available display devices found.</value>
+  </data>
+  <data name="Msg_Capture_AdapterDetected" xml:space="preserve">
+    <value>Adapter detected: {0}</value>
+  </data>
+  <data name="Msg_Capture_OutputDetected" xml:space="preserve">
+    <value>Output detected: {0} ({1}x{2})</value>
+  </data>
+  <data name="Msg_Capture_NoMatchingDisplay" xml:space="preserve">
+    <value>Could not find matching display for selected output</value>
+  </data>
+  <data name="Msg_Capture_NoSuitableOutput" xml:space="preserve">
+    <value>No suitable display output found for capture</value>
+  </data>
+  <data name="Msg_Capture_DXDeviceFailed" xml:space="preserve">
+    <value>Failed to create DirectX device for {0}</value>
+  </data>
+  <data name="Msg_Capture_DuplicationInit" xml:space="preserve">
+    <value>Desktop duplication initialized successfully for {0}</value>
+  </data>
+  <data name="Msg_Capture_DuplicationUnsupported" xml:space="preserve">
+    <value>Desktop duplication is not supported on {0}</value>
+  </data>
+  <data name="Msg_Capture_DuplicationInitFailed" xml:space="preserve">
+    <value>Desktop duplication initialization failed for {0}</value>
+  </data>
+  <data name="Msg_Capture_NoVisibleArea" xml:space="preserve">
+    <value>No visible area to capture on display {0}</value>
+  </data>
+  <data name="Msg_Capture_DXError" xml:space="preserve">
+    <value>DirectX capture error: {0}</value>
+  </data>
+  <data name="Msg_Capture_GDIFailed" xml:space="preserve">
+    <value>GDI+ screen capture failed: {0}</value>
+  </data>
+  <data name="Msg_Capture_DXGIReleaseFailed" xml:space="preserve">
+    <value>Failed to release DXGI resources: {0}</value>
+  </data>
+  <data name="Msg_Capture_DirectX" xml:space="preserve">
+    <value>DirectX</value>
+  </data>
+  <data name="Msg_Capture_GDI" xml:space="preserve">
+    <value>GDI+</value>
+  </data>
+  <data name="Msg_Config_SavingValue" xml:space="preserve">
+    <value>Saving: {0} = {1}</value>
+  </data>
+  <data name="Msg_Config_LoadingValue" xml:space="preserve">
+    <value>Loading: {0} = {1}</value>
+  </data>
+  <data name="Msg_Config_CreatingDefault" xml:space="preserve">
+    <value>Creating default configuration...</value>
+  </data>
+  <data name="Msg_Config_NoFiles" xml:space="preserve">
+    <value>No config files found.</value>
+  </data>
+  <data name="Msg_Models_NoFiles" xml:space="preserve">
+    <value>No model files found.</value>
+  </data>
+  <data name="Msg_RuntimeError" xml:space="preserve">
+    <value>A runtime error occurred: {0}</value>
+  </data>
+  <data name="Msg_Models_LabelNotFound" xml:space="preserve">
+    <value>Label file not found at {0}</value>
+  </data>
+  <data name="Msg_Notice_Default" xml:space="preserve">
+    <value>Notice</value>
+  </data>
+  <data name="Msg_rzctlInitFailed" xml:space="preserve">
+    <value>Failed to initialize Razer mode.\n{0}\n\nAttempting to replace rzctl.dll with the release version...</value>
+  </data>
+  <data name="Msg_rzctlRecoveryFailed" xml:space="preserve">
+    <value>Failed to recover rzctl.dll.\n{0}</value>
+  </data>
+  <data name="Msg_RazerSynapseDownloadFailed" xml:space="preserve">
+    <value>Failed to download Razer Synapse installer.</value>
+  </data>
+  <data name="Msg_rzctlDownloadFailed_Simple" xml:space="preserve">
+    <value>Failed to download rzctl.dll from the given URL.</value>
+  </data>
+  <data name="Msg_rzctlDownloadError_Simple" xml:space="preserve">
+    <value>Error downloading rzctl.dll.</value>
+  </data>
+  <data name="Msg_UpdateNewerVersion" xml:space="preserve">
+    <value>You are running a newer version ({0}) than the latest release ({1}).</value>
+  </data>
+  <data name="Msg_LGHubAutoUpdateWarning" xml:space="preserve">
+    <value>When LG Hub is installed, please make sure "Automatic Updates" is disabled for long term usage.</value>
+  </data>
+  <data name="Msg_LGHubFileError_Simple" xml:space="preserve">
+    <value>File is improper, please try a different host.</value>
+  </data>
+
+</root>

@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:Aimmy2.Resources"
              mc:Ignorable="d">
     <ScrollViewer x:Name="AboutMenu"
                   VerticalScrollBarVisibility="Auto"
@@ -29,7 +30,7 @@
                                FontSize="12"
                                VerticalAlignment="Center"
                                Padding="0,0,4,0"/>
-                        <Label Content="Aimmy is free and open source"
+                        <Label Content="{local:Loc About_FreeNotice}"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                Foreground="#80FFFFFF"
                                FontSize="11"
@@ -58,7 +59,7 @@
                                FontWeight="Bold"
                                Foreground="White"
                                HorizontalAlignment="Center"/>
-                    <TextBlock Text="Universal Second Eye"
+                    <TextBlock Text="{local:Loc About_UniversalSecondEye}"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                FontSize="12"
                                Foreground="#99FFFFFF"
@@ -94,7 +95,7 @@
                                 Background="#20FFFFFF"
                                 BorderBrush="Transparent"
                                 BorderThickness="0"
-                                Content="Check for Updates"
+                                Content="{local:Loc Button_CheckForUpdates}"
                                 FontWeight="Normal"
                                 FontSize="11"
                                 Height="32"
@@ -116,7 +117,7 @@
                     Padding="20"
                     Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="CORE TEAM"
+                    <TextBlock Text="{local:Loc About_CoreTeam}"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                FontSize="10"
                                FontWeight="Bold"
@@ -139,7 +140,7 @@
                     Padding="20"
                     Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="KEY CONTRIBUTORS"
+                    <TextBlock Text="{local:Loc About_KeyContributors}"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                FontSize="10"
                                FontWeight="Bold"
@@ -166,13 +167,13 @@
                     Padding="16"
                     Margin="0,0,0,12">
                 <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="And the entire Aimmy community"
+                    <TextBlock Text="{local:Loc About_Community}"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                FontSize="11"
                                Foreground="#70FFFFFF"
                                HorizontalAlignment="Center"
                                Margin="0,0,0,4"/>
-                    <TextBlock Text="Thank you for your support!"
+                    <TextBlock Text="{local:Loc About_ThankYou}"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                FontSize="10"
                                Foreground="#50FFFFFF"
@@ -201,7 +202,7 @@
                                FontSize="14"
                                VerticalAlignment="Center"
                                Margin="0,0,8,0"/>
-                    <TextBlock Text="View on GitHub"
+                    <TextBlock Text="{local:Loc About_ViewOnGitHub}"
                                VerticalAlignment="Center"/>
                 </StackPanel>
             </Ant:Button>
@@ -226,7 +227,7 @@
                                FontSize="14"
                                VerticalAlignment="Center"
                                Margin="0,0,8,0"/>
-                    <TextBlock Text="Join our Discord"
+                    <TextBlock Text="{local:Loc About_JoinDiscord}"
                                VerticalAlignment="Center"/>
                 </StackPanel>
             </Ant:Button>

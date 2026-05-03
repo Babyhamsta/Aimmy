@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+using Aimmy2.Resources;
+using Newtonsoft.Json;
 using Other;
 using System.IO;
 using MessageBox = System.Windows.MessageBox;
@@ -56,7 +57,7 @@ namespace Class
             catch (Exception ex)
             {
                 // Only show error if it's not a directory creation issue
-                MessageBox.Show($"Error writing JSON, please note:\n{ex}");
+                MessageBox.Show(LocalizationManager.GetString("Msg_JsonWriteError", path, ex.Message));
             }
         }
 
@@ -102,7 +103,7 @@ namespace Class
                 catch
                 {
                     // Only show error if we can't even create a default file
-                    MessageBox.Show("Error loading JSON, please note:\n" + ex.ToString());
+                    MessageBox.Show(LocalizationManager.GetString("Msg_JsonLoadError", path, ex.ToString()));
                 }
             }
         }

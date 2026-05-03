@@ -1,4 +1,5 @@
 using Aimmy2.Class;
+using Aimmy2.Resources;
 using Aimmy2.Theme;
 using Class;
 using Other;
@@ -25,6 +26,12 @@ namespace Visuality
         public LGDownloader()
         {
             InitializeComponent();
+
+            LGDownloaderTitleLabel.Content = LocalizationManager.GetString("LG_LGDownloader");
+            DownloadInstructionLabel.Content = LocalizationManager.GetString("LG_ClickToDownload");
+            LGDirectButton.Content = LocalizationManager.GetString("LG_LGDirect");
+            SupercometButton.Content = LocalizationManager.GetString("LG_SupercometCDN");
+            DeveloperGitHubButton.Content = LocalizationManager.GetString("LG_DeveloperGitHub");
 
             // Initialize theme colors
             UpdateThemeColors();
@@ -103,7 +110,7 @@ namespace Visuality
         {
             if (sender is Button clickedButton)
             {
-                LogManager.Log(LogManager.LogLevel.Info, "Attempting to download LG Hub.", true);
+                LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_LGHubDownloading"), true);
 
                 using HttpClient httpClient = new();
 
@@ -116,13 +123,13 @@ namespace Visuality
                         var content = await response.Content.ReadAsByteArrayAsync();
                         await File.WriteAllBytesAsync(FilePath, content);
                     }
-                    LogManager.Log(LogManager.LogLevel.Info, "LG Hub has downloaded, attempting to verify legitimacy of the file.", true);
+                    LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_LGHubVerifying"), true);
                 }
 
                 if (CheckFileValidity())
                 {
-                    LogManager.Log(LogManager.LogLevel.Info, "File is verified, attempting to launch LG Hub installer.", true);
-                    LogManager.Log(LogManager.LogLevel.Warning, "When LG Hub is installed, please make sure \"Automatic Updates\" is disabled for long term usage.", true, 20000);
+                    LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_LGHubVerified"), true);
+                    LogManager.Log(LogManager.LogLevel.Warning, LocalizationManager.GetString("Msg_LGHubAutoUpdateWarning"), true, 20000);
                     Process.Start(new ProcessStartInfo
                     {
                         WindowStyle = ProcessWindowStyle.Hidden,
@@ -134,7 +141,7 @@ namespace Visuality
                 }
                 else
                 {
-                    LogManager.Log(LogManager.LogLevel.Error, "File is improper, please try a different host.", true);
+                    LogManager.Log(LogManager.LogLevel.Error, LocalizationManager.GetString("Msg_LGHubFileError_Simple"), true);
                 }
             }
         }

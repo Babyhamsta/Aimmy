@@ -1,7 +1,9 @@
 using Aimmy2.AILogic;
 using Aimmy2.Class;
 using Aimmy2.Other;
+using Aimmy2.Resources;
 using Aimmy2.UILibrary;
+using Class;
 using Other;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,7 +18,6 @@ namespace Aimmy2.Controls
         private MainWindow? _mainWindow;
         private bool _isInitialized;
 
-        // Local minimize state management
         private readonly Dictionary<string, bool> _localMinimizeState = new()
         {
             { "Model Settings", false },
@@ -25,7 +26,6 @@ namespace Aimmy2.Controls
             { "Screen Settings", false }
         };
 
-        // Public properties for MainWindow access
         public StackPanel ModelSettingsPanel => ModelSettings;
         public StackPanel SettingsConfigPanel => SettingsConfig;
         public StackPanel ThemeMenuPanel => ThemeMenu;
@@ -44,7 +44,6 @@ namespace Aimmy2.Controls
             _mainWindow = mainWindow;
             _isInitialized = true;
 
-            // Load minimize states from global dictionary if they exist
             LoadMinimizeStatesFromGlobal();
 
             LoadModelSettings();
@@ -52,19 +51,14 @@ namespace Aimmy2.Controls
             LoadThemeMenu();
             LoadDisplaySelectMenu();
 
-            // Apply minimize states after loading
             ApplyMinimizeStates();
 
-            // Subscribe to display changes
             DisplayManager.DisplayChanged += OnDisplayChanged;
 
-            // Subscribe to AI class updates for Target Class dropdown
             AIManager.ClassesUpdated += OnClassesChanged;
 
-            // Subscribe to dynamic model status changes
             AIManager.DynamicModelStatusChanged += OnDynamicModelStatusChanged;
 
-            // Set visibility based on current model status (handles case where model loaded before panel opened)
             UpdateDynamicModelDropdownsVisibility(AIManager.CurrentModelIsDynamic);
             UpdateTargetClassDropdown(_mainWindow!.uiManager.D_TargetClass!);
         }
@@ -110,7 +104,6 @@ namespace Aimmy2.Controls
         {
             foreach (UIElement child in panel.Children)
             {
-                // Keep titles, spacers, and bottom rectangles always visible
                 bool shouldStayVisible = child is ATitle || child is ASpacer || child is ARectangleBottom;
 
                 child.Visibility = shouldStayVisible
@@ -123,13 +116,10 @@ namespace Aimmy2.Controls
         {
             if (!_localMinimizeState.ContainsKey(stateName)) return;
 
-            // Toggle the state
             _localMinimizeState[stateName] = !_localMinimizeState[stateName];
 
-            // Apply the new visibility
             SetPanelVisibility(panel, !_localMinimizeState[stateName]);
 
-            // Save to global dictionary
             SaveMinimizeStatesToGlobal();
         }
 
@@ -143,16 +133,15 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, ModelSettings);
 
             builder
-                .AddTitle("Model Settings", true, t =>
+                .AddTitle(LocalizationManager.GetString("Section_ModelSettings"), true, t =>
                 {
                     uiManager.AT_ModelSettings = t;
                     t.Minimize.Click += (s, e) => TogglePanel("Model Settings", ModelSettingsPanel);
                 })
-                .AddDropdown("Image Size", d =>
+                .AddDropdown(LocalizationManager.GetString("Dropdown_ImageSize"), "Image Size", d =>
                 {
                     uiManager.D_ImageSize = d;
 
-                    // Add size options
                     _mainWindow.AddDropdownItem(d, "640");
                     _mainWindow.AddDropdownItem(d, "512");
                     _mainWindow.AddDropdownItem(d, "416");
@@ -160,7 +149,6 @@ namespace Aimmy2.Controls
                     _mainWindow.AddDropdownItem(d, "256");
                     _mainWindow.AddDropdownItem(d, "160");
 
-                    // Set default to current value
                     var currentSize = Dictionary.dropdownState["Image Size"];
                     for (int i = 0; i < d.DropdownBox.Items.Count; i++)
                     {
@@ -171,7 +159,6 @@ namespace Aimmy2.Controls
                         }
                     }
 
-                    // Handle selection change
                     d.DropdownBox.SelectionChanged += async (s, e) =>
                     {
                         if (d.DropdownBox.SelectedItem == null || e.AddedItems.Count == 0)
@@ -181,75 +168,69 @@ namespace Aimmy2.Controls
                         if (string.IsNullOrEmpty(newSize))
                             return;
 
-                        // Check if model is loaded
                         if (FileManager.AIManager == null || Dictionary.lastLoadedModel == "N/A")
                         {
-                            // No model loaded, just update the dictionary
                             Dictionary.dropdownState["Image Size"] = newSize;
-                            LogManager.Log(LogLevel.Info, $"Image size set to {newSize}x{newSize} (no model loaded)", true, 2000);
+                            LogManager.Log(LogLevel.Info, LocalizationManager.GetString("Msg_ImageSizeSet", newSize), true, 2000);
                             return;
                         }
 
                         FileManager.CurrentlyLoadingModel = true;
-                        LogManager.Log(LogLevel.Info, $"Image size changing to {newSize}");
+                        LogManager.Log(LogLevel.Info, LocalizationManager.GetString("Msg_ImageSizeChanging", newSize));
 
                         try
                         {
-                            // Signal the AI to prepare for shutdown
                             if (FileManager.AIManager != null)
                             {
                                 FileManager.AIManager.RequestSizeChange(int.Parse(newSize));
-                                await Task.Delay(100); // Give AI loop time to pause
+                                await Task.Delay(100);
                             }
 
-                            // Dispose the current AIManager
                             var modelPath = System.IO.Path.Combine("bin/models", Dictionary.lastLoadedModel);
                             FileManager.AIManager?.Dispose();
                             FileManager.AIManager = null;
 
-                            // NOW it's safe to update the dictionary
                             Dictionary.dropdownState["Image Size"] = newSize;
 
-                            // Create new AIManager with the new size
                             FileManager.AIManager = new AIManager(modelPath);
 
-                            LogManager.Log(LogLevel.Info, $"Successfully changed image size to {newSize}x{newSize}", true, 2000);
+                            LogManager.Log(LogLevel.Info, LocalizationManager.GetString("Msg_ImageSizeChanged", newSize), true, 2000);
                         }
                         catch (Exception ex)
                         {
-                            LogManager.Log(LogLevel.Error, $"Error changing image size: {ex.Message}", true, 5000);
+                            LogManager.Log(LogLevel.Error, LocalizationManager.GetString("Msg_ImageSizeError", ex.Message), true, 5000);
                         }
                         finally
                         {
                             FileManager.CurrentlyLoadingModel = false;
                         }
                     };
-                }, tooltip: "Resolution the AI uses for detection. Smaller = faster but less accurate.")
-                .AddDropdown("Target Class", d =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_ImageSize"))
+                .AddDropdown(LocalizationManager.GetString("Dropdown_TargetClass"), "Target Class", d =>
                 {
                     d.DropdownBox.SelectedIndex = 0;
                     uiManager.D_TargetClass = d;
-                    _mainWindow.AddDropdownItem(d, "Best Confidence");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_BestConfidence"), "Best Confidence");
                     UpdateTargetClassDropdown(d);
-                }, tooltip: "Which type of target to aim at. Best Confidence picks the most certain detection.")
-                .AddSlider("AI Minimum Confidence", "% Confidence", 1, 1, 1, 100, s =>
+                }, tooltip: LocalizationManager.GetString("Tooltip_TargetClass"))
+                .AddSlider(LocalizationManager.GetString("Slider_AIMinimumConfidence"), "AI Minimum Confidence", LocalizationManager.GetString("Unit_ConfidencePercent"), 1, 1, 1, 100, s =>
                 {
                     uiManager.S_AIMinimumConfidence = s;
                     s.Slider.PreviewMouseLeftButtonUp += (sender, e) =>
                     {
                         var value = s.Slider.Value;
                         if (value >= 95)
-                            LogManager.Log(LogLevel.Warning, "The minimum confidence you have set for Aimmy to be too high and may be unable to detect players.", true);
+                            LogManager.Log(LogLevel.Warning, LocalizationManager.GetString("Msg_ConfidenceTooHigh"), true);
                         else if (value <= 35)
-                            LogManager.Log(LogLevel.Warning, "The minimum confidence you have set for Aimmy may be too low can cause false positives.", true);
+                            LogManager.Log(LogLevel.Warning, LocalizationManager.GetString("Msg_ConfidenceTooLow"), true);
                     };
-                }, tooltip: "How sure the AI must be before targeting. Higher = fewer false detections but may miss targets.")
-                .AddToggle("Enable Model Switch Keybind", t => uiManager.T_EnableModelSwitchKeybind = t,
-                    tooltip: "Allow switching between AI models using a hotkey.")
-                .AddKeyChanger("Model Switch Keybind", k => uiManager.C_ModelSwitchKeybind = k,
-                    tooltip: "Press this key to cycle through available AI models.")
-                .AddKeyChanger("Emergency Stop Keybind", k => uiManager.C_EmergencyKeybind = k,
-                    tooltip: "Press this key to immediately stop all aim assist functions.")
+                }, tooltip: LocalizationManager.GetString("Tooltip_AIMinimumConfidence"))
+                .AddToggle(LocalizationManager.GetString("Toggle_EnableModelSwitchKeybind"), "Enable Model Switch Keybind", t => uiManager.T_EnableModelSwitchKeybind = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_EnableModelSwitch"))
+                .AddKeyChanger(LocalizationManager.GetString("Key_ModelSwitchKeybind"), "Model Switch Keybind", k => uiManager.C_ModelSwitchKeybind = k,
+                    tooltip: LocalizationManager.GetString("Tooltip_ModelSwitchKeybind"))
+                .AddKeyChanger(LocalizationManager.GetString("Key_EmergencyStopKeybind"), "Emergency Stop Keybind", k => uiManager.C_EmergencyKeybind = k,
+                    tooltip: LocalizationManager.GetString("Tooltip_EmergencyStopKeybind"))
                 .AddSeparator();
         }
 
@@ -259,30 +240,57 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, SettingsConfig);
 
             builder
-                .AddTitle("Settings Menu", true, t =>
+                .AddTitle(LocalizationManager.GetString("Section_SettingsMenu"), true, t =>
                 {
                     uiManager.AT_SettingsMenu = t;
                     t.Minimize.Click += (s, e) => TogglePanel("Settings Menu", SettingsConfigPanel);
                 })
-                .AddToggle("Collect Data While Playing", t => uiManager.T_CollectDataWhilePlaying = t,
-                    tooltip: "Save screenshots of detections for training new AI models.")
-                .AddToggle("Auto Label Data", t => uiManager.T_AutoLabelData = t,
-                    tooltip: "Automatically label collected screenshots with detection data.")
-                .AddToggle("Mouse Background Effect", t => uiManager.T_MouseBackgroundEffect = t,
-                    tooltip: "Show a visual effect on the UI when moving your mouse.")
-                .AddToggle("UI TopMost", t => uiManager.T_UITopMost = t,
-                    tooltip: "Keep this window above all other windows.")
-                .AddToggle("Debug Mode", t => uiManager.T_DebugMode = t,
-                    tooltip: "Show extra information useful for troubleshooting problems.")
-                .AddButton("Save Config", b =>
+                .AddToggle(LocalizationManager.GetString("Toggle_CollectData"), "Collect Data While Playing", t => uiManager.T_CollectDataWhilePlaying = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_CollectData"))
+                .AddToggle(LocalizationManager.GetString("Toggle_AutoLabelData"), "Auto Label Data", t => uiManager.T_AutoLabelData = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_AutoLabelData"))
+                .AddToggle(LocalizationManager.GetString("Toggle_MouseBackgroundEffect"), "Mouse Background Effect", t => uiManager.T_MouseBackgroundEffect = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_MouseBgEffect"))
+                .AddToggle(LocalizationManager.GetString("Toggle_UITopMost"), "UI TopMost", t => uiManager.T_UITopMost = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_UITopMost"))
+                .AddToggle(LocalizationManager.GetString("Toggle_DebugMode"), "Debug Mode", t => uiManager.T_DebugMode = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_DebugMode"))
+                .AddDropdown(LocalizationManager.GetString("Dropdown_Language"), "Language", d =>
+                {
+                    uiManager.D_Language = d;
+
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_English"), "en-US");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_Chinese"), "zh-CN");
+
+                    d.DropdownBox.SelectedIndex = LocalizationManager.CurrentLanguage == "zh-CN" ? 1 : 0;
+
+                    d.DropdownBox.SelectionChanged += (s, e) =>
+                    {
+                        if (d.DropdownBox.SelectedIndex == -1)
+                            return;
+
+                        var languageCode = d.DropdownBox.SelectedIndex == 1 ? "zh-CN" : "en-US";
+
+                        if (LocalizationManager.CurrentLanguage == languageCode)
+                            return;
+
+                        LocalizationManager.SetLanguage(languageCode);
+
+                        Dictionary.languageState["Language"] = languageCode;
+                        SaveDictionary.WriteJSON(Dictionary.languageState, "bin\\language.cfg");
+
+                        LogManager.Log(LogLevel.Info, $"Language switched to {languageCode}");
+
+                        _mainWindow.RefreshCurrentMenuUI();
+                    };
+                }, tooltip: LocalizationManager.GetString("Tooltip_Language"))
+                .AddButton(LocalizationManager.GetString("Button_SaveConfig"), b =>
                 {
                     uiManager.B_SaveConfig = b;
                     b.Reader.Click += (s, e) => new ConfigSaver().ShowDialog();
-                }, tooltip: "Save your current settings to a file you can load later.")
+                }, tooltip: LocalizationManager.GetString("Tooltip_SaveConfig"))
                 .AddSeparator();
         }
-
-
 
         private void LoadDisplaySelectMenu()
         {
@@ -290,44 +298,41 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, DisplaySelectMenu);
 
             builder
-                .AddTitle("Screen Settings", true, t =>
+                .AddTitle(LocalizationManager.GetString("Section_ScreenSettings"), true, t =>
                 {
                     uiManager.AT_DisplaySelector = t;
                     t.Minimize.Click += (s, e) =>
                         TogglePanel("Screen Settings", DisplaySelectMenuPanel);
                 })
-                .AddDropdown("Screen Capture Method", d =>
+                .AddDropdown(LocalizationManager.GetString("Dropdown_ScreenCaptureMethod"), "Screen Capture Method", d =>
                 {
-                    d.DropdownBox.SelectedIndex = -1;  // Prevent auto-selection that overwrites saved state
+                    d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_ScreenCaptureMethod = d;
-                    _mainWindow.AddDropdownItem(d, "DirectX");
-                    _mainWindow.AddDropdownItem(d, "GDI+");
-                }, tooltip: "How the screen is captured. DirectX is faster, GDI+ works on more systems.")
-                .AddToggle("StreamGuard", t => uiManager.T_StreamGuard = t,
-                    tooltip: "Hide the overlay from screen recordings and streams. - Appears in system tray.")
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_DirectX"), "DirectX");
+                    _mainWindow.AddDropdownItem(d, LocalizationManager.GetString("DropdownOption_GDIPlus"), "GDI+");
+                }, tooltip: LocalizationManager.GetString("Tooltip_ScreenCaptureMethod"))
+                .AddToggle(LocalizationManager.GetString("Toggle_StreamGuard"), "StreamGuard", t => uiManager.T_StreamGuard = t,
+                    tooltip: LocalizationManager.GetString("Tooltip_StreamGuard"))
                 .AddSeparator();
 
-            // Handle DisplaySelector separately as it's a custom control
             uiManager.DisplaySelector = new ADisplaySelector();
             uiManager.DisplaySelector.RefreshDisplays();
 
-            // Insert after title but before separator
             var insertIndex = DisplaySelectMenu.Children.Count - 2;
             DisplaySelectMenu.Children.Insert(insertIndex, uiManager.DisplaySelector);
 
-            // Add refresh button after DisplaySelector
-            var refreshButton = new APButton("Refresh Displays", "Update the list of available monitors.");
+            var refreshButton = new APButton(LocalizationManager.GetString("Button_RefreshDisplays"), LocalizationManager.GetString("Tooltip_RefreshDisplays"));
             refreshButton.Reader.Click += (s, e) =>
             {
                 try
                 {
                     DisplayManager.RefreshDisplays();
                     uiManager.DisplaySelector.RefreshDisplays();
-                    LogManager.Log(LogLevel.Info, "Display list refreshed successfully.", true);
+                    LogManager.Log(LogLevel.Info, LocalizationManager.GetString("Msg_DisplayRefreshed"), true);
                 }
                 catch (Exception ex)
                 {
-                    LogManager.Log(LogLevel.Error, $"Error refreshing displays: {ex.Message}", true);
+                    LogManager.Log(LogLevel.Error, LocalizationManager.GetString("Msg_DisplayRefreshError", ex.Message), true);
                 }
             };
             DisplaySelectMenu.Children.Insert(insertIndex + 1, refreshButton);
@@ -339,7 +344,7 @@ namespace Aimmy2.Controls
             var builder = new SectionBuilder(this, ThemeMenu);
 
             builder
-                .AddTitle("Theme Settings", true, t =>
+                .AddTitle(LocalizationManager.GetString("Section_ThemeSettings"), true, t =>
                 {
                     uiManager.AT_ThemeColorWheel = t;
                     t.Minimize.Click += (s, e) =>
@@ -347,22 +352,16 @@ namespace Aimmy2.Controls
                 })
                 .AddSeparator();
 
-            // Handle ColorWheel separately as it's a custom control
             uiManager.ThemeColorWheel = new AColorWheel();
 
-            //--
             if (uiManager.ThemeColorWheel.FindName("ArrowButton") is Button arrowButton)
             {
                 arrowButton.Visibility = Visibility.Visible;
             }
-            //--
 
-            // Insert before separator
             var insertIndex = ThemeMenu.Children.Count - 2;
             ThemeMenu.Children.Insert(insertIndex, uiManager.ThemeColorWheel);
         }
-
-
 
         #endregion
 
@@ -374,7 +373,7 @@ namespace Aimmy2.Controls
             {
                 try
                 {
-                    LogManager.Log(LogLevel.Info, $"AI focus switched to Display {e.DisplayIndex + 1} ({e.Bounds.Width}x{e.Bounds.Height})", true);
+                    LogManager.Log(LogLevel.Info, LocalizationManager.GetString("Msg_AIFocusSwitched", e.DisplayIndex + 1, e.Bounds.Width, e.Bounds.Height), true);
                     UpdateDisplayRelatedSettings(e);
                 }
                 catch
@@ -431,8 +430,6 @@ namespace Aimmy2.Controls
 
         private void UpdateDynamicModelDropdownsVisibility(bool isDynamic)
         {
-            // Only Image Size depends on dynamic model - it's hidden for static models
-            // Target Class is always visible since both static and dynamic models can have multiple classes
             var imageSizeVisibility = isDynamic ? Visibility.Visible : Visibility.Collapsed;
 
             if (_mainWindow?.uiManager.D_ImageSize != null)
@@ -453,7 +450,7 @@ namespace Aimmy2.Controls
             string? selection = (dropdown.DropdownBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
 
             var removedItems = dropdown.DropdownBox.Items.Cast<ComboBoxItem>()
-                .Where(item => item.Content?.ToString() != "Best Confidence")
+                .Where(item => item.Content?.ToString() != LocalizationManager.GetString("DropdownOption_BestConfidence"))
                 .ToList();
 
             foreach (var item in removedItems)
@@ -468,7 +465,7 @@ namespace Aimmy2.Controls
                 _mainWindow!.AddDropdownItem(dropdown, kvp.Value);
             }
 
-            if (!string.IsNullOrEmpty(selection)) // tries to restore the selection
+            if (!string.IsNullOrEmpty(selection))
             {
                 for (int i = 0; i < dropdown.DropdownBox.Items.Count; i++)
                 {
@@ -489,50 +486,63 @@ namespace Aimmy2.Controls
             AIManager.ClassesUpdated -= OnClassesChanged;
             _mainWindow?.uiManager.DisplaySelector?.Dispose();
 
-            // Save minimize states before disposing
             SaveMinimizeStatesToGlobal();
+        }
+
+        public void RebuildSections()
+        {
+            if (!_isInitialized) return;
+
+            ModelSettings.Children.Clear();
+            SettingsConfig.Children.Clear();
+            ThemeMenu.Children.Clear();
+            DisplaySelectMenu.Children.Clear();
+
+            LoadModelSettings();
+            LoadSettingsConfig();
+            LoadThemeMenu();
+            LoadDisplaySelectMenu();
+
+            ApplyMinimizeStates();
         }
 
         #endregion
 
         #region Control Creation Methods
 
-        private AToggle CreateToggle(string title, string? tooltip = null)
+        private AToggle CreateToggle(string title, string stableKey, string? tooltip = null)
         {
             var toggle = new AToggle(title, tooltip);
-            _mainWindow!.toggleInstances[title] = toggle;
+            _mainWindow!.toggleInstances[stableKey] = toggle;
 
-            // Set initial state
-            if (Dictionary.toggleState[title])
+            if (Dictionary.toggleState.TryGetValue(stableKey, out var ts) && ts)
                 toggle.EnableSwitch();
             else
                 toggle.DisableSwitch();
 
-            // Handle click
             toggle.Reader.Click += (sender, e) =>
             {
-                Dictionary.toggleState[title] = !Dictionary.toggleState[title];
-                _mainWindow.UpdateToggleUI(toggle, Dictionary.toggleState[title]);
-                _mainWindow.Toggle_Action(title);
+                Dictionary.toggleState[stableKey] = !(Dictionary.toggleState.TryGetValue(stableKey, out var ts2) && ts2);
+                _mainWindow.UpdateToggleUI(toggle, Dictionary.toggleState.TryGetValue(stableKey, out var ts3) && ts3);
+                _mainWindow.Toggle_Action(stableKey);
             };
 
             return toggle;
         }
 
-        //copied & Pasted from other class
-        private AKeyChanger CreateKeyChanger(string title, string keybind, string? tooltip = null)
+        private AKeyChanger CreateKeyChanger(string title, string stableKey, string keybind, string? tooltip = null)
         {
             var keyChanger = new AKeyChanger(title, keybind, tooltip);
 
             keyChanger.Reader.Click += (sender, e) =>
             {
                 keyChanger.KeyNotifier.Content = "...";
-                _mainWindow!.bindingManager.StartListeningForBinding(title);
+                _mainWindow!.bindingManager.StartListeningForBinding(stableKey);
 
                 Action<string, string>? bindingSetHandler = null;
                 bindingSetHandler = (bindingId, key) =>
                 {
-                    if (bindingId == title)
+                    if (bindingId == stableKey)
                     {
                         keyChanger.KeyNotifier.Content = KeybindNameManager.ConvertToRegularKey(key);
                         Dictionary.bindingSettings[bindingId] = key;
@@ -546,7 +556,7 @@ namespace Aimmy2.Controls
             return keyChanger;
         }
 
-        private ASlider CreateSlider(string title, string label, double frequency, double buttonSteps,
+        private ASlider CreateSlider(string title, string stableKey, string label, double frequency, double buttonSteps,
             double min, double max, string? tooltip = null)
         {
             var slider = new ASlider(title, label, buttonSteps, tooltip)
@@ -554,13 +564,13 @@ namespace Aimmy2.Controls
                 Slider = { Minimum = min, Maximum = max, TickFrequency = frequency }
             };
 
-            slider.Slider.Value = Dictionary.sliderSettings.TryGetValue(title, out var value) ? value : min;
-            slider.Slider.ValueChanged += (s, e) => Dictionary.sliderSettings[title] = slider.Slider.Value;
+            slider.Slider.Value = Dictionary.sliderSettings.TryGetValue(stableKey, out var value) ? value : min;
+            slider.Slider.ValueChanged += (s, e) => Dictionary.sliderSettings[stableKey] = slider.Slider.Value;
 
             return slider;
         }
 
-        private ADropdown CreateDropdown(string title, string? tooltip = null) => new(title, title, tooltip);
+        private ADropdown CreateDropdown(string title, string dictionaryKey, string? tooltip = null) => new(title, dictionaryKey, tooltip);
 
         #endregion
 
@@ -585,35 +595,35 @@ namespace Aimmy2.Controls
                 return this;
             }
 
-            public SectionBuilder AddToggle(string title, Action<AToggle>? configure = null, string? tooltip = null)
+            public SectionBuilder AddToggle(string title, string stableKey, Action<AToggle>? configure = null, string? tooltip = null)
             {
-                var toggle = _parent.CreateToggle(title, tooltip);
+                var toggle = _parent.CreateToggle(title, stableKey, tooltip);
                 configure?.Invoke(toggle);
                 _panel.Children.Add(toggle);
                 return this;
             }
 
-            public SectionBuilder AddKeyChanger(string title, Action<AKeyChanger>? configure = null, string? defaultKey = null, string? tooltip = null)
+            public SectionBuilder AddKeyChanger(string title, string stableKey, Action<AKeyChanger>? configure = null, string? defaultKey = null, string? tooltip = null)
             {
-                var key = defaultKey ?? Dictionary.bindingSettings[title];
-                var keyChanger = _parent.CreateKeyChanger(title, key, tooltip);
+                var key = defaultKey ?? Dictionary.bindingSettings[stableKey];
+                var keyChanger = _parent.CreateKeyChanger(title, stableKey, key, tooltip);
                 configure?.Invoke(keyChanger);
                 _panel.Children.Add(keyChanger);
                 return this;
             }
 
-            public SectionBuilder AddSlider(string title, string label, double frequency, double buttonSteps,
+            public SectionBuilder AddSlider(string title, string stableKey, string label, double frequency, double buttonSteps,
                 double min, double max, Action<ASlider>? configure = null, string? tooltip = null)
             {
-                var slider = _parent.CreateSlider(title, label, frequency, buttonSteps, min, max, tooltip);
+                var slider = _parent.CreateSlider(title, stableKey, label, frequency, buttonSteps, min, max, tooltip);
                 configure?.Invoke(slider);
                 _panel.Children.Add(slider);
                 return this;
             }
 
-            public SectionBuilder AddDropdown(string title, Action<ADropdown>? configure = null, string? tooltip = null)
+            public SectionBuilder AddDropdown(string title, string dictionaryKey, Action<ADropdown>? configure = null, string? tooltip = null)
             {
-                var dropdown = _parent.CreateDropdown(title, tooltip);
+                var dropdown = _parent.CreateDropdown(title, dictionaryKey, tooltip);
                 configure?.Invoke(dropdown);
                 _panel.Children.Add(dropdown);
                 return this;
@@ -633,6 +643,16 @@ namespace Aimmy2.Controls
                 _panel.Children.Add(new ASpacer());
                 return this;
             }
+        }
+
+        #endregion
+
+        #region UI Refresh
+
+        private void RefreshCurrentMenuUI()
+        {
+            SettingsConfig.Children.Clear();
+            LoadSettingsConfig();
         }
 
         #endregion

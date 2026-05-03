@@ -1,4 +1,5 @@
-﻿using Other;
+using Aimmy2.Resources;
+using Other;
 using System.IO;
 using System.Net.Http;
 using System.Security.Principal;
@@ -16,7 +17,7 @@ namespace MouseMovementLibraries.ddxoftSupport
         {
             try
             {
-                LogManager.Log(LogManager.LogLevel.Info, $"{ddxoftpath} is missing, attempting to download {ddxoftpath}.", true);
+                LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_ddxoftDownloading"), true);
 
                 using HttpClient httpClient = new();
 
@@ -25,12 +26,12 @@ namespace MouseMovementLibraries.ddxoftSupport
                 {
                     var content = await response.Content.ReadAsByteArrayAsync();
                     await File.WriteAllBytesAsync(ddxoftpath, content);
-                    LogManager.Log(LogManager.LogLevel.Info, $"{ddxoftpath}has downloaded successfully, please re-select ddxoft Virtual Input Driver to load the DLL.", true);
+                    LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_ddxoftDownloaded"), true);
                 }
             }
             catch
             {
-                LogManager.Log(LogManager.LogLevel.Error, $"{ddxoftpath} has failed to download, please try a different Mouse Movement Method.", true);
+                LogManager.Log(LogManager.LogLevel.Error, LocalizationManager.GetString("Msg_ddxoftDownloadFailed"), true);
             }
         }
 
@@ -40,7 +41,7 @@ namespace MouseMovementLibraries.ddxoftSupport
             {
                 if (new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator) == false)
                 {
-                    MessageBox.Show("The ddxoft Virtual Input Driver requires Aimmy to be run as an administrator, please close Aimmy and run it as administrator to use this movement method.", "Aimmy");
+                    MessageBox.Show(LocalizationManager.GetString("Msg_ddxoftAdmin"), "Aimmy");
                     return false;
                 }
 
@@ -52,15 +53,15 @@ namespace MouseMovementLibraries.ddxoftSupport
 
                 if (ddxoftInstance.Load(ddxoftpath) != 1 || ddxoftInstance.btn!(0) != 1)
                 {
-                    MessageBox.Show("The ddxoft virtual input driver is not compatible with your PC, please try a different Mouse Movement Method.", "Aimmy");
+                    MessageBox.Show(LocalizationManager.GetString("Msg_ddxoftIncompatible"), "Aimmy");
                     return false;
                 }
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show("Failed to load ddxoft virtual input driver.\n\n" + ex.ToString(), "Aimmy");
+                MessageBox.Show(LocalizationManager.GetString("Msg_ddxoftLoadFailed"), "Aimmy");
                 return false;
             }
         }

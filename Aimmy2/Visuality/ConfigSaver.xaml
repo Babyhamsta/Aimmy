@@ -1,4 +1,4 @@
-﻿<Window x:Class="Visuality.ConfigSaver"
+<Window x:Class="Visuality.ConfigSaver"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -60,7 +60,7 @@
                            Padding="0,0,0,0"
                            FontSize="14"
                            FontFamily="Segoe MDL2 Assets" />
-                    <Label Content="Save Configuration"
+                    <Label x:Name="SaveConfigTitleLabel" Content="Save Configuration"
                            HorizontalAlignment="Left"
                            Margin="38,0,0,0"
                            VerticalAlignment="Center"
@@ -187,7 +187,7 @@
                                 BorderThickness="4"
                                 Margin="0,0,16,0" />
                     </Border>
-                    <Label Content="Can this model be found in the &quot;Downloadable Models&quot; Menu?"
+                    <Label x:Name="DownloadableQuestionLabel" Content="Can this model be found in the &quot;Downloadable Models&quot; Menu?"
                            HorizontalAlignment="Left"
                            Margin="41,82,0,0"
                            VerticalAlignment="Top"

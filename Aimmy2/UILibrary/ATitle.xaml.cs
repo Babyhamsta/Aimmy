@@ -1,10 +1,7 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 
 namespace Aimmy2.UILibrary
 {
-    /// <summary>
-    /// Interaction logic for ATitle.xaml
-    /// </summary>
     public partial class ATitle : System.Windows.Controls.UserControl
     {
         public ATitle(string Text, bool MinimizableMenu = false)
@@ -16,32 +13,16 @@ namespace Aimmy2.UILibrary
             if (MinimizableMenu)
             {
                 Minimize.Visibility = System.Windows.Visibility.Visible;
-                switch (Dictionary.minimizeState[Text])
-                {
-                    case false:
-                        Minimize.Content = "\xE921";
-                        break;
-
-                    case true:
-                        Minimize.Content = "\xE710";
-                        break;
-                }
+                bool isMinimized = Dictionary.minimizeState.TryGetValue(Text, out var val) && val;
+                Minimize.Content = isMinimized ? "\xE710" : "\xE921";
             }
 
             Minimize.Click += (s, e) =>
             {
-                switch (Dictionary.minimizeState[Text])
-                {
-                    case false:
-                        Minimize.Content = "\xE710";
-                        break;
+                bool isMinimized = Dictionary.minimizeState.TryGetValue(Text, out var val) && val;
+                Minimize.Content = isMinimized ? "\xE921" : "\xE710";
 
-                    case true:
-                        Minimize.Content = "\xE921";
-                        break;
-                }
-
-                Dictionary.minimizeState[Text] = !Dictionary.minimizeState[Text];
+                Dictionary.minimizeState[Text] = !isMinimized;
             };
         }
     }

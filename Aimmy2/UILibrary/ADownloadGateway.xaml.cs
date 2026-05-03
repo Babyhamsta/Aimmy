@@ -1,3 +1,4 @@
+using Aimmy2.Resources;
 using Other;
 using System.IO;
 using System.Net.Http;
@@ -31,7 +32,7 @@ namespace Aimmy2.UILibrary
 
                 if (downloadResult)
                 {
-                    LogManager.Log(LogManager.LogLevel.Info, $"Downloaded {Name} to bin/{Path}/{Name}", true);
+                    LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_Downloading", Name), true);
                     RemoveFromParent();
                 }
                 else
@@ -59,7 +60,7 @@ namespace Aimmy2.UILibrary
 
             if (!response.IsSuccessStatusCode)
             {
-                LogManager.Log(LogManager.LogLevel.Error, $"Failed to download {name} from {uri}. Status: {response.StatusCode} - {response.ReasonPhrase}", true);
+                LogManager.Log(LogManager.LogLevel.Error, LocalizationManager.GetString("Msg_DownloadError", name, $"{response.StatusCode} - {response.ReasonPhrase}"), true);
                 return false;
             }
 

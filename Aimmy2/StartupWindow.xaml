@@ -1,6 +1,7 @@
-﻿<Window x:Class="Aimmy2.StartupWindow"
+<Window x:Class="Aimmy2.StartupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Aimmy2.Resources"
         Title="Aimmy AI"
         Width="670"
         Height="444"
@@ -300,7 +301,7 @@
 
                     <!-- Title with gradient -->
                     <TextBlock x:Name="TitleText"
-               Text="AIMMY"
+               Text="{local:Loc Startup_Title}"
                FontSize="32"
                FontWeight="Light"
                HorizontalAlignment="Center"
@@ -320,7 +321,7 @@
 
                     <!-- Subtitle -->
                     <TextBlock x:Name="SubtitleText"
-               Text="AI PRECISION TARGETING"
+               Text="{local:Loc Startup_Subtitle}"
                FontSize="10"
                FontWeight="Normal"
                Foreground="#FF888888"
@@ -371,7 +372,7 @@
                         </StackPanel>
 
                         <TextBlock x:Name="LoadingText"
-                   Text="INITIALIZING AIMMY AI"
+                   Text="{local:Loc Startup_Loading}"
                    FontSize="9"
                    Foreground="#FF666666"
                    HorizontalAlignment="Center"

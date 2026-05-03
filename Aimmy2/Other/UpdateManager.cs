@@ -1,4 +1,5 @@
 using Aimmy2.Other;
+using Aimmy2.Resources;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -43,7 +44,7 @@ namespace Other
 
             if (string.IsNullOrEmpty(latestVersion) || string.IsNullOrEmpty(latestZipUrl))
             {
-                LogManager.Log(LogManager.LogLevel.Error, "Failed to get latest release information from Github.", true);
+                LogManager.Log(LogManager.LogLevel.Error, LocalizationManager.GetString("Msg_UpdateCheckFailed"), true);
                 return;
             }
 
@@ -52,17 +53,17 @@ namespace Other
 
             if (comparison == 0)
             {
-                LogManager.Log(LogManager.LogLevel.Info, "You are up to date.", true);
+                LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_NoUpdate"), true);
                 return;
             }
             else if (comparison > 0)
             {
-                LogManager.Log(LogManager.LogLevel.Info, $"You are running a newer version ({currentVersion}) than the latest release ({latestVersion}).", true);
+                LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_UpdateNewerVersion", currentVersion, latestVersion), true);
                 return;
             }
 
             // Only update if latest version is newer
-            LogManager.Log(LogManager.LogLevel.Info, $"A new version is available: {latestVersion}. Current version: {currentVersion}.", true);
+            LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("Msg_UpdateAvailable", latestVersion), true);
             githubManager.Dispose();
             await DoUpdate(latestZipUrl);
         }

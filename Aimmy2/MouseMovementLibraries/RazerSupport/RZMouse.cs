@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+using Aimmy2.Resources;
+using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
@@ -44,7 +45,7 @@ namespace MouseMovementLibraries.RazerSupport
 
             if (!DetectRazerDevices())
             {
-                new NoticeBar("No Razer device detected. This method is unusable.", 5000).Show();
+                new NoticeBar(LocalizationManager.GetString("Msg_RazerNoDevice"), 5000).Show();
                 return false;
             }
             try
@@ -53,7 +54,7 @@ namespace MouseMovementLibraries.RazerSupport
             }
             catch (BadImageFormatException)
             {
-                new NoticeBar("rzctl.dll is incompatible. Attempting release version...", 4000).Show();
+                new NoticeBar(LocalizationManager.GetString("Msg_rzctlIncompatible"), 4000).Show();
                 await DownloadRzctl(rzctlDownloadUrl_Release);
                 return false;
             }
@@ -62,9 +63,8 @@ namespace MouseMovementLibraries.RazerSupport
             // And if that still doesn't work, then it will error again, which in this case would mean they don't have the driver for vs &&|| vc 2015–2022
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to initialize Razer mode.\n{ex.Message}\n\n" +
-                                "Attempting to replace rzctl.dll with the release version...",
-                                "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(LocalizationManager.GetString("Msg_rzctlInitFailed", ex.Message),
+                                LocalizationManager.GetString("Msg_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                 try
                 {
                     if (File.Exists(rzctlpath))
@@ -72,12 +72,12 @@ namespace MouseMovementLibraries.RazerSupport
 
                     await DownloadRzctl(rzctlDownloadUrl_Release);
 
-                    new NoticeBar("rzctl.dll replaced with release version. Please retry loading.", 5000).Show();
+                    new NoticeBar(LocalizationManager.GetString("Msg_rzctlReplaced"), 5000).Show();
                 }
                 catch (Exception innerEx)
                 {
-                    MessageBox.Show($"Failed to recover rzctl.dll.\n{innerEx.Message}",
-                            "Recovery Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(LocalizationManager.GetString("Msg_rzctlRecoveryFailed", innerEx.Message),
+                            LocalizationManager.GetString("Msg_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 return false;
             }
@@ -107,7 +107,7 @@ namespace MouseMovementLibraries.RazerSupport
             if (Process.GetProcessesByName("RazerAppEngine").Any())
                 return true;
 
-            var response = MessageBox.Show("Razer Synapse is not running. Do you have it installed?",
+            var response = MessageBox.Show(LocalizationManager.GetString("Msg_RazerNotRunning"),
                                            "Aimmy - Razer Synapse", MessageBoxButton.YesNo);
             if (response == MessageBoxResult.No)
             {
@@ -117,7 +117,7 @@ namespace MouseMovementLibraries.RazerSupport
 
             if (!IsRazerSynapseInstalled())
             {
-                var install = MessageBox.Show("Razer Synapse is not installed. Would you like to install it?",
+                var install = MessageBox.Show(LocalizationManager.GetString("Msg_RazerNotInstalled"),
                                               "Aimmy - Razer Synapse", MessageBoxButton.YesNo);
                 if (install == MessageBoxResult.Yes)
                 {
@@ -145,7 +145,7 @@ namespace MouseMovementLibraries.RazerSupport
                 var response = await client.GetAsync("https://rzr.to/synapse-new-pc-download-beta");
                 if (!response.IsSuccessStatusCode)
                 {
-                    new NoticeBar("Failed to download Razer Synapse installer.", 4000).Show();
+                    new NoticeBar(LocalizationManager.GetString("Msg_RazerSynapseDownloadFailed"), 4000).Show();
                     return;
                 }
 
@@ -161,11 +161,11 @@ namespace MouseMovementLibraries.RazerSupport
                     WorkingDirectory = Path.GetTempPath()
                 });
 
-                new NoticeBar("Razer Synapse downloaded. Please confirm the UAC prompt to install.", 4000).Show();
+                new NoticeBar(LocalizationManager.GetString("Msg_RazerDownloaded"), 4000).Show();
             }
             catch
             {
-                new NoticeBar("Error occurred while downloading Synapse.", 4000).Show();
+                new NoticeBar(LocalizationManager.GetString("Msg_RazerInstallError"), 4000).Show();
             }
         }
 
@@ -236,8 +236,8 @@ namespace MouseMovementLibraries.RazerSupport
                 {
                     if (!vcRedistPromptRejected)
                     {
-                        var prompt = MessageBox.Show("VC++ 2015–2022 Redistributable (x64) is missing. Install now?",
-                                                     "Missing Dependency", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        var prompt = MessageBox.Show(LocalizationManager.GetString("Msg_RedistMissing"),
+                                                     LocalizationManager.GetString("Msg_ErrorTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
                         if (prompt == MessageBoxResult.Yes)
                         {
                             Process.Start(new ProcessStartInfo
@@ -268,13 +268,13 @@ namespace MouseMovementLibraries.RazerSupport
         {
             try
             {
-                new NoticeBar("rzctl.dll is missing, attempting to download rzctl.dll.", 4000).Show();
+                new NoticeBar(LocalizationManager.GetString("Msg_rzctlMissing"), 4000).Show();
 
                 using HttpClient client = new();
                 var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
                 if (!response.IsSuccessStatusCode)
                 {
-                    new NoticeBar("Failed to download rzctl.dll from the given URL.", 4000).Show();
+                    new NoticeBar(LocalizationManager.GetString("Msg_rzctlDownloadFailed_Simple"), 4000).Show();
                     return false;
                 }
 
@@ -282,12 +282,12 @@ namespace MouseMovementLibraries.RazerSupport
                 using var file = new FileStream(rzctlpath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
                 await stream.CopyToAsync(file);
 
-                new NoticeBar("rzctl.dll has downloaded successfully, please re-select Razer Synapse to load the DLL.", 5000).Show();
+                new NoticeBar(LocalizationManager.GetString("Msg_rzctlDownloaded"), 5000).Show();
                 return true;
             }
             catch
             {
-                new NoticeBar("Error downloading rzctl.dll.", 4000).Show();
+                new NoticeBar(LocalizationManager.GetString("Msg_rzctlDownloadError_Simple"), 4000).Show();
                 return false;
             }
         }

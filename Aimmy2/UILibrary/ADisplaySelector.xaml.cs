@@ -1,4 +1,5 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
+using Aimmy2.Resources;
 using Aimmy2.Theme;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,11 +20,18 @@ namespace Aimmy2.UILibrary
         public ADisplaySelector()
         {
             InitializeComponent();
+            ApplyLocalization();
             Loaded += ADisplaySelector_Loaded;
 
             // Subscribe to theme and display changes
             ThemeManager.ThemeChanged += OnThemeChanged;
             DisplayManager.DisplayChanged += OnDisplayManagerChanged;
+        }
+
+        private void ApplyLocalization()
+        {
+            DisplaySelectorTitle.Content = LocalizationManager.GetString("Display_FocusDisplay");
+            CurrentDisplayInfo.Content = LocalizationManager.GetString("Display_PrimaryDisplaySelected");
         }
 
         private void ADisplaySelector_Loaded(object sender, RoutedEventArgs e)
@@ -141,7 +149,7 @@ namespace Aimmy2.UILibrary
 
                 var primaryText = new TextBlock
                 {
-                    Text = "Primary",
+                    Text = LocalizationManager.GetString("Display_Primary"),
                     FontFamily = (FontFamily)FindResource("Atkinson Hyperlegible"),
                     FontSize = 9,
                     Foreground = Brushes.White
@@ -236,7 +244,7 @@ namespace Aimmy2.UILibrary
         {
             if (_displays.Count == 0)
             {
-                CurrentDisplayInfo.Content = "No displays detected";
+                CurrentDisplayInfo.Content = LocalizationManager.GetString("Common_NoDisplaysDetected");
                 return;
             }
 
@@ -279,8 +287,8 @@ namespace Aimmy2.UILibrary
             if (_selectedDisplayIndex < _displays.Count)
             {
                 var display = _displays[_selectedDisplayIndex];
-                string info = $"Display {display.Index + 1} Selected";
-                if (display.IsPrimary) info += " (Primary)";
+                string info = string.Format(LocalizationManager.GetString("Common_DisplaySelected"), display.Index + 1);
+                if (display.IsPrimary) info += LocalizationManager.GetString("Common_Primary");
                 info += $" - {display.Bounds.Width}x{display.Bounds.Height}";
                 CurrentDisplayInfo.Content = info;
             }

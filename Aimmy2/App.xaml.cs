@@ -2,6 +2,7 @@ using Aimmy2.Theme;
 using Class;
 using System.Windows;
 using Aimmy2.Other;
+using Aimmy2.Resources;
 
 namespace Aimmy2
 {
@@ -9,7 +10,7 @@ namespace Aimmy2
     {
         protected override void OnStartup(StartupEventArgs e)
         {
-            // Initialize the application theme from saved settings
+            InitializeLanguage();
             InitializeTheme();
 
             // Set shutdown mode to prevent app from closing when startup window closes
@@ -35,8 +36,7 @@ namespace Aimmy2
             catch (Exception ex)
             {
                 // If startup window fails, launch main window directly
-                MessageBox.Show($"Startup animation failed: {ex.Message}\nLaunching main application...",
-                              "Aimmy AI", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(LocalizationManager.GetString("Msg_StartupFailed", ex.Message));
 
                 var mainWindow = new MainWindow();
                 MainWindow = mainWindow;
@@ -47,33 +47,42 @@ namespace Aimmy2
 #endif
         }
 
+        private void InitializeLanguage()
+        {
+            try
+            {
+                SaveDictionary.LoadJSON(Class.Dictionary.languageState, "bin\\language.cfg");
+                var lang = Class.Dictionary.languageState.GetValueOrDefault("Language", "en-US")?.ToString() ?? "en-US";
+                LocalizationManager.SetLanguage(lang);
+            }
+            catch
+            {
+                LocalizationManager.SetLanguage("en-US");
+            }
+        }
+
         private void InitializeTheme()
         {
             try
             {
-                // Load the color state configuration
                 var colorState = new Dictionary<string, dynamic>
                 {
                     { "Theme Color", "#FF722ED1" }
                 };
 
-                // Load saved colors
                 SaveDictionary.LoadJSON(colorState, "bin\\colors.cfg");
 
-                // Apply theme color if found
                 if (colorState.TryGetValue("Theme Color", out var themeColor) && themeColor is string colorString)
                 {
                     ThemeManager.SetThemeColor(colorString);
                 }
                 else
                 {
-                    // Use default purple if no saved color
                     ThemeManager.SetThemeColor("#FF722ED1");
                 }
             }
             catch
             {
-                // Log error and use default color
                 ThemeManager.SetThemeColor("#FF722ED1");
             }
         }

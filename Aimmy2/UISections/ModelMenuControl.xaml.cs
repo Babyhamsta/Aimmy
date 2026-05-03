@@ -1,3 +1,4 @@
+using Aimmy2.Resources;
 using Aimmy2.UILibrary;
 using Other;
 using System.Diagnostics;
@@ -23,6 +24,17 @@ namespace Aimmy2.Controls
         public ModelMenuControl()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        public void ApplyLocalization()
+        {
+            TabLocalModels.Text = LocalizationManager.GetString("Model_Tab_LocalModels");
+            TabLocalConfigs.Text = LocalizationManager.GetString("Model_Tab_LocalConfigs");
+            TabDownloadableModels.Text = LocalizationManager.GetString("Model_Tab_DownloadableModels");
+            TabDownloadableConfigs.Text = LocalizationManager.GetString("Model_Tab_DownloadableConfigs");
+            LackOfModelsText.Content = LocalizationManager.GetString("Model_NoDownloadableModels");
+            LackOfConfigsText.Content = LocalizationManager.GetString("Model_NoDownloadableConfigs");
         }
 
         public void Initialize(MainWindow mainWindow)
@@ -78,7 +90,7 @@ namespace Aimmy2.Controls
 
                     var loadingText = new TextBlock
                     {
-                        Text = "Loading store...",
+                        Text = LocalizationManager.GetString("Model_LoadingStore"),
                         Foreground = System.Windows.Media.Brushes.White,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Margin = new Thickness(0, 20, 0, 0)
@@ -87,7 +99,7 @@ namespace Aimmy2.Controls
                     ModelStoreScroller.Children.Add(loadingText);
                     ConfigStoreScroller.Children.Add(new TextBlock
                     {
-                        Text = "Loading store...",
+                        Text = LocalizationManager.GetString("Model_LoadingStore"),
                         Foreground = System.Windows.Media.Brushes.White,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Margin = new Thickness(0, 20, 0, 0)
@@ -121,7 +133,7 @@ namespace Aimmy2.Controls
             {
                 await Dispatcher.InvokeAsync(() =>
                 {
-                    new NoticeBar($"Failed to load store: {e.Message}", 10000).Show();
+                    new NoticeBar(LocalizationManager.GetString("Msg_StoreLoadFailed", e.Message), 10000).Show();
 
                     // Show error in UI
                     ModelStoreScroller.Children.Clear();
@@ -129,7 +141,7 @@ namespace Aimmy2.Controls
 
                     ModelStoreScroller.Children.Add(new TextBlock
                     {
-                        Text = "Failed to load store",
+                        Text = LocalizationManager.GetString("Model_FailedToLoadStore"),
                         Foreground = System.Windows.Media.Brushes.Red,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Margin = new Thickness(0, 20, 0, 0)
@@ -178,12 +190,12 @@ namespace Aimmy2.Controls
                     }
                     else
                     {
-                        new NoticeBar($"Directory not found: {path}", 5000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_DirectoryNotFound", path), 5000).Show();
                     }
                 }
                 catch (Exception ex)
                 {
-                    new NoticeBar($"Failed to open folder: {ex.Message}", 5000).Show();
+                    new NoticeBar(LocalizationManager.GetString("Msg_FailedToOpenFolder", ex.Message), 5000).Show();
                 }
             }
         }
@@ -276,7 +288,7 @@ namespace Aimmy2.Controls
                     {
                         string duplicatePath = Path.Combine(destDir, Path.GetFileNameWithoutExtension(fileName) + "-DUPLICATED" + Path.GetExtension(fileName));
                         File.Move(file, duplicatePath);
-                        new NoticeBar($"Duplicate model renamed: {Path.GetFileName(duplicatePath)}", 3000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_DuplicateModelRenamed", Path.GetFileName(duplicatePath)), 3000).Show();
                         continue;
                     }
                     try
@@ -290,11 +302,11 @@ namespace Aimmy2.Controls
                         };
 
                         ModelListBox.Items.Add(item);
-                        new NoticeBar($"Model moved: {Path.GetFileName(destPath)}", 3000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_ModelMoved", Path.GetFileName(destPath)), 3000).Show();
                     }
                     catch (Exception ex)
                     {
-                        new NoticeBar($"Error moving model: {ex.Message}", 5000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_ErrorMovingModel", ex.Message), 5000).Show();
                     }
                 }
             }
@@ -336,7 +348,7 @@ namespace Aimmy2.Controls
                     {
                         string duplicatePath = Path.Combine(destDir, Path.GetFileNameWithoutExtension(fileName) + "-DUPLICATED" + Path.GetExtension(fileName));
                         File.Move(file, duplicatePath);
-                        new NoticeBar($"Duplicate config renamed: {Path.GetFileName(duplicatePath)}", 3000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_DuplicateConfigRenamed", Path.GetFileName(duplicatePath)), 3000).Show();
                         continue;
                     }
 
@@ -351,11 +363,11 @@ namespace Aimmy2.Controls
                         };
 
                         ConfigsListBox.Items.Add(item);
-                        new NoticeBar($"Config moved: {Path.GetFileName(destPath)}", 3000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_ConfigMoved", Path.GetFileName(destPath)), 3000).Show();
                     }
                     catch (Exception ex)
                     {
-                        new NoticeBar($"Error moving config: {ex.Message}", 5000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_ErrorMovingConfig", ex.Message), 5000).Show();
                     }
                 }
             }

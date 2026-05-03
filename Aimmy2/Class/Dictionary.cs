@@ -116,5 +116,10 @@ namespace Aimmy2.Class
         {
             { "ddxoft DLL Location", ""}
         };
+
+        public static Dictionary<string, dynamic> languageState = new()
+        {
+            { "Language", "en-US" }
+        };
     }
 }

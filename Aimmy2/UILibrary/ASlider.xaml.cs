@@ -1,4 +1,5 @@
-﻿using Aimmy2.Theme;
+using Aimmy2.Resources;
+using Aimmy2.Theme;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -50,7 +51,7 @@ namespace Aimmy2.UILibrary
 
         private void Slider_MouseUp_1(object sender, MouseButtonEventArgs e)
         {
-            System.Windows.MessageBox.Show($"{Slider.Value:F2}");
+            System.Windows.MessageBox.Show(LocalizationManager.GetString("Msg_SliderDebug", SliderTitle.Content?.ToString() ?? "", Slider.Value, Slider.Value));
         }
     }
 }

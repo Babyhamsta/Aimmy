@@ -6,6 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
         xmlns:controls="clr-namespace:Aimmy2.Controls"
+        xmlns:local="clr-namespace:Aimmy2.Resources"
         xmlns:theme="clr-namespace:Aimmy2.Theme"
         theme:ThemeBehavior.AutoRegister="True"
         mc:Ignorable="d"
@@ -85,7 +86,7 @@
                                           FillRule="NonZero" />
                         </Path.Data>
                     </Path>
-                    <Label Content="Aimmy"
+                    <Label Content="{local:Loc App_Title}"
                            HorizontalAlignment="Left"
                            Margin="45,0,0,0"
                            VerticalAlignment="Center"

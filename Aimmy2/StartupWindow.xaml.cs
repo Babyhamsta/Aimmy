@@ -1,3 +1,4 @@
+using Aimmy2.Resources;
 using Aimmy2.Theme;
 using System.Windows;
 using System.Windows.Controls;
@@ -59,7 +60,7 @@ namespace Aimmy2
                 await PreloadMainWindowAsync();
                 await Task.Delay(2000);
 
-                await Dispatcher.InvokeAsync(() => LoadingText.Text = "LAUNCHING INTERFACE");
+                await Dispatcher.InvokeAsync(() => LoadingText.Text = LocalizationManager.GetString("Startup_Launching"));
                 await Task.Delay(500);
                 await StartSmoothTransition();
             }

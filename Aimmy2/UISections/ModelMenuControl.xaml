@@ -15,7 +15,7 @@
                 <TabItem Style="{StaticResource ModelsTabItem}"
                          Height="33">
                     <TabItem.Header>
-                        <TextBlock Text="Local Models"
+                        <TextBlock x:Name="TabLocalModels"
                                    FontSize="11"
                                    Foreground="White"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -67,7 +67,6 @@
                                 Height="39">
                             <Label x:Name="SelectedModelNotifier"
                                    Foreground="#DDFFFFFF"
-                                   Content="Loaded Model: N/A"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
                                    Padding="10"></Label>
                         </Border>
@@ -94,7 +93,7 @@
                          Height="33"
                          Width="90">
                     <TabItem.Header>
-                        <TextBlock Text="Local Configs"
+                        <TextBlock x:Name="TabLocalConfigs"
                                    FontSize="11"
                                    Foreground="White"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -145,7 +144,6 @@
                                 Height="39">
                             <Label x:Name="SelectedConfigNotifier"
                                    Foreground="#DDFFFFFF"
-                                   Content="Loaded Config: N/A"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
                                    Padding="10"></Label>
                         </Border>
@@ -172,7 +170,7 @@
                          Height="33"
                          Width="132">
                     <TabItem.Header>
-                        <TextBlock Text="Downloadable Models"
+                        <TextBlock x:Name="TabDownloadableModels"
                                    FontSize="11"
                                    Foreground="White"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -182,7 +180,6 @@
                                Visibility="Collapsed"
                                HorizontalContentAlignment="Center"
                                VerticalContentAlignment="Center"
-                               Content="There is no downloadable models at the moment, please check again later."
                                Foreground="#DDFFFFFF" />
                         <ScrollViewer x:Name="ModelStoreMenu"
                                       VerticalScrollBarVisibility="Visible"
@@ -213,7 +210,7 @@
                          Height="33"
                          Width="132">
                     <TabItem.Header>
-                        <TextBlock Text="Downloadable Configs"
+                        <TextBlock x:Name="TabDownloadableConfigs"
                                    FontSize="11"
                                    Foreground="White"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -223,7 +220,6 @@
                                Visibility="Collapsed"
                                HorizontalContentAlignment="Center"
                                VerticalContentAlignment="Center"
-                               Content="There is no downloadable configs at the moment, please check again later."
                                Foreground="#DDFFFFFF" />
                         <ScrollViewer x:Name="ConfigStoreMenu"
                                       VerticalScrollBarVisibility="Visible"

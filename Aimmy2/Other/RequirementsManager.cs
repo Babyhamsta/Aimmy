@@ -1,3 +1,4 @@
+using Aimmy2.Resources;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Windows;
@@ -32,7 +33,7 @@ namespace Other
             object? value = Registry.GetValue(keyPath, valueName, null);
             if (value != null && Convert.ToInt32(value) == 1)
             {
-                LogManager.Log(LogManager.LogLevel.Warning, "Memory Integrity is enabled, please disable it to use Logitech Driver.", true, 7000);
+                LogManager.Log(LogManager.LogLevel.Warning, LocalizationManager.GetString("Msg_MemoryIntegrity"), true, 7000);
                 return false;
             }
             else return true;
@@ -52,7 +53,7 @@ namespace Other
                 string? ghubfilepath = process.MainModule?.FileName;
                 if (string.IsNullOrEmpty(ghubfilepath))
                 {
-                    LogManager.Log(LogManager.LogLevel.Error, "An error occurred. Run as admin and try again.", true);
+                    LogManager.Log(LogManager.LogLevel.Error, LocalizationManager.GetString("Msg_RuntimeError", "An error occurred. Run as admin and try again."), true);
                     return false;
                 }
 
@@ -68,16 +69,16 @@ namespace Other
             }
             catch (AccessViolationException ex)
             {
-                LogManager.Log(LogManager.LogLevel.Error, $"An error occured: {ex.Message}\nRun as admin and try again.", true);
+                LogManager.Log(LogManager.LogLevel.Error, LocalizationManager.GetString("Msg_RuntimeError", $"{ex.Message}\nRun as admin and try again."), true);
                 return false;
             }
         }
 
         private static void ShowLGHubNotRunningMessage()
         {
-            if (MessageBox.Show("LG HUB is not running, is it installed?", "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
+            if (MessageBox.Show(LocalizationManager.GetString("Msg_LGHubNotRunning"), "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
             {
-                if (MessageBox.Show("Would you like to install it?", "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (MessageBox.Show(LocalizationManager.GetString("Msg_LGHubInstall"), "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     new LGDownloader().Show();
                 }
@@ -86,7 +87,7 @@ namespace Other
 
         private static void ShowLGHubImproperInstallMessage()
         {
-            if (MessageBox.Show("LG HUB install is improper, would you like to install it?", "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (MessageBox.Show(LocalizationManager.GetString("Msg_LGHubNotInstalled"), "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 new LGDownloader().Show();
             }

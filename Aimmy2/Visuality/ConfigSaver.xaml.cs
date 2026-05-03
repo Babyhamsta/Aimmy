@@ -1,4 +1,5 @@
 using Aimmy2.Class;
+using Aimmy2.Resources;
 using Aimmy2.Theme;
 using AimmyWPF.Class;
 using Class;
@@ -38,6 +39,12 @@ namespace Visuality
         {
             InitializeComponent();
 
+            SaveConfigTitleLabel.Content = LocalizationManager.GetString("ConfigSaver_SaveConfiguration");
+            ConfigNameTextbox.Tag = LocalizationManager.GetString("ConfigSaver_InsertConfigName");
+            RecommendedModelNameTextBox.Tag = LocalizationManager.GetString("ConfigSaver_InsertRecommendedModel");
+            DownloadableQuestionLabel.Content = LocalizationManager.GetString("ConfigSaver_DownloadableModelsQuestion");
+            SaveButton.Content = LocalizationManager.GetString("ConfigSaver_Save");
+
             //Every .xaml with a border named "MainBorder" gets changed as long as this is visible, so double check!
             ThemeManager.TrackWindow(this);
 
@@ -76,7 +83,7 @@ namespace Visuality
                                     .GroupBy(kvp => kvp.Key)
                                     .ToDictionary(g => g.Key, g => g
                                     .First().Value), $"bin\\configs\\{ConfigNameTextbox.Text}.cfg", RecommendedModelNameTextBox.Text, ExtraStrings);
-            LogManager.Log(LogManager.LogLevel.Info, $"Config has been saved to bin/configs.", true);
+            LogManager.Log(LogManager.LogLevel.Info, LocalizationManager.GetString("ConfigSaver_SavedNotification"), true);
             Close();
         }
 
@@ -84,7 +91,7 @@ namespace Visuality
         {
             if (ExtraStrings == string.Empty)
             {
-                ExtraStrings = " (Found in Downloadable Model menu)";
+                ExtraStrings = LocalizationManager.GetString("ConfigSaver_FoundInDownloadable");
                 SetColorAnimation((Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty), EnableColor, AnimationDuration);
                 Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, -1, 0));
             }
@@ -99,7 +106,7 @@ namespace Visuality
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (!File.Exists($"bin/configs/{ConfigNameTextbox.Text}.cfg") ||
-                MessageBox.Show("A config already exists with the same name, would you like to overwrite it?",
+                MessageBox.Show(LocalizationManager.GetString("Msg_ConfigConfirmOverwrite"),
                     $"{Title} - Configuration Saver", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 WriteJSON();

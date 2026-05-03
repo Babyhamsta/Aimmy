@@ -1,3 +1,4 @@
+using Aimmy2.Resources;
 using Aimmy2.Theme;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -66,7 +67,16 @@ namespace Aimmy2.UILibrary
         public AColorWheel()
         {
             InitializeComponent();
+            ApplyLocalization();
             Loaded += AColorWheel_Loaded;
+        }
+
+        private void ApplyLocalization()
+        {
+            BrightnessLabel1.Content = LocalizationManager.GetString("ColorWheel_Brightness");
+            CurrentThemeColorLabel.Content = LocalizationManager.GetString("ColorWheel_CurrentThemeColor");
+            MediaControlLabel.Content = LocalizationManager.GetString("ColorWheel_MediaControl");
+            BrightnessLabel2.Content = LocalizationManager.GetString("ColorWheel_Brightness");
         }
 
         private void AColorWheel_Loaded(object sender, RoutedEventArgs e)
@@ -516,7 +526,7 @@ namespace Aimmy2.UILibrary
                     }
                     else
                     {
-                        new NoticeBar("Error: Only PNG/JPG/JPEG images are supported", 3000).Show();
+                        new NoticeBar(LocalizationManager.GetString("Msg_UnsupportedImageFormat"), 3000).Show();
                     }
 
                     e.Handled = true;
@@ -576,7 +586,7 @@ namespace Aimmy2.UILibrary
             catch
             {
                 DropHintText.Visibility = Visibility.Visible;
-                DropHintText.Text = "Invalid Media File";
+                DropHintText.Text = LocalizationManager.GetString("ColorWheel_InvalidMediaFile");
                 DropZone.Background = Brushes.Transparent;
             }
         }
@@ -762,7 +772,7 @@ namespace Aimmy2.UILibrary
                 if (DropHintText != null)
                 {
                     DropHintText.Visibility = Visibility.Visible;
-                    DropHintText.Text = "Drag & Drop Media Here";
+                    DropHintText.Text = LocalizationManager.GetString("ColorWheel_DragDropMedia");
                 }
                 _mediaBrightness = 1.0;
                 if (BrightnessMediaSlider != null) BrightnessMediaSlider.Value = 1.0;
@@ -771,7 +781,7 @@ namespace Aimmy2.UILibrary
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error clearing media: {ex.Message}");
+                MessageBox.Show(LocalizationManager.GetString("Msg_MediaClearError", ex.Message));
             }
         }
 

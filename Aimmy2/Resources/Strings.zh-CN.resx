@@ -1,0 +1,1080 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Title" xml:space="preserve">
+    <value>Aimmy</value>
+  </data>
+  <data name="App_TitleFull" xml:space="preserve">
+    <value>Aimmy AI</value>
+  </data>
+  <data name="Startup_Title" xml:space="preserve">
+    <value>AIMMY</value>
+  </data>
+  <data name="Startup_Subtitle" xml:space="preserve">
+    <value>AI 精准瞄准</value>
+  </data>
+  <data name="Startup_Loading" xml:space="preserve">
+    <value>正在初始化 AIMMY AI</value>
+  </data>
+  <data name="Startup_Launching" xml:space="preserve">
+    <value>正在启动界面</value>
+  </data>
+  <data name="AimAssist_Title" xml:space="preserve">
+    <value>瞄准辅助</value>
+  </data>
+  <data name="AimConfig_Title" xml:space="preserve">
+    <value>瞄准配置</value>
+  </data>
+  <data name="Predictions_Title" xml:space="preserve">
+    <value>预测</value>
+  </data>
+  <data name="AutoTrigger_Title" xml:space="preserve">
+    <value>自动扳机</value>
+  </data>
+  <data name="FOVConfig_Title" xml:space="preserve">
+    <value>FOV 配置</value>
+  </data>
+  <data name="ESPConfig_Title" xml:space="preserve">
+    <value>ESP 配置</value>
+  </data>
+  <data name="Section_ModelSettings" xml:space="preserve">
+    <value>模型设置</value>
+  </data>
+  <data name="Section_SettingsMenu" xml:space="preserve">
+    <value>设置菜单</value>
+  </data>
+  <data name="Section_ThemeSettings" xml:space="preserve">
+    <value>主题设置</value>
+  </data>
+  <data name="Section_ScreenSettings" xml:space="preserve">
+    <value>屏幕设置</value>
+  </data>
+  <data name="Toggle_AimAssist" xml:space="preserve">
+    <value>瞄准辅助</value>
+  </data>
+  <data name="Toggle_ConstantAITracking" xml:space="preserve">
+    <value>持续 AI 追踪</value>
+  </data>
+  <data name="Toggle_StickyAim" xml:space="preserve">
+    <value>粘性瞄准</value>
+  </data>
+  <data name="Toggle_Predictions" xml:space="preserve">
+    <value>预测</value>
+  </data>
+  <data name="Toggle_EMASmoothing" xml:space="preserve">
+    <value>EMA 平滑</value>
+  </data>
+  <data name="Toggle_EnableModelSwitchKeybind" xml:space="preserve">
+    <value>启用模型切换快捷键</value>
+  </data>
+  <data name="Toggle_AutoTrigger" xml:space="preserve">
+    <value>自动扳机</value>
+  </data>
+  <data name="Toggle_CursorCheck" xml:space="preserve">
+    <value>光标检测</value>
+  </data>
+  <data name="Toggle_SprayMode" xml:space="preserve">
+    <value>连射模式</value>
+  </data>
+  <data name="Toggle_FOV" xml:space="preserve">
+    <value>FOV</value>
+  </data>
+  <data name="Toggle_DynamicFOV" xml:space="preserve">
+    <value>动态 FOV</value>
+  </data>
+  <data name="Toggle_ThirdPersonSupport" xml:space="preserve">
+    <value>第三人称支持</value>
+  </data>
+  <data name="Toggle_ShowDetectedPlayer" xml:space="preserve">
+    <value>显示检测玩家</value>
+  </data>
+  <data name="Toggle_ShowAIConfidence" xml:space="preserve">
+    <value>显示 AI 置信度</value>
+  </data>
+  <data name="Toggle_ShowTracers" xml:space="preserve">
+    <value>显示追踪线</value>
+  </data>
+  <data name="Toggle_CollectData" xml:space="preserve">
+    <value>游戏时收集数据</value>
+  </data>
+  <data name="Toggle_AutoLabelData" xml:space="preserve">
+    <value>自动标注数据</value>
+  </data>
+  <data name="Toggle_MouseBackgroundEffect" xml:space="preserve">
+    <value>鼠标背景特效</value>
+  </data>
+  <data name="Toggle_UITopMost" xml:space="preserve">
+    <value>窗口置顶</value>
+  </data>
+  <data name="Toggle_DebugMode" xml:space="preserve">
+    <value>调试模式</value>
+  </data>
+  <data name="Toggle_StreamGuard" xml:space="preserve">
+    <value>StreamGuard</value>
+  </data>
+  <data name="Toggle_XAxisPercent" xml:space="preserve">
+    <value>X 轴百分比调整</value>
+  </data>
+  <data name="Toggle_YAxisPercent" xml:space="preserve">
+    <value>Y 轴百分比调整</value>
+  </data>
+  <data name="Key_AimKeybind" xml:space="preserve">
+    <value>瞄准键</value>
+  </data>
+  <data name="Key_SecondAimKeybind" xml:space="preserve">
+    <value>第二瞄准键</value>
+  </data>
+  <data name="Key_DynamicFOVKeybind" xml:space="preserve">
+    <value>动态 FOV 键</value>
+  </data>
+  <data name="Key_ModelSwitchKeybind" xml:space="preserve">
+    <value>模型切换键</value>
+  </data>
+  <data name="Key_EmergencyStopKeybind" xml:space="preserve">
+    <value>紧急停止键</value>
+  </data>
+  <data name="Dropdown_MouseMovementMethod" xml:space="preserve">
+    <value>鼠标移动方式</value>
+  </data>
+  <data name="Dropdown_MovementPath" xml:space="preserve">
+    <value>移动路径</value>
+  </data>
+  <data name="Dropdown_DetectionAreaType" xml:space="preserve">
+    <value>检测区域类型</value>
+  </data>
+  <data name="Dropdown_AimingBoundaries" xml:space="preserve">
+    <value>瞄准边界对齐</value>
+  </data>
+  <data name="Dropdown_ImageSize" xml:space="preserve">
+    <value>图像尺寸</value>
+  </data>
+  <data name="Dropdown_TargetClass" xml:space="preserve">
+    <value>目标类别</value>
+  </data>
+  <data name="Dropdown_PredictionMethod" xml:space="preserve">
+    <value>预测方式</value>
+  </data>
+  <data name="Dropdown_ScreenCaptureMethod" xml:space="preserve">
+    <value>屏幕捕获方式</value>
+  </data>
+  <data name="Dropdown_FOVStyle" xml:space="preserve">
+    <value>FOV 样式</value>
+  </data>
+  <data name="Dropdown_TracerPosition" xml:space="preserve">
+    <value>追踪线位置</value>
+  </data>
+  <data name="Dropdown_Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="DropdownOption_MouseEvent" xml:space="preserve">
+    <value>鼠标事件</value>
+  </data>
+  <data name="DropdownOption_SendInput" xml:space="preserve">
+    <value>SendInput</value>
+  </data>
+  <data name="DropdownOption_LGHub" xml:space="preserve">
+    <value>LG HUB</value>
+  </data>
+  <data name="DropdownOption_RazerSynapse" xml:space="preserve">
+    <value>Razer Synapse（需要 Razer 设备）</value>
+  </data>
+  <data name="DropdownOption_ddxoft" xml:space="preserve">
+    <value>ddxoft 虚拟输入驱动</value>
+  </data>
+  <data name="DropdownOption_CubicBezier" xml:space="preserve">
+    <value>三次贝塞尔</value>
+  </data>
+  <data name="DropdownOption_Exponential" xml:space="preserve">
+    <value>指数</value>
+  </data>
+  <data name="DropdownOption_Linear" xml:space="preserve">
+    <value>线性</value>
+  </data>
+  <data name="DropdownOption_Adaptive" xml:space="preserve">
+    <value>自适应</value>
+  </data>
+  <data name="DropdownOption_PerlinNoise" xml:space="preserve">
+    <value>柏林噪声</value>
+  </data>
+  <data name="DropdownOption_ClosestToCenter" xml:space="preserve">
+    <value>离屏幕中心最近</value>
+  </data>
+  <data name="DropdownOption_ClosestToMouse" xml:space="preserve">
+    <value>离鼠标最近</value>
+  </data>
+  <data name="DropdownOption_Center" xml:space="preserve">
+    <value>居中</value>
+  </data>
+  <data name="DropdownOption_Top" xml:space="preserve">
+    <value>顶部</value>
+  </data>
+  <data name="DropdownOption_Bottom" xml:space="preserve">
+    <value>底部</value>
+  </data>
+  <data name="DropdownOption_Middle" xml:space="preserve">
+    <value>中间</value>
+  </data>
+  <data name="DropdownOption_KalmanFilter" xml:space="preserve">
+    <value>卡尔曼滤波</value>
+  </data>
+  <data name="DropdownOption_ShalloePrediction" xml:space="preserve">
+    <value>Shall0e 的预测</value>
+  </data>
+  <data name="DropdownOption_Wisethef0xEMA" xml:space="preserve">
+    <value>wisethef0x 的 EMA 预测</value>
+  </data>
+  <data name="DropdownOption_Circle" xml:space="preserve">
+    <value>圆形</value>
+  </data>
+  <data name="DropdownOption_Rectangle" xml:space="preserve">
+    <value>矩形</value>
+  </data>
+  <data name="DropdownOption_DirectX" xml:space="preserve">
+    <value>DirectX</value>
+  </data>
+  <data name="DropdownOption_GDIPlus" xml:space="preserve">
+    <value>GDI+</value>
+  </data>
+  <data name="DropdownOption_BestConfidence" xml:space="preserve">
+    <value>最高置信度</value>
+  </data>
+  <data name="DropdownOption_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="DropdownOption_Chinese" xml:space="preserve">
+    <value>中文</value>
+  </data>
+  <data name="Slider_MouseSensitivity" xml:space="preserve">
+    <value>鼠标灵敏度（+/-）</value>
+  </data>
+  <data name="Slider_MouseJitter" xml:space="preserve">
+    <value>鼠标抖动</value>
+  </data>
+  <data name="Slider_StickyAimThreshold" xml:space="preserve">
+    <value>粘性瞄准阈值</value>
+  </data>
+  <data name="Slider_YOffset" xml:space="preserve">
+    <value>Y 偏移（上/下）</value>
+  </data>
+  <data name="Slider_YOffsetPercent" xml:space="preserve">
+    <value>Y 偏移（%）</value>
+  </data>
+  <data name="Slider_XOffset" xml:space="preserve">
+    <value>X 偏移（左/右）</value>
+  </data>
+  <data name="Slider_XOffsetPercent" xml:space="preserve">
+    <value>X 偏移（%）</value>
+  </data>
+  <data name="Slider_EMASmoothing" xml:space="preserve">
+    <value>EMA 平滑</value>
+  </data>
+  <data name="Slider_KalmanLeadTime" xml:space="preserve">
+    <value>卡尔曼预测时间</value>
+  </data>
+  <data name="Slider_WiseTheFoxLeadTime" xml:space="preserve">
+    <value>WiseTheFox 预测时间</value>
+  </data>
+  <data name="Slider_ShalloeLeadMultiplier" xml:space="preserve">
+    <value>Shalloe 预测倍数</value>
+  </data>
+  <data name="Slider_AutoTriggerDelay" xml:space="preserve">
+    <value>自动扳机延迟</value>
+  </data>
+  <data name="Slider_AIMinimumConfidence" xml:space="preserve">
+    <value>AI 最低置信度</value>
+  </data>
+  <data name="Slider_AIConfidenceFontSize" xml:space="preserve">
+    <value>AI 置信度字体大小</value>
+  </data>
+  <data name="Slider_CornerRadius" xml:space="preserve">
+    <value>圆角半径</value>
+  </data>
+  <data name="Slider_BorderThickness" xml:space="preserve">
+    <value>边框厚度</value>
+  </data>
+  <data name="Slider_Opacity" xml:space="preserve">
+    <value>不透明度</value>
+  </data>
+  <data name="Slider_FOVSize" xml:space="preserve">
+    <value>FOV 大小</value>
+  </data>
+  <data name="Slider_DynamicFOVSize" xml:space="preserve">
+    <value>动态 FOV 大小</value>
+  </data>
+  <data name="Unit_Pixels" xml:space="preserve">
+    <value>像素</value>
+  </data>
+  <data name="Unit_Sensitivity" xml:space="preserve">
+    <value>灵敏度</value>
+  </data>
+  <data name="Unit_Jitter" xml:space="preserve">
+    <value>抖动</value>
+  </data>
+  <data name="Unit_Offset" xml:space="preserve">
+    <value>偏移</value>
+  </data>
+  <data name="Unit_Percent" xml:space="preserve">
+    <value>百分比</value>
+  </data>
+  <data name="Unit_Seconds" xml:space="preserve">
+    <value>秒</value>
+  </data>
+  <data name="Unit_Frames" xml:space="preserve">
+    <value>帧</value>
+  </data>
+  <data name="Unit_Amount" xml:space="preserve">
+    <value>程度</value>
+  </data>
+  <data name="Unit_Size" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Unit_Radius" xml:space="preserve">
+    <value>半径</value>
+  </data>
+  <data name="Unit_Thickness" xml:space="preserve">
+    <value>厚度</value>
+  </data>
+  <data name="Unit_Opacity_Unit" xml:space="preserve">
+    <value>不透明度</value>
+  </data>
+  <data name="Unit_ConfidencePercent" xml:space="preserve">
+    <value>% 置信度</value>
+  </data>
+  <data name="Button_SaveConfig" xml:space="preserve">
+    <value>保存配置</value>
+  </data>
+  <data name="Button_RefreshDisplays" xml:space="preserve">
+    <value>刷新显示器列表</value>
+  </data>
+  <data name="Button_CheckForUpdates" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="Color_FOVColor" xml:space="preserve">
+    <value>FOV 颜色</value>
+  </data>
+  <data name="Color_DetectedPlayerColor" xml:space="preserve">
+    <value>检测玩家颜色</value>
+  </data>
+  <data name="Tab_LocalModels" xml:space="preserve">
+    <value>本地模型</value>
+  </data>
+  <data name="Tab_LocalConfigs" xml:space="preserve">
+    <value>本地配置</value>
+  </data>
+  <data name="Tab_DownloadableModels" xml:space="preserve">
+    <value>可下载模型</value>
+  </data>
+  <data name="Tab_DownloadableConfigs" xml:space="preserve">
+    <value>可下载配置</value>
+  </data>
+  <data name="Model_LoadedModel" xml:space="preserve">
+    <value>已加载模型：N/A</value>
+  </data>
+  <data name="Model_LoadedConfig" xml:space="preserve">
+    <value>已加载配置：N/A</value>
+  </data>
+  <data name="Model_NoDownloadableModels" xml:space="preserve">
+    <value>目前没有可下载的模型，请稍后再查看。</value>
+  </data>
+  <data name="Model_NoDownloadableConfigs" xml:space="preserve">
+    <value>目前没有可下载的配置，请稍后再查看。</value>
+  </data>
+  <data name="Model_LoadingStore" xml:space="preserve">
+    <value>正在加载商店...</value>
+  </data>
+  <data name="Model_FailedToLoadStore" xml:space="preserve">
+    <value>加载商店失败</value>
+  </data>
+  <data name="Model_Tab_LocalModels" xml:space="preserve">
+    <value>本地模型</value>
+  </data>
+  <data name="Model_Tab_LocalConfigs" xml:space="preserve">
+    <value>本地配置</value>
+  </data>
+  <data name="Model_Tab_DownloadableModels" xml:space="preserve">
+    <value>可下载模型</value>
+  </data>
+  <data name="Model_Tab_DownloadableConfigs" xml:space="preserve">
+    <value>可下载配置</value>
+  </data>
+  <data name="Common_LoadedModel" xml:space="preserve">
+    <value>已加载模型：{0}</value>
+  </data>
+  <data name="Common_LoadedConfig" xml:space="preserve">
+    <value>已加载配置：{0}</value>
+  </data>
+  <data name="Common_NoDisplaysDetected" xml:space="preserve">
+    <value>未检测到显示器</value>
+  </data>
+  <data name="Common_DisplaySelected" xml:space="preserve">
+    <value>已选择显示器 {0}</value>
+  </data>
+  <data name="Common_Primary" xml:space="preserve">
+    <value>（主显示器）</value>
+  </data>
+  <data name="Common_NotFound" xml:space="preserve">
+    <value>未找到</value>
+  </data>
+  <data name="Common_GpuNotFound" xml:space="preserve">
+    <value>未找到 GPU</value>
+  </data>
+  <data name="Common_GpuError" xml:space="preserve">
+    <value>GPU 错误</value>
+  </data>
+  <data name="ColorWheel_Brightness" xml:space="preserve">
+    <value>亮度</value>
+  </data>
+  <data name="ColorWheel_CurrentThemeColor" xml:space="preserve">
+    <value>当前主题颜色</value>
+  </data>
+  <data name="ColorWheel_MediaControl" xml:space="preserve">
+    <value>媒体控制</value>
+  </data>
+  <data name="ColorWheel_DragDropMedia" xml:space="preserve">
+    <value>拖放媒体文件到此处</value>
+  </data>
+  <data name="ColorWheel_InvalidMediaFile" xml:space="preserve">
+    <value>无效的媒体文件</value>
+  </data>
+  <data name="ConfigSaver_SaveConfiguration" xml:space="preserve">
+    <value>保存配置</value>
+  </data>
+  <data name="ConfigSaver_InsertConfigName" xml:space="preserve">
+    <value>在此输入配置名称</value>
+  </data>
+  <data name="ConfigSaver_InsertRecommendedModel" xml:space="preserve">
+    <value>在此输入推荐模型名称</value>
+  </data>
+  <data name="ConfigSaver_DownloadableModelsQuestion" xml:space="preserve">
+    <value>该模型是否可以在"可下载模型"菜单中找到？</value>
+  </data>
+  <data name="ConfigSaver_Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="ConfigSaver_SavedNotification" xml:space="preserve">
+    <value>配置已保存到 bin/configs。</value>
+  </data>
+  <data name="ConfigSaver_FoundInDownloadable" xml:space="preserve">
+    <value>（在可下载模型菜单中找到）</value>
+  </data>
+  <data name="Display_FocusDisplay" xml:space="preserve">
+    <value>焦点显示器</value>
+  </data>
+  <data name="Display_PrimaryDisplaySelected" xml:space="preserve">
+    <value>已选择主显示器</value>
+  </data>
+  <data name="Display_Primary" xml:space="preserve">
+    <value>主显示器</value>
+  </data>
+  <data name="LG_LGDownloader" xml:space="preserve">
+    <value>LG 下载器</value>
+  </data>
+  <data name="LG_ClickToDownload" xml:space="preserve">
+    <value>请点击下方按钮下载 LG Hub。</value>
+  </data>
+  <data name="LG_LGDirect" xml:space="preserve">
+    <value>LG 直连</value>
+  </data>
+  <data name="LG_SupercometCDN" xml:space="preserve">
+    <value>Supercomet CDN</value>
+  </data>
+  <data name="LG_DeveloperGitHub" xml:space="preserve">
+    <value>99'developer 的 GitHub</value>
+  </data>
+  <data name="About_FreeNotice" xml:space="preserve">
+    <value>Aimmy 是免费且开源的</value>
+  </data>
+  <data name="About_UniversalSecondEye" xml:space="preserve">
+    <value>通用二倍镜</value>
+  </data>
+  <data name="About_CoreTeam" xml:space="preserve">
+    <value>核心团队</value>
+  </data>
+  <data name="About_KeyContributors" xml:space="preserve">
+    <value>重要贡献者</value>
+  </data>
+  <data name="About_Community" xml:space="preserve">
+    <value>以及整个 Aimmy 社区</value>
+  </data>
+  <data name="About_ThankYou" xml:space="preserve">
+    <value>感谢你的支持！</value>
+  </data>
+  <data name="About_ViewOnGitHub" xml:space="preserve">
+    <value>在 GitHub 上查看</value>
+  </data>
+  <data name="About_JoinDiscord" xml:space="preserve">
+    <value>加入我们的 Discord</value>
+  </data>
+  <data name="Tooltip_AimAssist" xml:space="preserve">
+    <value>打开或关闭瞄准辅助。你必须先加载模型。</value>
+  </data>
+  <data name="Tooltip_ConstantAITracking" xml:space="preserve">
+    <value>无需按住按键即可持续追踪目标。关闭时，你需要按住瞄准键。</value>
+  </data>
+  <data name="Tooltip_StickyAim" xml:space="preserve">
+    <value>锁定一个目标直到它超出范围，而不是切换目标。</value>
+  </data>
+  <data name="Tooltip_StickyAimThreshold" xml:space="preserve">
+    <value>目标移动多远后才切换到新目标。越高 = 锁定越久。</value>
+  </data>
+  <data name="Tooltip_AimKeybind" xml:space="preserve">
+    <value>按住此键激活瞄准辅助。</value>
+  </data>
+  <data name="Tooltip_SecondAimKeybind" xml:space="preserve">
+    <value>激活瞄准辅助的备用键。</value>
+  </data>
+  <data name="Tooltip_MouseMovementMethod" xml:space="preserve">
+    <value>如何发送鼠标移动。如果瞄准辅助无效，请尝试不同选项。</value>
+  </data>
+  <data name="Tooltip_MovementPath" xml:space="preserve">
+    <value>移动到目标时使用的曲线样式。影响移动的自然程度。</value>
+  </data>
+  <data name="Tooltip_DetectionAreaType" xml:space="preserve">
+    <value>如何确定目标优先级。中心屏幕适合大多数游戏。</value>
+  </data>
+  <data name="Tooltip_AimingBoundaries" xml:space="preserve">
+    <value>瞄准检测框的哪个位置。居中通常最好。</value>
+  </data>
+  <data name="Tooltip_MouseSensitivity" xml:space="preserve">
+    <value>鼠标移动的速度。越低 = 越快越灵敏，越高 = 越慢越平滑。</value>
+  </data>
+  <data name="Tooltip_MouseJitter" xml:space="preserve">
+    <value>添加随机的微小移动，使瞄准看起来更自然。</value>
+  </data>
+  <data name="Tooltip_XAxisPercent" xml:space="preserve">
+    <value>启用 X 偏移（%）滑块以按百分比调整水平瞄准。</value>
+  </data>
+  <data name="Tooltip_YAxisPercent" xml:space="preserve">
+    <value>启用 Y 偏移（%）滑块以按百分比调整垂直瞄准。</value>
+  </data>
+  <data name="Tooltip_YOffset" xml:space="preserve">
+    <value>以像素为单位向上（负值）或向下（正值）移动瞄准点。</value>
+  </data>
+  <data name="Tooltip_YOffsetPercent" xml:space="preserve">
+    <value>按目标框高度的百分比向上或向下移动瞄准点。</value>
+  </data>
+  <data name="Tooltip_XOffset" xml:space="preserve">
+    <value>以像素为单位向左（负值）或向右（正值）移动瞄准点。</value>
+  </data>
+  <data name="Tooltip_XOffsetPercent" xml:space="preserve">
+    <value>按目标框宽度的百分比向左或向右移动瞄准点。</value>
+  </data>
+  <data name="Tooltip_PredictionsToggle" xml:space="preserve">
+    <value>预测移动目标的位置。有助于追踪快速移动的目标。</value>
+  </data>
+  <data name="Tooltip_PredictionMethod" xml:space="preserve">
+    <value>用于预测目标移动的算法。尝试不同方法找到最适合的。</value>
+  </data>
+  <data name="Tooltip_KalmanLeadTime" xml:space="preserve">
+    <value>预测目标位置的前置时间。越高 = 预测越多，可能会过头。</value>
+  </data>
+  <data name="Tooltip_WiseTheFoxLeadTime" xml:space="preserve">
+    <value>预测目标位置的前置时间。越高 = 预测越多，可能会过头。</value>
+  </data>
+  <data name="Tooltip_ShalloeLeadMultiplier" xml:space="preserve">
+    <value>预测的帧数。越高 = 预测越多，可能会过头。</value>
+  </data>
+  <data name="Tooltip_EMASmoothingToggle" xml:space="preserve">
+    <value>平滑瞄准移动，减少抖动，使追踪更稳定。</value>
+  </data>
+  <data name="Tooltip_EMASmoothing" xml:space="preserve">
+    <value>应用的平滑程度。越低 = 越平滑但越慢，越高 = 越快但抖动大。</value>
+  </data>
+  <data name="Tooltip_AutoTrigger" xml:space="preserve">
+    <value>当目标在准星区域内时自动点击。</value>
+  </data>
+  <data name="Tooltip_CursorCheck" xml:space="preserve">
+    <value>仅在光标直接在目标上时触发。更精准但可能漏掉。</value>
+  </data>
+  <data name="Tooltip_SprayMode" xml:space="preserve">
+    <value>按住连射而不是单发点击。适合自动武器。</value>
+  </data>
+  <data name="Tooltip_AutoTriggerDelay" xml:space="preserve">
+    <value>检测目标后等待触发的延迟时间。避免意外射击。</value>
+  </data>
+  <data name="Tooltip_FOVToggle" xml:space="preserve">
+    <value>在屏幕上显示标识检测范围的圆圈。</value>
+  </data>
+  <data name="Tooltip_DynamicFOV" xml:space="preserve">
+    <value>按住按键时改变 FOV 大小。适合开镜使用。</value>
+  </data>
+  <data name="Tooltip_ThirdPerson" xml:space="preserve">
+    <value>为第三人称视角游戏调整 FOV 位置。</value>
+  </data>
+  <data name="Tooltip_DynamicFOVKeybind" xml:space="preserve">
+    <value>按住此键切换到动态 FOV 大小。</value>
+  </data>
+  <data name="Tooltip_FOVStyle" xml:space="preserve">
+    <value>FOV 覆盖的形状。圆形最常见。</value>
+  </data>
+  <data name="Tooltip_FOVSize" xml:space="preserve">
+    <value>检测区域的大小。越小 = 越精确，越大 = 覆盖越广。</value>
+  </data>
+  <data name="Tooltip_DynamicFOVSize" xml:space="preserve">
+    <value>按住动态 FOV 键时的 FOV 大小。通常更小用于精确瞄准。</value>
+  </data>
+  <data name="Tooltip_ShowDetectedPlayer" xml:space="preserve">
+    <value>在屏幕上围绕检测目标绘制方框。</value>
+  </data>
+  <data name="Tooltip_ShowAIConfidence" xml:space="preserve">
+    <value>显示 AI 对每次检测的置信度（0-100%）。</value>
+  </data>
+  <data name="Tooltip_ShowTracers" xml:space="preserve">
+    <value>从屏幕边缘向检测目标绘制连线。</value>
+  </data>
+  <data name="Tooltip_TracerPosition" xml:space="preserve">
+    <value>追踪线在屏幕上的起始位置。</value>
+  </data>
+  <data name="Tooltip_AIConfidenceFontSize" xml:space="preserve">
+    <value>置信度百分比显示的文字大小。</value>
+  </data>
+  <data name="Tooltip_CornerRadius" xml:space="preserve">
+    <value>检测框的圆角半径。0 = 尖角。</value>
+  </data>
+  <data name="Tooltip_BorderThickness" xml:space="preserve">
+    <value>检测框轮廓的粗细。</value>
+  </data>
+  <data name="Tooltip_Opacity" xml:space="preserve">
+    <value>检测框的透明程度。0 = 不可见，1 = 不透明。</value>
+  </data>
+  <data name="Tooltip_ImageSize" xml:space="preserve">
+    <value>AI 检测所使用的分辨率。越小 = 越快但准确性越低。</value>
+  </data>
+  <data name="Tooltip_TargetClass" xml:space="preserve">
+    <value>瞄准哪种类型的目标。最高置信度会选取最确定的检测结果。</value>
+  </data>
+  <data name="Tooltip_AIMinimumConfidence" xml:space="preserve">
+    <value>AI 瞄准前需要达到的置信度。越高 = 误检越少但可能漏掉目标。</value>
+  </data>
+  <data name="Tooltip_EnableModelSwitch" xml:space="preserve">
+    <value>允许使用热键切换 AI 模型。</value>
+  </data>
+  <data name="Tooltip_ModelSwitchKeybind" xml:space="preserve">
+    <value>按下此键循环切换可用的 AI 模型。</value>
+  </data>
+  <data name="Tooltip_EmergencyStopKeybind" xml:space="preserve">
+    <value>按下此键立即停止所有瞄准辅助功能。</value>
+  </data>
+  <data name="Tooltip_CollectData" xml:space="preserve">
+    <value>保存检测截图用于训练新的 AI 模型。</value>
+  </data>
+  <data name="Tooltip_AutoLabelData" xml:space="preserve">
+    <value>自动为收集的截图标注检测数据。</value>
+  </data>
+  <data name="Tooltip_MouseBgEffect" xml:space="preserve">
+    <value>鼠标移动时在 UI 上显示视觉特效。</value>
+  </data>
+  <data name="Tooltip_UITopMost" xml:space="preserve">
+    <value>将此窗口保持在其他所有窗口之上。</value>
+  </data>
+  <data name="Tooltip_DebugMode" xml:space="preserve">
+    <value>显示有助于排查问题的额外信息。</value>
+  </data>
+  <data name="Tooltip_SaveConfig" xml:space="preserve">
+    <value>将当前设置保存到文件，以便后续加载。</value>
+  </data>
+  <data name="Tooltip_ScreenCaptureMethod" xml:space="preserve">
+    <value>屏幕的捕获方式。DirectX 更快，GDI+ 兼容性更广。</value>
+  </data>
+  <data name="Tooltip_StreamGuard" xml:space="preserve">
+    <value>从录屏和直播中隐藏覆盖层。 - 会显示在系统托盘中。</value>
+  </data>
+  <data name="Tooltip_RefreshDisplays" xml:space="preserve">
+    <value>更新可用显示器列表。</value>
+  </data>
+  <data name="Msg_PleaseExtractZip" xml:space="preserve">
+    <value>您好，检测到您正在运行未解压的 Aimmy。请从压缩包中解压 Aimmy，否则 Aimmy 将无法正常运行。
+
+谢谢。</value>
+  </data>
+  <data name="Msg_StartupFailed" xml:space="preserve">
+    <value>启动动画失败：{0}
+正在启动主应用...</value>
+  </data>
+  <data name="Msg_ErrorStartup" xml:space="preserve">
+    <value>启动时出错：{0}</value>
+  </data>
+  <data name="Msg_ErrorTitle" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Msg_StackTrace" xml:space="preserve">
+    <value>堆栈跟踪：</value>
+  </data>
+  <data name="Msg_ConfigError" xml:space="preserve">
+    <value>加载配置时出错，可能配置已过期
+{0}</value>
+  </data>
+  <data name="Msg_SuggestedModel" xml:space="preserve">
+    <value>该配置的创建者建议你使用以下模型：\n{0}</value>
+  </data>
+  <data name="Msg_PleaseLoadModel" xml:space="preserve">
+    <value>请先加载模型</value>
+  </data>
+  <data name="Msg_SensitivityHigh" xml:space="preserve">
+    <value>你设置的鼠标灵敏度可能导致 Aimmy 无法瞄准，如遇到此问题请降低灵敏度</value>
+  </data>
+  <data name="Msg_SensitivityLow" xml:space="preserve">
+    <value>你设置的鼠标灵敏度可能导致 Aimmy 瞄准不稳定，如遇到此问题请提高灵敏度</value>
+  </data>
+  <data name="Msg_ConfidenceTooHigh" xml:space="preserve">
+    <value>你设置的 AI 最低置信度过高，可能导致无法检测到玩家。</value>
+  </data>
+  <data name="Msg_ConfidenceTooLow" xml:space="preserve">
+    <value>你设置的 AI 最低置信度过低，可能导致误检。</value>
+  </data>
+  <data name="Msg_StoreLoadFailed" xml:space="preserve">
+    <value>加载商店失败：{0}</value>
+  </data>
+  <data name="Msg_DirectoryNotFound" xml:space="preserve">
+    <value>未找到目录：{0}</value>
+  </data>
+  <data name="Msg_FailedToOpenFolder" xml:space="preserve">
+    <value>打开文件夹失败：{0}</value>
+  </data>
+  <data name="Msg_DuplicateModelRenamed" xml:space="preserve">
+    <value>已重命名重复模型：{0}</value>
+  </data>
+  <data name="Msg_ModelMoved" xml:space="preserve">
+    <value>已移动模型：{0}</value>
+  </data>
+  <data name="Msg_ErrorMovingModel" xml:space="preserve">
+    <value>移动模型失败：{0}</value>
+  </data>
+  <data name="Msg_DuplicateConfigRenamed" xml:space="preserve">
+    <value>已重命名重复配置：{0}</value>
+  </data>
+  <data name="Msg_ConfigMoved" xml:space="preserve">
+    <value>已移动配置：{0}</value>
+  </data>
+  <data name="Msg_ErrorMovingConfig" xml:space="preserve">
+    <value>移动配置失败：{0}</value>
+  </data>
+  <data name="Msg_ImageSizeSet" xml:space="preserve">
+    <value>图像尺寸已设置为 {0}x{0}（未加载模型）</value>
+  </data>
+  <data name="Msg_ImageSizeChanging" xml:space="preserve">
+    <value>图像尺寸正在更改为 {0}</value>
+  </data>
+  <data name="Msg_ImageSizeChanged" xml:space="preserve">
+    <value>已成功更改图像尺寸为 {0}x{0}</value>
+  </data>
+  <data name="Msg_ImageSizeError" xml:space="preserve">
+    <value>更改图像尺寸时出错：{0}</value>
+  </data>
+  <data name="Msg_DisplayRefreshed" xml:space="preserve">
+    <value>显示器列表刷新成功。</value>
+  </data>
+  <data name="Msg_DisplayRefreshError" xml:space="preserve">
+    <value>刷新显示器列表时出错：{0}</value>
+  </data>
+  <data name="Msg_AIFocusSwitched" xml:space="preserve">
+    <value>AI 焦点已切换到显示器 {0}（{1}x{2}）</value>
+  </data>
+  <data name="Msg_EmergencyStop" xml:space="preserve">
+    <value>[紧急停止] 已禁用所有 AI 功能。</value>
+  </data>
+  <data name="Msg_LGHubNotRunning" xml:space="preserve">
+    <value>LG HUB 当前未运行。</value>
+  </data>
+  <data name="Msg_LGHubInstall" xml:space="preserve">
+    <value>LG HUB 未正确安装。是否安装 LG HUB？</value>
+  </data>
+  <data name="Msg_LGHubNotInstalled" xml:space="preserve">
+    <value>LG HUB 未正确安装在此电脑上。</value>
+  </data>
+  <data name="Msg_LGHubNotFound" xml:space="preserve">
+    <value>未找到 LG HUB 已安装。</value>
+  </data>
+  <data name="Msg_LGHubMouseMode" xml:space="preserve">
+    <value>LG HUB 无法切换到鼠标模式以正常工作。</value>
+  </data>
+  <data name="Msg_MemoryIntegrity" xml:space="preserve">
+    <value>内存完整性（内核隔离）当前已启用。这会阻止 LG HUB 鼠标驱动工作。是否禁用它？</value>
+  </data>
+  <data name="Msg_ddxoftAdmin" xml:space="preserve">
+    <value>ddxoft 虚拟输入需要以管理员权限运行 Aimmy。</value>
+  </data>
+  <data name="Msg_ddxoftIncompatible" xml:space="preserve">
+    <value>ddxoft 与当前 Windows 版本不兼容。</value>
+  </data>
+  <data name="Msg_ddxoftLoadFailed" xml:space="preserve">
+    <value>ddxoft 加载失败。请重试或使用"鼠标事件"。</value>
+  </data>
+  <data name="Msg_RazerNotRunning" xml:space="preserve">
+    <value>Razer Synapse 当前未运行，请检查系统托盘区域。</value>
+  </data>
+  <data name="Msg_RazerNotInstalled" xml:space="preserve">
+    <value>Razer Synapse 未安装。是否下载？</value>
+  </data>
+  <data name="Msg_RazerNoDevice" xml:space="preserve">
+    <value>未检测到 Razer 设备。请插入 Razer 产品。</value>
+  </data>
+  <data name="Msg_rzctlIncompatible" xml:space="preserve">
+    <value>你的 rzctl.dll 当前与 Aimmy 不兼容，正在替换为兼容版本...</value>
+  </data>
+  <data name="Msg_rzctlReplaced" xml:space="preserve">
+    <value>rzctl.dll 替换成功。Aimmy 现在可以使用 Razer Synapse 支持。</value>
+  </data>
+  <data name="Msg_RazerDownloadFailed" xml:space="preserve">
+    <value>下载 Razer Synapse 3 失败：{0}</value>
+  </data>
+  <data name="Msg_RazerDownloaded" xml:space="preserve">
+    <value>Razer Synapse 3 已下载。请先安装再在 Aimmy 中使用 Razer Synapse。</value>
+  </data>
+  <data name="Msg_RazerInstallError" xml:space="preserve">
+    <value>下载 Razer Synapse 3 时发生错误：{0}</value>
+  </data>
+  <data name="Msg_RedistMissing" xml:space="preserve">
+    <value>未安装 Visual C++ 2015-2022 x64 Redistributable。是否下载？Razer Synapse 需要此项才能正常运行。</value>
+  </data>
+  <data name="Msg_rzctlMissing" xml:space="preserve">
+    <value>rzctl.dll 似乎缺失。是否下载？</value>
+  </data>
+  <data name="Msg_rzctlDownloadFailed" xml:space="preserve">
+    <value>下载 rzctl.dll 失败：{0}</value>
+  </data>
+  <data name="Msg_rzctlDownloaded" xml:space="preserve">
+    <value>rzctl.dll 下载成功。Razer Synapse 支持现已就绪。</value>
+  </data>
+  <data name="Msg_rzctlDownloadError" xml:space="preserve">
+    <value>下载 rzctl.dll 时发生错误：{0}</value>
+  </data>
+  <data name="Msg_UnsupportedImageFormat" xml:space="preserve">
+    <value>不支持的图像格式。请使用 PNG 或 JPG 文件。</value>
+  </data>
+  <data name="Msg_SpecsError" xml:space="preserve">
+    <value>无法获取 {0}：{1}</value>
+  </data>
+  <data name="Msg_DXGIError" xml:space="preserve">
+    <value>DXGI 错误：{0} (HRESULT: 0x{1:X8})</value>
+  </data>
+  <data name="Msg_GeneralError" xml:space="preserve">
+    <value>错误：{0}</value>
+  </data>
+  <data name="Msg_DirectoryCreateError" xml:space="preserve">
+    <value>无法在 {0} 创建目录：{1}</value>
+  </data>
+  <data name="Msg_JsonWriteError" xml:space="preserve">
+    <value>无法将 JSON 写入 {0}：{1}</value>
+  </data>
+  <data name="Msg_JsonLoadError" xml:space="preserve">
+    <value>无法从 {0} 加载 JSON：{1}</value>
+  </data>
+  <data name="Msg_MediaClearError" xml:space="preserve">
+    <value>清除媒体文件时出错：{0}</value>
+  </data>
+  <data name="Msg_SliderDebug" xml:space="preserve">
+    <value>滑块：{0}，值：{1}，实际值：{2}</value>
+  </data>
+  <data name="Msg_ConfigConfirmOverwrite" xml:space="preserve">
+    <value>已有同名配置，是否覆盖？</value>
+  </data>
+  <data name="Msg_ConfigSaving" xml:space="preserve">
+    <value>正在保存配置...</value>
+  </data>
+  <data name="Msg_ConfigSaved" xml:space="preserve">
+    <value>配置保存成功！</value>
+  </data>
+  <data name="Msg_NoLabelsFound" xml:space="preserve">
+    <value>未找到标签。请创建 'labels.txt' 文件。</value>
+  </data>
+  <data name="Msg_SuggestedModelTitle" xml:space="preserve">
+    <value>推荐模型 - Aimmy</value>
+  </data>
+  <data name="Msg_SystemSpecsLoading" xml:space="preserve">
+    <value>正在加载系统信息...</value>
+  </data>
+  <data name="Msg_UpdateAvailable" xml:space="preserve">
+    <value>有新版本可用！版本 {0} 已就绪。是否下载？</value>
+  </data>
+  <data name="Msg_NoUpdate" xml:space="preserve">
+    <value>你已是最新版本。</value>
+  </data>
+  <data name="Msg_UpdateCheckFailed" xml:space="preserve">
+    <value>无法检查更新。</value>
+  </data>
+  <data name="Msg_LGHubDownloading" xml:space="preserve">
+    <value>正在下载 LG HUB...</value>
+  </data>
+  <data name="Msg_LGHubVerifying" xml:space="preserve">
+    <value>正在验证 LG HUB 安装...</value>
+  </data>
+  <data name="Msg_LGHubVerified" xml:space="preserve">
+    <value>LG HUB 已验证。请在打开后安装 LG HUB。</value>
+  </data>
+  <data name="Msg_LGHubFileError" xml:space="preserve">
+    <value>LG HUB 文件不正确。错误：{0}</value>
+  </data>
+  <data name="Msg_ddxoftDownloading" xml:space="preserve">
+    <value>正在下载 ddxoft 虚拟输入驱动...</value>
+  </data>
+  <data name="Msg_ddxoftDownloaded" xml:space="preserve">
+    <value>ddxoft 驱动已下载。请先安装再使用此选项。</value>
+  </data>
+  <data name="Msg_ddxoftDownloadFailed" xml:space="preserve">
+    <value>ddxoft 驱动下载失败：{0}</value>
+  </data>
+  <data name="Msg_Downloading" xml:space="preserve">
+    <value>正在下载 {0}...</value>
+  </data>
+  <data name="Msg_DownloadError" xml:space="preserve">
+    <value>下载 {0} 出错：{1}</value>
+  </data>
+  <data name="Msg_Capture_DisplayChanged" xml:space="preserve">
+    <value>检测到显示器变更，正在重新初始化捕获...</value>
+  </data>
+  <data name="Msg_Capture_NoDisplays" xml:space="preserve">
+    <value>未找到可用的显示设备。</value>
+  </data>
+  <data name="Msg_Capture_AdapterDetected" xml:space="preserve">
+    <value>检测到适配器：{0}</value>
+  </data>
+  <data name="Msg_Capture_OutputDetected" xml:space="preserve">
+    <value>检测到输出：{0}（{1}x{2}）</value>
+  </data>
+  <data name="Msg_Capture_NoMatchingDisplay" xml:space="preserve">
+    <value>找不到与所选输出匹配的显示设备</value>
+  </data>
+  <data name="Msg_Capture_NoSuitableOutput" xml:space="preserve">
+    <value>未找到合适的显示输出用于捕获</value>
+  </data>
+  <data name="Msg_Capture_DXDeviceFailed" xml:space="preserve">
+    <value>创建 DirectX 设备失败：{0}</value>
+  </data>
+  <data name="Msg_Capture_DuplicationInit" xml:space="preserve">
+    <value>桌面复制已成功初始化：{0}</value>
+  </data>
+  <data name="Msg_Capture_DuplicationUnsupported" xml:space="preserve">
+    <value>{0} 不支持桌面复制</value>
+  </data>
+  <data name="Msg_Capture_DuplicationInitFailed" xml:space="preserve">
+    <value>桌面复制初始化失败：{0}</value>
+  </data>
+  <data name="Msg_Capture_NoVisibleArea" xml:space="preserve">
+    <value>在显示设备 {0} 上没有可见区域可捕获</value>
+  </data>
+  <data name="Msg_Capture_DXError" xml:space="preserve">
+    <value>DirectX 捕获错误：{0}</value>
+  </data>
+  <data name="Msg_Capture_GDIFailed" xml:space="preserve">
+    <value>GDI+ 屏幕捕获失败：{0}</value>
+  </data>
+  <data name="Msg_Capture_DXGIReleaseFailed" xml:space="preserve">
+    <value>释放 DXGI 资源失败：{0}</value>
+  </data>
+  <data name="Msg_Capture_DirectX" xml:space="preserve">
+    <value>DirectX</value>
+  </data>
+  <data name="Msg_Capture_GDI" xml:space="preserve">
+    <value>GDI+</value>
+  </data>
+  <data name="Msg_Config_SavingValue" xml:space="preserve">
+    <value>保存：{0} = {1}</value>
+  </data>
+  <data name="Msg_Config_LoadingValue" xml:space="preserve">
+    <value>加载：{0} = {1}</value>
+  </data>
+  <data name="Msg_Config_CreatingDefault" xml:space="preserve">
+    <value>正在创建默认配置...</value>
+  </data>
+  <data name="Msg_Config_NoFiles" xml:space="preserve">
+    <value>未找到配置文件。</value>
+  </data>
+  <data name="Msg_Models_NoFiles" xml:space="preserve">
+    <value>未找到模型文件。</value>
+  </data>
+  <data name="Msg_RuntimeError" xml:space="preserve">
+    <value>发生运行时错误：{0}</value>
+  </data>
+  <data name="Msg_Models_LabelNotFound" xml:space="preserve">
+    <value>未在 {0} 找到标签文件</value>
+  </data>
+  <data name="Msg_Notice_Default" xml:space="preserve">
+    <value>通知</value>
+  </data>
+  <data name="Msg_rzctlInitFailed" xml:space="preserve">
+    <value>无法初始化 Razer 模式。
+{0}
+
+正在尝试替换为发布版本的 rzctl.dll...</value>
+  </data>
+  <data name="Msg_rzctlRecoveryFailed" xml:space="preserve">
+    <value>无法恢复 rzctl.dll。
+{0}</value>
+  </data>
+  <data name="Msg_RazerSynapseDownloadFailed" xml:space="preserve">
+    <value>下载 Razer Synapse 安装程序失败。</value>
+  </data>
+  <data name="Msg_rzctlDownloadFailed_Simple" xml:space="preserve">
+    <value>从给定 URL 下载 rzctl.dll 失败。</value>
+  </data>
+  <data name="Msg_rzctlDownloadError_Simple" xml:space="preserve">
+    <value>下载 rzctl.dll 时出错。</value>
+  </data>
+  <data name="Msg_UpdateNewerVersion" xml:space="preserve">
+    <value>您运行的版本（{0}）比最新版本（{1}）更新。</value>
+  </data>
+  <data name="Msg_LGHubAutoUpdateWarning" xml:space="preserve">
+    <value>安装 LG Hub 后，请确保禁用"自动更新"以长期使用。</value>
+  </data>
+  <data name="Msg_LGHubFileError_Simple" xml:space="preserve">
+    <value>文件不正确，请尝试其他下载源。</value>
+  </data>
+</root>
