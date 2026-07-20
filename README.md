@@ -82,7 +82,7 @@ When you press the trigger binding, Aimmy will capture the screen and run the im
 ## Setup
 - Download and Install the x64 version of [.NET Runtime 8.0.X.X](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.2-windows-x64-installer)
 - Download and Install the x64 version of [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
-- Download Aimmy from [Releases](https://github.com/Babyhamsta/Aimmy/releases/latest) (Make sure it's the Aimmy zip and not Source zip)
+- Download Aimmy from [Releases](releases) (Make sure it's the Aimmy zip and not Source zip)
 - Extract the Aimmy.zip file
 - Run Aimmy.exe
 - Choose your Model and Enjoy :)
@@ -90,13 +90,15 @@ When you press the trigger binding, Aimmy will capture the screen and run the im
 ## How is Aimmy better than similar AI-Based tools?
 Aimmy is written in C# using .NET 8 and WPF utilizing pre-existing libraries like DirectML and ONNX. This has allowed us to make a very fast Aim Aligner with high compatiblity on both AMD and NVIDIA GPUs without sacrificing the end-user experience.
 
-<img src="readme_assets/UI.gif" alt="UI Overview" width="400"/>
+![Example of Model switching](readme_assets/UI.gif?raw=true)
 
 Beyond the core functionality, Aimmy also adds some amazing additional features like Detection ESP to help you tune your gaming experience however you like it.
 
-Aimmy comes pre-bundled with a well trained AI model with thousands of images. 
+Aimmy comes pre-bundled with 2 well trained AI models with thousands of images each. 
+1. Phantom Forces
+2. Universal Model
 
-Besides that model, Aimmy provides dozens of other community made models through the store and our Discord server, with more models being developed every day by other Aimmy users. These models vary from game to image count, making Aimmy incredibly versatile and universal for thousands of games on the market right now.
+Besides those 2 models, Aimmy provides dozens of other community made models through the store, with more models being developed every day by other Aimmy users. These models vary from game to image count, making Aimmy incredibly versatile and universal for thousands of games on the market right now.
 
 ## How the hell is Aimmy free?
 As an AI based Aim Aligner, Aimmy does not require any sort of upkeep because it does not read any specific game data to perform it's actions. If Aimmy team stops maintaining Aimmy, even if no one pitches in to fork and maintain the project, Aimmy would still work.
