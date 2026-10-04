@@ -1,0 +1,67 @@
+name: Asset submission policy tests
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/asset-submissions/**'
+      - '.github/workflows/validate-assets.yml'
+      - '.github/workflows/auto-close-empty-prs.yml'
+      - '.github/workflows/asset-submission-tests.yml'
+  push:
+    branches: [Aimmy-V2]
+    paths:
+      - '.github/scripts/asset-submissions/**'
+      - '.github/workflows/validate-assets.yml'
+      - '.github/workflows/auto-close-empty-prs.yml'
+      - '.github/workflows/asset-submission-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # pull_request is deliberately unprivileged; no publisher consumes its outputs.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Test policy, fork handling, pagination and publication races
+        run: node --test .github/scripts/asset-submissions/test_submissions.cjs
+      - name: Build the pinned parser dependencies
+        run: docker build --pull --tag aimmy-asset-validator .github/scripts/asset-submissions
+      - name: Test synthetic ONNX and JSON fixtures inside the restricted container
+        run: |
+          docker run --rm --network=none --read-only --cap-drop=ALL \
+            --security-opt=no-new-privileges --user=65534:65534 \
+            --memory=1536m --memory-swap=1536m --cpus=1 --pids-limit=32 \
+            --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+            --entrypoint python aimmy-asset-validator \
+            -I -m unittest discover -s /validator -p test_validator.py -v
+      - name: Generate a synthetic model for production-limit smoke testing
+        run: |
+          docker run --rm --network=none --read-only --cap-drop=ALL \
+            --security-opt=no-new-privileges --entrypoint python aimmy-asset-validator \
+            -I -c "import sys; sys.path.insert(0, '/validator'); from test_validator import model; m = model((-1, 3, -1, -1), (-1, 84, -1)); m.doc_string = 'x' * (5 * 1024 * 1024); sys.stdout.buffer.write(m.SerializeToString())" \
+            > "$RUNNER_TEMP/asset-validator-model.bin"
+          chmod 444 "$RUNNER_TEMP/asset-validator-model.bin"
+      - name: Smoke-test the actual production container invocation
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const assert = require('node:assert/strict');
+            const { runParser } = require('./.github/scripts/asset-submissions/submissions.cjs');
+            const input = path.join(process.env.RUNNER_TEMP, 'asset-validator-smoke.bin');
+            fs.writeFileSync(input, '{}', { mode: 0o444 });
+            assert.equal(runParser(input, 'config').valid, true);
+            fs.chmodSync(input, 0o644);
+            fs.writeFileSync(input, '{"bad":NaN}');
+            fs.chmodSync(input, 0o444);
+            assert.equal(runParser(input, 'config').valid, false);
+            fs.unlinkSync(input);
+            const model = path.join(process.env.RUNNER_TEMP, 'asset-validator-model.bin');
+            assert.equal(runParser(model, 'model').valid, true);
+            fs.unlinkSync(model);
