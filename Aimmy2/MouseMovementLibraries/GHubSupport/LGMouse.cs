@@ -28,13 +28,14 @@ namespace Aimmy2.MouseMovementLibraries.GHubSupport
             {
                 return true;
             }
-
             for (int num = 9; num >= 0; num--)
             {
                 int Status = Initialize("\\??\\ROOT#SYSTEM#000" + num + "#{1abc05c0-c378-41b9-9cef-df1aba82b015}");
-                if (Status >= 0) break;
+                if (Status >= 0)
+                {
+                    return true;
+                }
             }
-
             return false;
         }
 
