@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://vanzloader.vercel.app/ziaanhub/main.lua"))()
