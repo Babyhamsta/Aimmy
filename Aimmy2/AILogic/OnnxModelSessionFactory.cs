@@ -17,14 +17,18 @@ namespace Aimmy2.AILogic
             };
         }
 
-        internal static OnnxModelLoadResult Load(string modelPath, bool useDirectML)
+        internal static OnnxModelLoadResult Load(string modelPath, bool useDirectML) =>
+            Load(modelPath, useDirectML, null);
+
+        internal static OnnxModelLoadResult Load(string modelPath, bool useDirectML, DirectMlGpuContext? gpuContext)
         {
             using SessionOptions sessionOptions = CreateDefaultOptions(useDirectML);
 
             if (useDirectML)
             {
                 sessionOptions.AddSessionConfigEntry("session.intra_op.allow_spinning", "0");
-                sessionOptions.AppendExecutionProvider_DML();
+                if (gpuContext != null) gpuContext.AppendExecutionProvider(sessionOptions);
+                else sessionOptions.AppendExecutionProvider_DML();
             }
             else { sessionOptions.AppendExecutionProvider_CPU(); }
 

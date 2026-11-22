@@ -9,6 +9,9 @@ namespace Aimmy2.AILogic
         private readonly string[] _inputNames, _outputNames;
         private readonly OrtValue[] _inputs, _outputs;
         private readonly TensorBase _output;
+        private OrtValue[]? _gpuInputs;
+        internal bool HasGpuInput => _gpuInputs != null;
+        internal void BindGpuInput(OrtValue input) => _gpuInputs = [input];
 
         internal static FixedModelBuffers? TryCreate<T>(InferenceSession session, int size, T[] input) where T : unmanaged
         {
@@ -59,14 +62,17 @@ namespace Aimmy2.AILogic
             _output = tensor;
         }
 
-        internal TensorBase Run(InferenceSession session, RunOptions options)
+        internal TensorBase Run(InferenceSession session, RunOptions options, bool useGpuInput = false)
         {
-            session.Run(options, _inputNames, _inputs, _outputNames, _outputs);
+            // This preallocated OrtValue overload invokes OrtApi::Run for either input location.
+            var inputs = useGpuInput ? _gpuInputs ?? throw new InvalidOperationException("GPU input is unbound.") : _inputs;
+            session.Run(options, _inputNames, inputs, _outputNames, _outputs);
             return _output;
         }
 
         public void Dispose()
         {
+            _gpuInputs = null; // Borrowed from the model's DirectML context.
             _outputs[0].Dispose();
             _inputs[0].Dispose();
         }

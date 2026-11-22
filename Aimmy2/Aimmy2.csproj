@@ -58,6 +58,12 @@
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 
+  <!-- The DirectML package copies the DLL itself for explicit architecture builds. -->
+  <ItemGroup Condition="'$(Platform)' == 'AnyCPU' And ('$(PlatformTarget)' == '' Or '$(PlatformTarget)' == 'AnyCPU')">
+    <Content Include="$(Microsoft_AI_DirectML_Bin_Dir_Windows_x64)\DirectML.dll" Link="runtimes\win-x64\native\DirectML.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Microsoft_AI_DirectML_Bin_Dir_Windows_Arm64)\DirectML.dll" Link="runtimes\win-arm64\native\DirectML.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AntWpf" Version="1.0.5" />
     <PackageReference Include="Costura.Fody" Version="6.2.0">

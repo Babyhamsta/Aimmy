@@ -78,6 +78,8 @@ namespace Aimmy2.AILogic
         private InferenceSession? _onnxModel;
         private readonly string _modelPath;
         private bool _usingDirectML;
+        private DirectMlGpuContext? _gpuContext;
+        private bool _gpuCaptureDisabled;
 
         private Task? _aiLoopTask;
         private CancellationTokenSource? _aiLoopCancellation;
@@ -86,10 +88,11 @@ namespace Aimmy2.AILogic
         private volatile bool _suppressOutputActions;
         private volatile bool _lastPredictionRanInference;
         private readonly SemaphoreSlim _inferenceGate = new(1, 1);
-        private bool _disposed;
+        private volatile bool _disposed;
 
         // Benchmarking
         private int _liveInferences;
+        private int _zeroCopyGpuFrames;
 
         private int _liveSelections;
         private int _framesWithCandidates;
@@ -195,6 +198,7 @@ namespace Aimmy2.AILogic
 
                 if (_captureManager.SlowestReadback is { } readback) lines.Add(readback);
                 lines.Add(_captureManager.ReadbackCounts);
+                lines.Add($"Zero-copy GPU frames: {_zeroCopyGpuFrames}/{_liveInferences}");
                 lines.Add($"Frames with eligible detections: {_framesWithCandidates}/{_liveInferences}, with detections but no sticky match: {_framesAwaitingMatch}");
                 lines.Add($"Active inference FPS: {(_liveSeconds > 0 ? _liveInferences / _liveSeconds : 0):F2}, selected frames: {_liveSelections}/{_liveInferences}");
 
@@ -248,7 +252,20 @@ namespace Aimmy2.AILogic
         {
             try
             {
-                OnnxModelLoadResult loadedModel = OnnxModelSessionFactory.Load(modelPath, useDirectML);
+                if (useDirectML && AimSettings.ScreenCaptureMethod == "DirectX")
+                {
+                    try { _gpuContext = DirectMlGpuContext.Create(); }
+                    catch (Exception ex) { DisableGpuCapture(ex.Message); }
+                }
+                OnnxModelLoadResult loadedModel;
+                try { loadedModel = OnnxModelSessionFactory.Load(modelPath, useDirectML, _gpuContext); }
+                catch (Exception ex) when (_gpuContext != null)
+                {
+                    DisableGpuCapture(ex.Message);
+                    _gpuContext.Dispose();
+                    _gpuContext = null;
+                    loadedModel = OnnxModelSessionFactory.Load(modelPath, useDirectML);
+                }
                 _onnxModel = loadedModel.Session;
                 _usingDirectML = useDirectML;
                 _outputNames = loadedModel.OutputNames;
@@ -291,13 +308,18 @@ namespace Aimmy2.AILogic
             try
             {
                 using (Benchmark("CapturePreparation"))
-                    _captureManager.PrepareDirectX(IMAGE_SIZE);
+                {
+                    if (_fixedModelBuffers?.HasGpuInput == true && AimSettings.ScreenCaptureMethod == "DirectX")
+                        _captureManager.InitializeDxgiDuplication();
+                    else _captureManager.PrepareDirectX(IMAGE_SIZE);
+                }
             }
             catch (Exception ex)
             {
                 Log(LogLevel.Warning, $"DirectX preparation deferred to first capture: {ex.Message}");
             }
 
+            if (_disposed) return Task.FromResult(false);
             _isAiLoopRunning = true;
             _aiLoopCancellation?.Dispose();
             _aiLoopCancellation = new CancellationTokenSource();
@@ -312,10 +334,23 @@ namespace Aimmy2.AILogic
 
         private void DisposeLoadedModel()
         {
-            ReleaseInferenceBuffers();
-            _onnxModel?.Dispose();
-            _onnxModel = null;
-            _outputNames = null;
+            try { _gpuContext?.Drain(); }
+            finally
+            {
+                ReleaseInferenceBuffers();
+                _onnxModel?.Dispose();
+                _onnxModel = null;
+                _gpuContext?.Dispose();
+                _gpuContext = null;
+                _outputNames = null;
+            }
+        }
+
+        private void DisableGpuCapture(string reason)
+        {
+            if (_gpuCaptureDisabled) return;
+            _gpuCaptureDisabled = true;
+            Log(LogLevel.Warning, $"Zero-copy capture unavailable. Using CPU staging for this session: {reason}");
         }
 
         private bool ValidateOnnxShape()
@@ -880,16 +915,29 @@ namespace Aimmy2.AILogic
             EnsureInferenceBuffers(_onnxModel);
 
             Bitmap? frame = null;
-            Rectangle capturedBox;
+            Rectangle capturedBox = detectionBox;
+            bool gpuFrame = false;
             using (Benchmark("ScreenGrab"))
             {
                 if (AimSettings.ScreenCaptureMethod == "DirectX" && !_benchmarkMode && !AimSettings.CollectDataWhilePlaying)
                 {
-                    bool captured = _reusableHalfInput != null
-                        ? _captureManager.TryCaptureToTensor(detectionBox, _reusableHalfInput, IMAGE_SIZE, out capturedBox)
-                        : _captureManager.TryCaptureToTensor(detectionBox, _reusableFloatInput!, IMAGE_SIZE, out capturedBox);
-                    if (!captured)
-                        return null;
+                    if (!_gpuCaptureDisabled && _gpuContext != null && _fixedModelBuffers?.HasGpuInput == true)
+                    {
+                        gpuFrame = _captureManager.TryCaptureToGpu(detectionBox, IMAGE_SIZE, _gpuContext,
+                            _reusableHalfInput != null, out capturedBox);
+                        if (!gpuFrame)
+                        {
+                            if (_captureManager.GpuCaptureFailure is not { } reason) return null;
+                            DisableGpuCapture(reason);
+                        }
+                    }
+                    if (!gpuFrame)
+                    {
+                        bool captured = _reusableHalfInput != null
+                            ? _captureManager.TryCaptureToTensor(detectionBox, _reusableHalfInput, IMAGE_SIZE, out capturedBox)
+                            : _captureManager.TryCaptureToTensor(detectionBox, _reusableFloatInput!, IMAGE_SIZE, out capturedBox);
+                        if (!captured) return null;
+                    }
                 }
                 else
                 {
@@ -915,7 +963,13 @@ namespace Aimmy2.AILogic
                 {
                     if (_fixedModelBuffers != null)
                     {
-                        outputTensor = _fixedModelBuffers.Run(_onnxModel, _modeloptions!);
+                        try { outputTensor = _fixedModelBuffers.Run(_onnxModel, _modeloptions!, gpuFrame); }
+                        catch (Exception ex) when (gpuFrame)
+                        {
+                            DisableGpuCapture(ex.Message);
+                            return null;
+                        }
+                        if (gpuFrame) _zeroCopyGpuFrames++;
                     }
                     else
                     {
@@ -1043,21 +1097,28 @@ namespace Aimmy2.AILogic
             CancellationToken cancellationToken = default,
             PerformanceGoal goal = PerformanceGoal.Balanced)
         {
-            if (!IsLoaded)
-                throw new InvalidOperationException("Load a model before running the performance helper.");
+            CancellationTokenSource benchmarkCancellation;
+            bool originalSizeChangePending;
+            lock (_sizeLock)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (!IsLoaded || _aiLoopCancellation == null)
+                    throw new InvalidOperationException("Load a model before running the performance helper.");
+                if (_benchmarkMode) throw new InvalidOperationException("A performance benchmark is already running.");
+                benchmarkCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _aiLoopCancellation.Token);
+                originalSizeChangePending = _sizeChangePending;
+                _sizeChangePending = false;
+                _benchmarkMode = true;
+                _suppressOutputActions = true;
+            }
+            using var ownedCancellation = benchmarkCancellation;
+            cancellationToken = benchmarkCancellation.Token;
 
             int originalImageSize = IMAGE_SIZE;
             int originalDetections = NUM_DETECTIONS;
             InferenceSession? originalSession = _onnxModel;
             List<string>? originalOutputNames = _outputNames;
             bool originalUsingDirectML = _usingDirectML;
-            bool originalSizeChangePending;
-
-            lock (_sizeLock)
-            {
-                originalSizeChangePending = _sizeChangePending;
-                _sizeChangePending = false;
-            }
 
             int[] supportedSizes = [640, 512, 416, 320, 256, 160];
             int[] sizes = IsDynamicModel
@@ -1068,16 +1129,14 @@ namespace Aimmy2.AILogic
                 : [ModelFixedSize];
 
             var results = new List<PerformanceBenchmarkSizeResult>(sizes.Length);
-            _benchmarkMode = true;
-            _suppressOutputActions = true;
             bool gateEntered = false;
             Exception? benchmarkException = null;
             Exception? restoreException = null;
 
             try
             {
-                await Task.Delay(80, cancellationToken);
-                await _inferenceGate.WaitAsync(cancellationToken);
+                await Task.Delay(80, cancellationToken).ConfigureAwait(false);
+                await _inferenceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
                 gateEntered = true;
                 _stickyAimSelector.Reset();
 
@@ -1155,18 +1214,17 @@ namespace Aimmy2.AILogic
                 }
                 finally
                 {
-                    _stickyAimSelector.Reset();
-                    _suppressOutputActions = false;
-                    _benchmarkMode = false;
-
                     if (gateEntered)
                     {
+                        _stickyAimSelector.Reset();
                         _inferenceGate.Release();
                     }
 
                     lock (_sizeLock)
                     {
                         _sizeChangePending = _sizeChangePending || originalSizeChangePending;
+                        _suppressOutputActions = false;
+                        _benchmarkMode = false;
                     }
                 }
             }
@@ -1300,6 +1358,11 @@ namespace Aimmy2.AILogic
             {
                 if (_usingDirectML)
                     _fixedModelBuffers = FixedModelBuffers.TryCreate(session, IMAGE_SIZE, buffer);
+                if (_fixedModelBuffers != null && _gpuContext != null && !_gpuCaptureDisabled && !_benchmarkMode)
+                {
+                    try { _fixedModelBuffers.BindGpuInput(_gpuContext.GetInputTensor(IMAGE_SIZE, typeof(T) == typeof(Float16))); }
+                    catch (Exception ex) { DisableGpuCapture(ex.Message); }
+                }
                 if (_fixedModelBuffers == null)
                 {
                     var tensor = new DenseTensor<T>(buffer, new[] { 1, 3, IMAGE_SIZE, IMAGE_SIZE });
@@ -1346,7 +1409,7 @@ namespace Aimmy2.AILogic
         private void ReloadBenchmarkModelSession(InferenceSession? preservedSession)
         {
             InferenceSession? previousSession = _onnxModel;
-            OnnxModelLoadResult loadedModel = OnnxModelSessionFactory.Load(_modelPath, _usingDirectML);
+            OnnxModelLoadResult loadedModel = OnnxModelSessionFactory.Load(_modelPath, _usingDirectML, _gpuContext);
             _onnxModel = loadedModel.Session;
             _outputNames = loadedModel.OutputNames;
 
@@ -1538,31 +1601,41 @@ namespace Aimmy2.AILogic
 
         public void Dispose()
         {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-
-            // Signal that we're shutting down
             lock (_sizeLock)
             {
+                if (_disposed) return;
+                _disposed = true;
                 _sizeChangePending = true;
             }
 
+            // Loading can still be notifying WPF synchronously. Let that worker finish
+            // before tearing down resources, without blocking its dispatcher callbacks.
+            if (!InitializationTask.IsCompleted)
+            {
+                _ = InitializationTask.ContinueWith(_ => DisposeResources(), CancellationToken.None,
+                    TaskContinuationOptions.None, TaskScheduler.Default);
+                return;
+            }
+            DisposeResources();
+        }
+
+        private void DisposeResources()
+        {
             StopAiLoop();
             _pendingSave.GetAwaiter().GetResult();
-
-            // Print final benchmarks
-            PrintBenchmarks();
-
-            // Dispose DXGI objects
-            _captureManager.Dispose();
-
-            // Clean up other resources
-            ReleaseInferenceBuffers();
-            _onnxModel?.Dispose();
-            _modeloptions?.Dispose();
-            _inferenceGate.Dispose();
+            // A canceled benchmark restores its original session before releasing this gate.
+            _inferenceGate.Wait();
+            try
+            {
+                PrintBenchmarks();
+                _captureManager.Dispose();
+                DisposeLoadedModel();
+            }
+            finally
+            {
+                _modeloptions?.Dispose();
+                _inferenceGate.Dispose();
+            }
         }
     }
 }

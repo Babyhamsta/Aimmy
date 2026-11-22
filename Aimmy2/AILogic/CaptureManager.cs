@@ -1,4 +1,5 @@
 using Microsoft.ML.OnnxRuntime;
+using Microsoft.Win32.SafeHandles;
 using Aimmy2.Class;
 using Aimmy2.AILogic;
 using Other;
@@ -30,6 +31,15 @@ namespace AILogic
         private IDXGIDevice2? _eventDevice;
         private IDXGIOutputDuplication? _deskDuplication;
         private ID3D11Texture2D? _stagingTex;
+        internal Vortice.Luid? AdapterLuid { get; private set; }
+        private ID3D11Device5? _device5;
+        private ID3D11DeviceContext4? _context4;
+        private ID3D11Texture2D? _sharedTexture;
+        private ID3D11Fence? _sharedFence;
+        private DirectMlGpuContext? _boundContext;
+        private int _sharedSize;
+        private ulong _sharedFenceValue;
+        internal string? GpuCaptureFailure { get; private set; }
 
         // Frame caching for DirectX
         private Rectangle _cachedFrameBounds;
@@ -77,102 +87,46 @@ namespace AILogic
 
         #region DirectX
 
+        internal static (IDXGIAdapter1, IDXGIOutput1) FindDisplayOutput()
+        {
+            var display = DisplayManager.CurrentDisplay ?? throw new InvalidOperationException("No current display.");
+            using var factory = DXGI.CreateDXGIFactory1<IDXGIFactory1>();
+            // Prefer the monitor identity. Use the flattened output index only if no identity matches.
+            foreach (bool useIndex in new[] { false, true })
+            {
+                int index = 0;
+                for (uint a = 0; factory.EnumAdapters1(a, out var adapter).Success; a++)
+                {
+                    using (adapter)
+                    {
+                        for (uint o = 0; adapter.EnumOutputs(o, out var output).Success; o++, index++)
+                        {
+                            using (output)
+                            {
+                                var desc = output.Description;
+                                var rect = desc.DesktopCoordinates;
+                                var bounds = new System.Windows.Rect(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
+                                if (useIndex ? index != display.Index :
+                                    desc.DeviceName.TrimEnd('\0') != display.DeviceName?.TrimEnd('\0') && bounds != display.Bounds)
+                                    continue;
+
+                                var selectedOutput = output.QueryInterface<IDXGIOutput1>();
+                                try { return (adapter.QueryInterface<IDXGIAdapter1>(), selectedOutput); }
+                                catch { selectedOutput.Dispose(); throw; }
+                            }
+                        }
+                    }
+                }
+            }
+            throw new InvalidOperationException("No suitable display output found for DirectX capture.");
+        }
+
         public void InitializeDxgiDuplication()
         {
             DisposeDxgiResources();
             try
             {
-                var currentDisplay = DisplayManager.CurrentDisplay;
-                if (currentDisplay == null)
-                {
-                    LogManager.Log(LogLevel.Error, "No current display available. DisplayManager may not be initialized.");
-                    throw new InvalidOperationException("No current display available. DisplayManager may not be initialized.");
-                }
-
-                using var factory = DXGI.CreateDXGIFactory1<IDXGIFactory1>();
-                IDXGIOutput1? targetOutput1 = null;
-                IDXGIAdapter1? targetAdapter = null;
-                bool foundTarget = false;
-
-                for (uint adapterIndex = 0;
-                    factory.EnumAdapters1(adapterIndex, out var adapter).Success;
-                    adapterIndex++)
-                {
-                    LogManager.Log(LogLevel.Info, $"Checking Adapter {adapterIndex}: {adapter.Description.Description.TrimEnd('\0')}");
-
-                    for (uint outputIndex = 0;
-                        adapter.EnumOutputs(outputIndex, out var output).Success;
-                        outputIndex++)
-                    {
-                        using (output)
-                        {
-                            var output1 = output.QueryInterface<IDXGIOutput1>();
-                            var outputDesc = output1.Description;
-                            var outputBounds = new System.Windows.Rect(
-                                outputDesc.DesktopCoordinates.Left,
-                                outputDesc.DesktopCoordinates.Top,
-                                outputDesc.DesktopCoordinates.Right - outputDesc.DesktopCoordinates.Left,
-                                outputDesc.DesktopCoordinates.Bottom - outputDesc.DesktopCoordinates.Top);
-                            LogManager.Log(LogLevel.Info, $"Found Output {outputIndex}: DeviceName = '{outputDesc.DeviceName.TrimEnd('\0')}', Bounds = {outputBounds}");
-
-                            // Try different matching strategies
-                            bool nameMatch = currentDisplay?.DeviceName != null && outputDesc.DeviceName.TrimEnd('\0') == currentDisplay.DeviceName.TrimEnd('\0');
-                            bool boundsMatch = currentDisplay?.Bounds != null && outputBounds.Equals(currentDisplay.Bounds);
-
-                            if (nameMatch || boundsMatch)
-                            {
-                                targetOutput1 = output1;
-                                targetAdapter = adapter;
-                                foundTarget = true;
-                                break;
-                            }
-                            output1.Dispose();
-                        }
-                    }
-
-                    if (foundTarget) break;
-                    adapter.Dispose();
-                }
-
-                // Fallback to specific display index if not found
-                if (!foundTarget)
-                {
-                    int targetIndex = currentDisplay?.Index ?? 0;
-                    int currentIndex = 0;
-
-                    for (uint adapterIndex = 0;
-                        factory.EnumAdapters1(adapterIndex, out var adapter).Success;
-                        adapterIndex++)
-                    {
-                        for (uint outputIndex = 0;
-                            adapter.EnumOutputs(outputIndex, out var output).Success;
-                            outputIndex++)
-                        {
-                            if (currentIndex == targetIndex)
-                            {
-                                LogManager.Log(LogLevel.Warning, $"Could not match display by name or bounds. Found a fallback index, {targetIndex}.");
-                                targetOutput1 = output.QueryInterface<IDXGIOutput1>();
-                                output.Dispose();
-                                targetAdapter = adapter;
-                                foundTarget = true;
-                                break;
-                            }
-                            currentIndex++;
-                            output.Dispose();
-                        }
-
-                        if (foundTarget)
-                            break;
-                        adapter.Dispose();
-                    }
-                }
-
-                if (targetAdapter == null || targetOutput1 == null)
-                {
-                    LogManager.Log(LogLevel.Error, "No suitable display output found for DirectX capture.", true, 6000);
-                    throw new Exception("No suitable display output found");
-                }
-
+                var (targetAdapter, targetOutput1) = FindDisplayOutput();
                 using var ownedAdapter = targetAdapter;
                 using var ownedOutput = targetOutput1;
                 FeatureLevel[] featureLevels = {
@@ -215,6 +169,8 @@ namespace AILogic
                 // Create desktop duplication
                 _eventDevice = _dxDevice.QueryInterface<IDXGIDevice2>();
                 _deskDuplication = targetOutput1.DuplicateOutput(_dxDevice);
+                AdapterLuid = targetAdapter.Description1.Luid;
+                _currentCaptureMethod = "DirectX";
                 _consecutiveFailures = 0; //reset on success
 
                 LogManager.Log(LogLevel.Info, "DirectX Desktop Duplication initialized successfully.");
@@ -245,6 +201,115 @@ namespace AILogic
             if (_deskDuplication == null) return;
             EnsureReadbackBuffers(size, size);
             _currentCaptureMethod = "DirectX";
+        }
+
+        private void BindGpuCapture(DirectMlGpuContext context, int size)
+        {
+            if (AdapterLuid != context.AdapterLuid)
+                throw new NotSupportedException("The capture and DirectML adapters have different LUIDs.");
+            if (_boundContext == context && _sharedSize == size) return;
+
+            ReleaseGpuCapture();
+            _device5 = _dxDevice!.QueryInterface<ID3D11Device5>();
+            _context4 = _dxDevice.ImmediateContext.QueryInterface<ID3D11DeviceContext4>();
+            _sharedTexture = _device5.CreateTexture2D(new Texture2DDescription
+            {
+                Width = (uint)size, Height = (uint)size, MipLevels = 1, ArraySize = 1,
+                Format = Format.B8G8R8A8_UNorm, SampleDescription = new(1, 0),
+                Usage = ResourceUsage.Default, BindFlags = BindFlags.ShaderResource,
+                MiscFlags = ResourceOptionFlags.Shared | ResourceOptionFlags.SharedNTHandle
+            });
+            _sharedFence = _device5.CreateFence(0, FenceFlags.Shared);
+            using var dxgiTexture = _sharedTexture.QueryInterface<IDXGIResource1>();
+            using var textureHandle = new SafeFileHandle(dxgiTexture.CreateSharedHandle(null,
+                Vortice.DXGI.SharedResourceFlags.Read | Vortice.DXGI.SharedResourceFlags.Write, null), true);
+            using var fenceHandle = new SafeFileHandle(_sharedFence.CreateSharedHandle(null, null), true);
+            context.BindSharedResources(textureHandle.DangerousGetHandle(), fenceHandle.DangerousGetHandle());
+            _boundContext = context;
+            _sharedSize = size;
+        }
+
+        internal bool TryCaptureToGpu(Rectangle detectionBox, int imageSize, DirectMlGpuContext gpuContext,
+            bool isFp16, out Rectangle capturedBox)
+        {
+            capturedBox = detectionBox;
+            GpuCaptureFailure = null;
+            try
+            {
+                if (PrepareCaptureMethod() != "DirectX") return false;
+                if (_deskDuplication == null) InitializeDxgiDuplication();
+                if (_deskDuplication == null) return false;
+            }
+            catch
+            {
+                Interlocked.Exchange(ref _displayChangesPending, 1);
+                return false;
+            }
+
+            try
+            {
+                BindGpuCapture(gpuContext, imageSize);
+                var display = DisplayBounds();
+                var (visible, destination) = CaptureTargetSelector.VisibleRegion(detectionBox, display);
+                if (visible.Width <= 0 || visible.Height <= 0) return false;
+                var result = _deskDuplication.AcquireNextFrame(1, out _, out var desktopResource);
+                if (result == Vortice.DXGI.ResultCode.WaitTimeout) return false;
+                if (result.Failure)
+                {
+                    Interlocked.Exchange(ref _displayChangesPending, 1);
+                    return false;
+                }
+
+                long capturedAt = Stopwatch.GetTimestamp();
+                ulong copyDone = checked(_sharedFenceValue + 1);
+                try
+                {
+                    using (desktopResource)
+                    using (var screen = desktopResource.QueryInterface<ID3D11Texture2D>())
+                    {
+                        var box = new Box(visible.Left - display.Left, visible.Top - display.Top, 0,
+                            visible.Right - display.Left, visible.Bottom - display.Top, 1);
+                        if (_sharedFenceValue != 0) _context4!.Wait(_sharedFence!, _sharedFenceValue);
+                        _context4!.CopySubresourceRegion(_sharedTexture!, 0, (uint)destination.X, (uint)destination.Y, 0, screen, 0, box);
+                        _context4.Signal(_sharedFence!, copyDone);
+                        _context4.Flush();
+                    }
+                }
+                finally { _deskDuplication.ReleaseFrame(); }
+
+                gpuContext.EnqueuePreprocess(copyDone, imageSize, visible, destination, AimSettings.ThirdPersonSupport, isFp16);
+                _sharedFenceValue = copyDone + 1;
+                CapturedPixels = new Rectangle(destination, visible.Size);
+                LastCaptureTimestamp = capturedAt;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                GpuCaptureFailure = ex.Message;
+                ReleaseGpuCapture();
+                return false;
+            }
+        }
+
+        private void ReleaseGpuCapture()
+        {
+            try { _boundContext?.ReleaseSharedResources(); }
+            // A removed D3D12 device cannot drain. The context still releases its views.
+            catch (SharpGenException ex) { LogManager.Log(LogLevel.Warning, $"GPU capture teardown: {ex.Message}"); }
+            finally
+            {
+                _boundContext = null;
+                _sharedTexture?.Dispose();
+                _sharedTexture = null;
+                _sharedFence?.Dispose();
+                _sharedFence = null;
+                _context4?.Dispose();
+                _context4 = null;
+                _device5?.Dispose();
+                _device5 = null;
+                _sharedSize = 0;
+                _sharedFenceValue = 0;
+            }
         }
 
         [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(directXBitmap), nameof(_stagingTex))]
@@ -689,6 +754,8 @@ namespace AILogic
             {
                 try
                 {
+                    AdapterLuid = null;
+                    ReleaseGpuCapture();
                     // Try to release any pending frame
                     if (_deskDuplication != null)
                     {
