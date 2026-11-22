@@ -48,138 +48,104 @@ namespace Aimmy2.Class
         // Working area (excludes taskbar)
         public static Rect WorkingArea => CurrentDisplay?.WorkingArea ?? SystemParameters.WorkArea;
 
-        static DisplayManager()
-        {
-            // Don't auto-initialize here, let the application control initialization
-        }
-
-        /// <summary>
-        /// Initialize the DisplayManager - should be called early in application startup
-        /// </summary>
         public static void Initialize()
         {
+            DisplayChangedEventArgs? change;
             lock (_lockObject)
             {
                 if (_initialized) return;
-
-
-                // Refresh displays first
-                RefreshDisplays();
-
-                // Load saved display preference
-                LoadSavedDisplay();
-
-                // Set up monitor change detection
-                SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
-
+                EnumerateDisplays();
+                SelectSavedDisplay();
+                change = Snapshot();
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
                 _initialized = true;
-
             }
+            Publish(change);
         }
 
-        /// <summary>
-        /// Handle system display settings changes
-        /// </summary>
-        private static void OnDisplaySettingsChanged(object? sender, EventArgs e)
+        private static int _refreshVersion;
+
+        private static async void OnDisplaySettingsChanged(object? sender, EventArgs e)
         {
-            // Add delay to ensure system has updated display info
-            Task.Delay(1000).ContinueWith(t =>
+            int version = Interlocked.Increment(ref _refreshVersion);
+            await Task.Delay(1000).ConfigureAwait(false);
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.HasShutdownStarted) return;
+            _ = dispatcher.BeginInvoke(new Action(() =>
             {
-                ForceRefresh();
-            });
+                if (Volatile.Read(ref _refreshVersion) == version) ForceRefresh();
+            }));
         }
 
         public static void ForceRefresh()
         {
+            DisplayChangedEventArgs? change;
             lock (_lockObject)
             {
-                RefreshDisplays();
-                LoadSavedDisplay();
-                ForceUpdateWindows();
+                EnumerateDisplays();
+                SelectSavedDisplay();
+                change = Snapshot();
             }
+            Publish(change);
         }
 
-        /// <summary>
-        /// Refresh the list of available displays
-        /// </summary>
         public static void RefreshDisplays()
         {
+            DisplayChangedEventArgs? change = null;
             lock (_lockObject)
             {
-                var oldDisplayCount = _displays.Count;
-                var oldCurrentIndex = _currentDisplayIndex;
-
-                _displays = MonitorHelper.GetMonitors();
-
-                for (int i = 0; i < _displays.Count; i++)
-                {
-                    var d = _displays[i];
-                }
-
-                // Handle case where displays were removed
-                if (_currentDisplayIndex >= _displays.Count)
-                {
-                    _currentDisplayIndex = _displays.FindIndex(d => d.IsPrimary);
-                    if (_currentDisplayIndex == -1 && _displays.Count > 0)
-                        _currentDisplayIndex = 0;
-                }
-
-                // Update current display reference
-                _currentDisplay = _currentDisplayIndex >= 0 && _currentDisplayIndex < _displays.Count
-                    ? _displays[_currentDisplayIndex]
-                    : null;
-
-                // Always notify if displays changed or current display index changed
-                if (_displays.Count != oldDisplayCount || _currentDisplayIndex != oldCurrentIndex)
-                {
-                    NotifyDisplayChanged();
-                }
+                var previous = _currentDisplay;
+                int count = _displays.Count;
+                EnumerateDisplays();
+                if (count != _displays.Count || previous?.Index != _currentDisplay?.Index ||
+                    previous?.DeviceName != _currentDisplay?.DeviceName ||
+                    previous?.Bounds != _currentDisplay?.Bounds || previous?.WorkingArea != _currentDisplay?.WorkingArea)
+                    change = Snapshot();
             }
+            Publish(change);
         }
 
-        /// <summary>
-        /// Set the active display by index
-        /// </summary>
+        private static void EnumerateDisplays()
+        {
+            _displays = MonitorHelper.GetMonitors();
+            if (_currentDisplayIndex < 0 || _currentDisplayIndex >= _displays.Count)
+                _currentDisplayIndex = DefaultIndex();
+            _currentDisplay = _currentDisplayIndex < 0 ? null : _displays[_currentDisplayIndex];
+        }
+
+        private static int DefaultIndex()
+        {
+            int primary = _displays.FindIndex(display => display.IsPrimary);
+            return primary >= 0 || _displays.Count == 0 ? primary : 0;
+        }
+
         public static bool SetDisplay(int displayIndex)
         {
+            DisplayChangedEventArgs? change;
             lock (_lockObject)
             {
-                if (displayIndex < 0 || displayIndex >= _displays.Count)
-                {
-                    return false;
-                }
-
-                var oldIndex = _currentDisplayIndex;
+                if (displayIndex < 0 || displayIndex >= _displays.Count) return false;
                 _currentDisplayIndex = displayIndex;
                 _currentDisplay = _displays[displayIndex];
-
-
-                // Save selection
                 Dictionary.sliderSettings["SelectedDisplay"] = displayIndex;
-
-                // Always notify about display change, even if same index
-                // This ensures any new windows get positioned correctly
-                NotifyDisplayChanged();
-
-                return true;
+                change = Snapshot();
             }
+            Publish(change);
+            return true;
         }
 
-        /// <summary>
-        /// Notify subscribers of display change
-        /// </summary>
-        private static void NotifyDisplayChanged()
+        private static DisplayChangedEventArgs? Snapshot() => _currentDisplay == null ? null : new()
         {
-            if (_currentDisplay != null)
-            {
-                DisplayChanged?.Invoke(null, new DisplayChangedEventArgs
-                {
-                    DisplayIndex = _currentDisplayIndex,
-                    DisplayInfo = _currentDisplay,
-                    Bounds = _currentDisplay.Bounds,
-                    WorkingArea = _currentDisplay.WorkingArea
-                });
-            }
+            DisplayIndex = _currentDisplayIndex,
+            DisplayInfo = _currentDisplay,
+            Bounds = _currentDisplay.Bounds,
+            WorkingArea = _currentDisplay.WorkingArea
+        };
+
+        // Subscribers can dispatch to WPF and read display state on a different thread.
+        private static void Publish(DisplayChangedEventArgs? change)
+        {
+            if (change != null) DisplayChanged?.Invoke(null, change);
         }
 
         /// <summary>
@@ -270,38 +236,23 @@ namespace Aimmy2.Class
         /// </summary>
         public static void LoadSavedDisplay()
         {
+            DisplayChangedEventArgs? change;
             lock (_lockObject)
             {
-                // Ensure displays are detected
-                if (_displays.Count == 0)
-                {
-                    RefreshDisplays();
-                }
-
-                if (Dictionary.sliderSettings.TryGetValue("SelectedDisplay", out var saved))
-                {
-                    var savedIndex = (int)saved;
-                    if (savedIndex >= 0 && savedIndex < _displays.Count)
-                    {
-                        _currentDisplayIndex = savedIndex;
-                        _currentDisplay = _displays[savedIndex];
-                        return;
-                    }
-                }
-
-                // Default to primary display
-                var primaryIndex = _displays.FindIndex(d => d.IsPrimary);
-                if (primaryIndex >= 0)
-                {
-                    _currentDisplayIndex = primaryIndex;
-                    _currentDisplay = _displays[primaryIndex];
-                }
-                else if (_displays.Count > 0)
-                {
-                    _currentDisplayIndex = 0;
-                    _currentDisplay = _displays[0];
-                }
+                var previous = _currentDisplay;
+                if (_displays.Count == 0) EnumerateDisplays();
+                SelectSavedDisplay();
+                change = previous == _currentDisplay ? null : Snapshot();
             }
+            Publish(change);
+        }
+
+        private static void SelectSavedDisplay()
+        {
+            int index = Dictionary.sliderSettings.TryGetValue("SelectedDisplay", out var saved)
+                ? (int)saved : -1;
+            _currentDisplayIndex = index >= 0 && index < _displays.Count ? index : DefaultIndex();
+            _currentDisplay = _currentDisplayIndex < 0 ? null : _displays[_currentDisplayIndex];
         }
 
         /// <summary>
@@ -348,7 +299,8 @@ namespace Aimmy2.Class
             {
                 if (!_initialized) return;
 
-                SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+                Interlocked.Increment(ref _refreshVersion);
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
                 _initialized = false;
             }
         }
@@ -439,45 +391,4 @@ namespace Aimmy2.Class
         }
     }
 
-    // System event handling
-    internal static class SystemEvents
-    {
-        public static event EventHandler? DisplaySettingsChanged;
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
-
-        [DllImport("user32.dll")]
-        private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
-
-        private delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
-
-        private const uint EVENT_SYSTEM_DISPLAYCHANGE = 0x001E;
-        private const uint WINEVENT_OUTOFCONTEXT = 0;
-
-        private static IntPtr _hook;
-        private static WinEventDelegate _procDelegate = new WinEventDelegate(WinEventProc);
-
-        static SystemEvents()
-        {
-            _hook = SetWinEventHook(EVENT_SYSTEM_DISPLAYCHANGE, EVENT_SYSTEM_DISPLAYCHANGE, IntPtr.Zero, _procDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
-        }
-
-        private static void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
-        {
-            if (eventType == EVENT_SYSTEM_DISPLAYCHANGE)
-            {
-                DisplaySettingsChanged?.Invoke(null, EventArgs.Empty);
-            }
-        }
-
-        public static void Dispose()
-        {
-            if (_hook != IntPtr.Zero)
-            {
-                UnhookWinEvent(_hook);
-                _hook = IntPtr.Zero;
-            }
-        }
-    }
 }

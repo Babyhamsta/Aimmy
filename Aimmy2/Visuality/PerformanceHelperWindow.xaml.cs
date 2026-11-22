@@ -714,41 +714,14 @@ namespace Visuality
                 return badges;
             }
 
-            var modeBadge = GetPrimaryModeBadge(result, _report);
-            if (modeBadge != null)
-            {
-                badges.Add(modeBadge.Value);
-            }
+            var recommendation = GetMatchingRecommendation(result, _report);
+            if (recommendation != null)
+                badges.Add(CreateModeBadge(recommendation.Mode));
 
             if (MatchesRecommendation(result, _report.Recommendations.Primary))
                 badges.Add(new ResultBadge("Suggested", ThemeManager.ThemeColor));
 
             return badges;
-        }
-
-        private static ResultBadge? GetPrimaryModeBadge(
-            PerformanceBenchmarkSizeResult result,
-            PerformanceBenchmarkReport report)
-        {
-            if (MatchesRecommendation(result, report.Recommendations.Primary))
-                return CreateModeBadge(report.Recommendations.Primary.Mode);
-
-            if (MatchesRecommendation(result, report.Recommendations.FastestDetections))
-                return CreateModeBadge(PerformanceRecommendationMode.FastestDetections);
-
-            if (MatchesRecommendation(result, report.Recommendations.Balanced))
-                return CreateModeBadge(PerformanceRecommendationMode.Balanced);
-
-            if (MatchesRecommendation(result, report.Recommendations.LowestResources))
-                return CreateModeBadge(PerformanceRecommendationMode.LowestResources);
-
-            if (MatchesRecommendation(result, report.Recommendations.Quality))
-                return CreateModeBadge(PerformanceRecommendationMode.Quality);
-
-            if (MatchesRecommendation(result, report.Recommendations.HighSpeed))
-                return CreateModeBadge(PerformanceRecommendationMode.HighSpeed);
-
-            return null;
         }
 
         private static ResultBadge CreateModeBadge(PerformanceRecommendationMode mode)

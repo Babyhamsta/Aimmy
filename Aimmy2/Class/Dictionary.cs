@@ -1,3 +1,4 @@
+using Aimmy2.AILogic;
 using Visuality;
 
 namespace Aimmy2.Class
@@ -27,6 +28,7 @@ namespace Aimmy2.Class
             { "Mouse Sensitivity (+/-)", 0.80 },
             { "Mouse Jitter", 4 },
             { "Sticky Aim Threshold", 50 },
+            { "Sticky Aim Grace", StickyAimSelector.DefaultGraceMilliseconds },
             { "Y Offset (Up/Down)", 0 },
             { "Y Offset (%)", 50 },
             { "X Offset (Left/Right)", 0 },

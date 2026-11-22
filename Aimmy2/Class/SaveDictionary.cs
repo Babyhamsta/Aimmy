@@ -84,7 +84,8 @@ namespace Class
                 {
                     if (dictionary.ContainsKey(key))
                     {
-                        dictionary[key] = value;
+                        dictionary[key] = key == "Movement Path" && (Equals(value, "Adaptive") || Equals(value, "Precision") || Equals(value, "Smooth Acceleration"))
+                            ? "Cubic Bezier" : value;
                     }
                     else if (!strict)
                     {

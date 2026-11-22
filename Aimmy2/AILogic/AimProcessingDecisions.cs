@@ -29,13 +29,5 @@ namespace Aimmy2.AILogic
             aimKeyHeld &&
             !secondAimKeyHeld &&
             !constantAiTracking;
-
-        internal static bool ShouldKeepSprayActive(
-            bool autoTrigger,
-            bool aimKeyHeld,
-            bool secondAimKeyHeld) =>
-            autoTrigger &&
-            aimKeyHeld &&
-            secondAimKeyHeld;
     }
 }

@@ -278,7 +278,6 @@ namespace Aimmy2.Controls
 
             // Handle DisplaySelector separately as it's a custom control
             uiManager.DisplaySelector = new ADisplaySelector();
-            uiManager.DisplaySelector.RefreshDisplays();
 
             // Insert after title but before separator
             var insertIndex = DisplaySelectMenu.Children.Count - 2;
@@ -475,11 +474,7 @@ namespace Aimmy2.Controls
             var toggle = new AToggle(title, tooltip);
             _mainWindow!.toggleInstances[title] = toggle;
 
-            // Set initial state
-            if (Dictionary.toggleState[title])
-                toggle.EnableSwitch();
-            else
-                toggle.DisableSwitch();
+            toggle.SetInitialState((bool)Dictionary.toggleState[title]);
 
             // Handle click
             toggle.Reader.Click += (sender, e) =>

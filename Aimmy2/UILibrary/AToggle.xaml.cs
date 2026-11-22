@@ -60,6 +60,13 @@ namespace Aimmy2.UILibrary
             return SwitchMoving.Background is SolidColorBrush brush ? brush.Color : DisableColor;
         }
 
+        internal void SetInitialState(bool enabled)
+        {
+            _isEnabled = enabled;
+            SwitchMoving.Margin = new Thickness(0, 0, enabled ? -1 : 16, 0);
+            SwitchMoving.Background = new SolidColorBrush(enabled ? ThemeManager.ThemeColor : DisableColor);
+        }
+
         public void EnableSwitch()
         {
             _isEnabled = true;

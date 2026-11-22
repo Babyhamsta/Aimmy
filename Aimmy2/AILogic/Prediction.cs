@@ -5,6 +5,10 @@ namespace Aimmy2.AILogic
     public class Prediction
     {
         public RectangleF Rectangle { get; set; }
+
+        internal RectangleF ScreenBounds => new(ScreenCenterX - Rectangle.Width / 2,
+            ScreenCenterY - Rectangle.Height / 2, Rectangle.Width, Rectangle.Height);
+
         public float Confidence { get; set; }
         public int ClassId { get; set; } = 0;
         public string ClassName { get; set; } = "Enemy";

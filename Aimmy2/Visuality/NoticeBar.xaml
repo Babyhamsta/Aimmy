@@ -104,8 +104,8 @@
                                 CornerRadius="0,0,12,12"
                                 Background="#15FFFFFF"
                                 ClipToBounds="True">
-                            <Border x:Name="ProgressBar"
-                                    HorizontalAlignment="Left"
+                            <Border Loaded="ProgressBar_Loaded"
+                                    HorizontalAlignment="Stretch"
                                     CornerRadius="0,0,0,12"
                                     Background="#99FFFFFF"/>
                         </Border>

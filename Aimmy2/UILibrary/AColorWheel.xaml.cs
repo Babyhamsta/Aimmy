@@ -54,7 +54,7 @@ namespace Aimmy2.UILibrary
         private bool _isUpdatingMediaFromCode = false;
         //--
         private bool _isMouseDown = false;
-        private WriteableBitmap _colorWheelBitmap;
+        private static readonly Lazy<Task<ImageBrush>> WheelBrush = new(() => Task.Run(CreateColorWheel));
         private Color _selectedColor = Color.FromRgb(114, 46, 209); // Default purple
         private Color _previewColor = Color.FromRgb(114, 46, 209); // For live preview
         private double _brightness = 1.0;
@@ -69,11 +69,8 @@ namespace Aimmy2.UILibrary
             Loaded += AColorWheel_Loaded;
         }
 
-        private void AColorWheel_Loaded(object sender, RoutedEventArgs e)
+        private async void AColorWheel_Loaded(object sender, RoutedEventArgs e)
         {
-            // Create the color wheel bitmap
-            CreateColorWheel();
-
             // Use initial color if set, otherwise use theme color
             if (_hasInitialColor)
             {
@@ -94,12 +91,12 @@ namespace Aimmy2.UILibrary
 
             // Allow TextBox to load Hex Values
             _isTextBoxLoadedAlready = true;
+            ColorWheelEllipse.Fill = await WheelBrush.Value;
         }
 
-        private void CreateColorWheel()
+        private static ImageBrush CreateColorWheel()
         {
-            int size = 200;
-            _colorWheelBitmap = new WriteableBitmap(size, size, 96, 96, PixelFormats.Bgra32, null);
+            const int size = 200;
 
             byte[] pixels = new byte[size * size * 4];
 
@@ -140,8 +137,11 @@ namespace Aimmy2.UILibrary
                 }
             }
 
-            _colorWheelBitmap.WritePixels(new Int32Rect(0, 0, size, size), pixels, size * 4, 0);
-            ColorWheelEllipse.Fill = new ImageBrush(_colorWheelBitmap);
+            var bitmap = BitmapSource.Create(size, size, 96, 96, PixelFormats.Bgra32, null, pixels, size * 4);
+            bitmap.Freeze();
+            var brush = new ImageBrush(bitmap);
+            brush.Freeze();
+            return brush;
         }
 
         private void ColorWheel_MouseDown(object sender, MouseButtonEventArgs e)
@@ -352,7 +352,7 @@ namespace Aimmy2.UILibrary
 
         #region Color Conversion Methods
 
-        private Color HsvToRgb(double hue, double saturation, double value)
+        private static Color HsvToRgb(double hue, double saturation, double value)
         {
             int hi = (int)(hue / 60) % 6;
             double f = hue / 60 - Math.Floor(hue / 60);

@@ -8,6 +8,8 @@ namespace Other
 {
     internal class LogManager
     {
+        private static readonly object FileLock = new();
+
         public enum LogLevel
         {
             Info,
@@ -19,20 +21,20 @@ namespace Other
         {
             if (notifyUser)
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    new NoticeBar(message, waitingTime).Show();
-                });
+                var dispatcher = Application.Current.Dispatcher;
+                if (dispatcher.CheckAccess()) NoticeBar.Show(message, waitingTime);
+                else dispatcher.BeginInvoke(new Action(() => NoticeBar.Show(message, waitingTime)));
             }
 #if DEBUG
             Debug.WriteLine(message);
 #endif
             if (Dictionary.toggleState["Debug Mode"])
             {
-                string logFilepath = "debug.txt";
-                using StreamWriter w = new(logFilepath, true);
-                string lvlPrefix = lvl.ToString().ToUpper();
-                w.WriteLine($"[{DateTime.Now}] [{lvlPrefix}]: {message}");
+                lock (FileLock)
+                {
+                    using StreamWriter writer = new("debug.txt", true);
+                    writer.WriteLine($"[{DateTime.Now}] [{lvl.ToString().ToUpperInvariant()}]: {message}");
+                }
             }
         }
     }

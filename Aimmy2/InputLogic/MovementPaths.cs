@@ -2,11 +2,25 @@
 
 namespace InputLogic
 {
-    class MovementPaths
+    internal static class MovementPaths
     {
         private static readonly int[] permutation = new int[512];
 
-        internal static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
+        internal static PointF GetCommand(string path, Point end, double sensitivity)
+        {
+            var start = Point.Empty;
+            double progress = 1 - sensitivity;
+            return path switch
+            {
+                "Cubic Bezier" => CubicBezier(start, end, new PointF(end.X / 3f, end.Y / 3f),
+                    new PointF(2f * end.X / 3f, 2f * end.Y / 3f), progress),
+                "Exponential" => Exponential(start, end, progress + 0.2, 3.0),
+                "Perlin Noise" => PerlinNoise(start, end, progress, 20, 0.5),
+                _ => Lerp(start, end, progress)
+            };
+        }
+
+        private static PointF CubicBezier(Point start, Point end, PointF control1, PointF control2, double t)
         {
             double u = 1 - t;
             double tt = t * t;
@@ -15,39 +29,23 @@ namespace InputLogic
             double x = uu * u * start.X + 3 * uu * t * control1.X + 3 * u * tt * control2.X + tt * t * end.X;
             double y = uu * u * start.Y + 3 * uu * t * control1.Y + 3 * u * tt * control2.Y + tt * t * end.Y;
 
-            return new Point((int)x, (int)y);
+            return new PointF((float)x, (float)y);
         }
 
-        internal static Point Lerp(Point start, Point end, double t)
+        private static PointF Lerp(Point start, Point end, double t)
         {
-            int x = (int)(start.X + (end.X - start.X) * t);
-            int y = (int)(start.Y + (end.Y - start.Y) * t);
-            return new Point(x, y);
+            return new PointF((float)(start.X + (end.X - start.X) * t),
+                (float)(start.Y + (end.Y - start.Y) * t));
         }
 
-        internal static Point Exponential(Point start, Point end, double t, double exponent = 2.0)
+        private static PointF Exponential(Point start, Point end, double t, double exponent = 2.0)
         {
             double x = start.X + (end.X - start.X) * Math.Pow(t, exponent);
             double y = start.Y + (end.Y - start.Y) * Math.Pow(t, exponent);
-            return new Point((int)x, (int)y);
+            return new PointF((float)x, (float)y);
         }
 
-        internal static Point Adaptive(Point start, Point end, double t, double threshold = 100.0)
-        {
-            double distance = Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
-            if (distance < threshold)
-            {
-                return Lerp(start, end, t);
-            }
-            else
-            {
-                Point control1 = new Point(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
-                Point control2 = new Point(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
-                return CubicBezier(start, end, control1, control2, t);
-            }
-        }
-
-        internal static Point PerlinNoise(Point start, Point end, double t, double amplitude = 10.0, double frequency = 0.1)
+        private static PointF PerlinNoise(Point start, Point end, double t, double amplitude = 10.0, double frequency = 0.1)
         {
             double baseX = start.X + (end.X - start.X) * t;
             double baseY = start.Y + (end.Y - start.Y) * t;
@@ -68,7 +66,7 @@ namespace InputLogic
             double finalX = baseX + perpX * noiseX + noiseY * 0.3;
             double finalY = baseY + perpY * noiseX + noiseY * 0.3;
 
-            return new Point((int)finalX, (int)finalY);
+            return new PointF((float)finalX, (float)finalY);
         }
 
         private static double Fade(double t)

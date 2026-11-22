@@ -61,11 +61,7 @@ namespace Aimmy2
         public SettingsMenuControl? SettingsMenuControlInstance { get; set; }
         internal Dictionary<string, AToggle> toggleInstances = new();
         private readonly Dictionary<string, UserControl?> _menuControls = new();
-        private readonly Dictionary<string, bool> _menuInitialized = new();
-        private UserControl? _currentControl;
         private string _currentMenu = "AimMenu";
-        private bool _currentlySwitching;
-        private ScrollViewer? CurrentScrollViewer;
         public double ActualFOV { get; set; } = 640;
         private double _currentGradientAngle;
         private bool _performanceHelperOpen;
@@ -99,8 +95,7 @@ namespace Aimmy2
                 LoadInitialMenu();
 
                 // Continue with the rest of initialization
-                await InitializeApplicationAsync();
-                UpdateAboutSpecs();
+                InitializeApplication();
                 ApplyThemeGradients();
                 ThemeManager.LoadMediaSettings();
             }
@@ -115,7 +110,6 @@ namespace Aimmy2
             foreach (var menu in MenuNames)
             {
                 _menuControls[menu] = null;
-                _menuInitialized[menu] = false;
             }
         }
 
@@ -132,10 +126,9 @@ namespace Aimmy2
             LoadMenu("AimMenu");
             // Don't call UpdateSliderVisibility here - it would override collapsed menu states
             // Visibility is handled by the toggle click actions when user interacts with toggles
-            _currentMenu = "AimMenu";
         }
 
-        private async Task InitializeApplicationAsync()
+        private void InitializeApplication()
         {
             CheckRunningFromTemp();
 
@@ -152,15 +145,6 @@ namespace Aimmy2
             ApplyInitialSettings();
             ListenForKeybinds();
 
-            // Subscribe to display changes after everything is initialized
-            DisplayManager.DisplayChanged += OnDisplayChanged;
-        }
-
-        private void OnDisplayChanged(object? sender, DisplayChangedEventArgs e)
-        {
-
-            // Force update all windows to new display
-            DisplayManager.ForceUpdateWindows();
         }
 
         private void CheckRunningFromTemp()
@@ -302,18 +286,15 @@ namespace Aimmy2
             }
         }
 
-        private void UpdateAboutSpecs()
+        private void UpdateAboutSpecs(AboutMenuControl aboutMenu)
         {
-            if (_menuControls["AboutMenu"] is AboutMenuControl aboutMenu)
-            {
-                aboutMenu.AboutSpecsControl.Content = "Loading system specs...";
+            aboutMenu.AboutSpecsControl.Content = "Loading system specs...";
 
-                Task.Run(() =>
-                {
-                    var specs = $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
-                    Dispatcher.Invoke(() => aboutMenu.AboutSpecsControl.Content = specs);
-                });
-            }
+            Task.Run(() =>
+            {
+                var specs = $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
+                Dispatcher.Invoke(() => aboutMenu.AboutSpecsControl.Content = specs);
+            });
         }
 
         private void ShowError(string message, Exception ex)
@@ -619,7 +600,6 @@ namespace Aimmy2
             FileManager.AIManager?.Dispose();
 
             // Clean up display manager
-            DisplayManager.DisplayChanged -= OnDisplayChanged;
             DisplayManager.Dispose();
 
             Application.Current.Shutdown();
@@ -673,22 +653,31 @@ namespace Aimmy2
 
         private UserControl GetOrCreateMenuControl(string menuName)
         {
-            if (_menuControls[menuName] != null)
-                return _menuControls[menuName]!;
+            if (_menuControls[menuName] is { } cached) return cached;
 
-            var newControl = menuName == "ModelMenu" && _menuControls["ModelMenu"] != null
-                ? _menuControls["ModelMenu"]!
-                : CreateMenuControl(menuName);
-
-            _menuControls[menuName] = newControl;
-
-            if (!_menuInitialized[menuName])
+            var control = CreateMenuControl(menuName);
+            switch (control)
             {
-                InitializeMenuControl(menuName, newControl);
-                _menuInitialized[menuName] = true;
+                case AimMenuControl aim:
+                    aim.Initialize(this);
+                    LoadDropdownStates();
+                    break;
+                case SettingsMenuControl settings:
+                    settings.Initialize(this);
+                    LoadDropdownStates();
+                    SettingsMenuControlInstance = settings;
+                    break;
+                case AboutMenuControl about:
+                    about.Initialize(this);
+                    UpdateAboutSpecs(about);
+                    break;
+                case ModelMenuControl models:
+                    models.Initialize(this);
+                    break;
             }
 
-            return newControl;
+            _menuControls[menuName] = control;
+            return control;
         }
 
         private UserControl CreateMenuControl(string menuName) => menuName switch
@@ -700,103 +689,34 @@ namespace Aimmy2
             _ => throw new ArgumentException($"Unknown menu: {menuName}")
         };
 
-        private void InitializeMenuControl(string menuName, UserControl control)
-        {
-            try
-            {
-                switch (control)
-                {
-                    case AimMenuControl aimMenu:
-                        aimMenu.Initialize(this);
-                        CurrentScrollViewer = aimMenu.AimMenuScrollViewer;
-                        LoadDropdownStates();
-                        break;
-
-                    case ModelMenuControl modelMenu:
-                        if (!_menuInitialized["ModelMenu"])
-                            modelMenu.Initialize(this);
-                        break;
-
-                    case SettingsMenuControl settingsMenu:
-                        settingsMenu.Initialize(this);
-                        LoadDropdownStates();
-                        SettingsMenuControlInstance = settingsMenu;
-                        break;
-
-                    case AboutMenuControl aboutMenu:
-                        aboutMenu.Initialize(this);
-                        UpdateAboutSpecs();
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-            }
-        }
-
         private void LoadMenu(string menuName)
         {
             var control = GetOrCreateMenuControl(menuName);
-            ContentArea.Children.Clear();
-            ContentArea.Children.Add(control);
-            _currentControl = control;
-            UpdateCurrentScrollViewer(menuName, control);
+            if (control.Parent == null) ContentArea.Children.Add(control);
+            if (_menuControls.TryGetValue(_currentMenu, out var previous) && previous != control && previous != null)
+                previous.Visibility = Visibility.Collapsed;
+            control.Visibility = Visibility.Visible;
+            _currentMenu = menuName;
         }
 
-        private void UpdateCurrentScrollViewer(string menuName, UserControl control)
+        private void MenuSwitch(object sender, RoutedEventArgs e)
         {
-            CurrentScrollViewer = control switch
-            {
-                AimMenuControl aim => aim.AimMenuScrollViewer,
-                ModelMenuControl model => model.ModelMenuScrollViewer,
-                SettingsMenuControl settings => settings.SettingsMenuScrollViewer,
-                AboutMenuControl about => about.AboutMenuScrollViewer,
-                _ => CurrentScrollViewer
-            };
-        }
-
-        private async void MenuSwitch(object sender, RoutedEventArgs e)
-        {
-            if (sender is not Button { Tag: string newMenuName } ||
-                !IsValidMenu(newMenuName) ||
-                _currentlySwitching ||
-                _currentMenu == newMenuName) return;
-
-            _currentlySwitching = true;
-
+            if (sender is not Button { Tag: string menu } button ||
+                menu == _currentMenu || !_menuControls.ContainsKey(menu)) return;
             try
             {
-                Animator.ObjectShift(
-                    TimeSpan.FromMilliseconds(150), // Fade between menu buttons
-                    MenuHighlighter,
-                    MenuHighlighter.Margin,
-                    ((Button)sender).Margin);
-
-                await SwitchToMenu(newMenuName);
-                _currentMenu = newMenuName;
+                bool cached = _menuControls[menu] != null;
+                var start = System.Diagnostics.Stopwatch.GetTimestamp();
+                LoadMenu(menu);
+                MenuHighlighter.Margin = button.Margin;
+                if (Dictionary.toggleState["Debug Mode"])
+                    LogManager.Log(LogManager.LogLevel.Info,
+                        $"Opened {menu} ({(cached ? "cached" : "first visit")}) in {System.Diagnostics.Stopwatch.GetElapsedTime(start).TotalMilliseconds:F2} ms");
             }
             catch (Exception ex)
             {
+                LogManager.Log(LogManager.LogLevel.Error, $"Could not open {menu}. {ex.Message}", true);
             }
-            finally
-            {
-                _currentlySwitching = false;
-            }
-        }
-
-        private bool IsValidMenu(string? menuName) =>
-            !string.IsNullOrEmpty(menuName) && _menuControls.ContainsKey(menuName!);
-
-        private async Task SwitchToMenu(string menuName)
-        {
-            if (_currentControl != null)
-            {
-                Animator.FadeOut(_currentControl);
-                await Task.Delay(150); // Fade between menu content
-            }
-
-            LoadMenu(menuName);
-            Animator.Fade(_currentControl!);
         }
 
         #endregion
@@ -851,11 +771,9 @@ namespace Aimmy2
         {
             bool useYPercent = Dictionary.toggleState["Y Axis Percentage Adjustment"];
             bool useXPercent = Dictionary.toggleState["X Axis Percentage Adjustment"];
-            bool thresholdEnabled = Dictionary.toggleState["Sticky Aim"];
 
             // Null checks in case AimMenu hasn't been loaded yet
-            if (uiManager.S_StickyAimThreshold != null)
-                uiManager.S_StickyAimThreshold.Visibility = thresholdEnabled ? Visibility.Visible : Visibility.Collapsed;
+            UpdateStickySliderVisibility(uiManager);
 
             if (uiManager.S_YOffset != null)
                 uiManager.S_YOffset.Visibility = useYPercent ? Visibility.Collapsed : Visibility.Visible;
@@ -985,33 +903,16 @@ namespace Aimmy2
             Dictionary.sliderSettings["FOV Size"] = targetSize;
             AnimateFOVSize(targetSize);
         }
-        /* Old
-        private void ApplyDynamicFOV(bool apply)
-        {
-            if (!Dictionary.toggleState["Dynamic FOV"]) return;
-
-            var targetSize = apply ? Convert.ToDouble(Dictionary.sliderSettings["Dynamic FOV Size"]) : ActualFOV;
-            Dictionary.sliderSettings["FOV Size"] = targetSize;
-
-            AnimateFOVSize(targetSize);
-        }
-        */
         private void AnimateFOVSize(double targetSize)
         {
             var duration = TimeSpan.FromMilliseconds(500);
-            Animator.WidthShift(duration, FOVWindow.Circle, FOVWindow.Circle.ActualWidth, targetSize);
-            Animator.HeightShift(duration, FOVWindow.Circle, FOVWindow.Circle.ActualHeight, targetSize);
-            Animator.WidthShift(duration, FOVWindow.RectangleShape, FOVWindow.RectangleShape.ActualWidth, targetSize);
-            Animator.HeightShift(duration, FOVWindow.RectangleShape, FOVWindow.RectangleShape.ActualHeight, targetSize);
+            var dpi = VisualTreeHelper.GetDpi(FOVWindow);
+            double width = targetSize / dpi.DpiScaleX, height = targetSize / dpi.DpiScaleY;
+            Animator.WidthShift(duration, FOVWindow.Circle, FOVWindow.Circle.ActualWidth, width);
+            Animator.HeightShift(duration, FOVWindow.Circle, FOVWindow.Circle.ActualHeight, height);
+            Animator.WidthShift(duration, FOVWindow.RectangleShape, FOVWindow.RectangleShape.ActualWidth, width);
+            Animator.HeightShift(duration, FOVWindow.RectangleShape, FOVWindow.RectangleShape.ActualHeight, height);
         }
-        /* Old
-        private void AnimateFOVSize(double targetSize)
-        {
-            var duration = TimeSpan.FromMilliseconds(500);
-            Animator.WidthShift(duration, FOVWindow.Circle, FOVWindow.Circle.ActualWidth, targetSize);
-            Animator.HeightShift(duration, FOVWindow.Circle, FOVWindow.Circle.ActualHeight, targetSize);
-        }
-        */
         private void HandleEmergencyStop()
         {
             var features = new[] { "Aim Assist", "Constant AI Tracking", "Auto Trigger" };
@@ -1034,8 +935,7 @@ namespace Aimmy2
         {
             if (!Dictionary.toggleState["Mouse Background Effect"]) return;
 
-            var mousePosition = WinAPICaller.GetCursorPosition();
-            var translatedMousePos = PointFromScreen(new Point(mousePosition.X, mousePosition.Y));
+            var translatedMousePos = e.GetPosition(MainBorder);
 
             var targetAngle = Math.Atan2(
                 translatedMousePos.Y - (MainBorder.ActualHeight * 0.5),
@@ -1065,75 +965,8 @@ namespace Aimmy2
 
         private void LoadDropdownStates()
         {
-
-            var dropdownConfigs = new[]
-            {
-                // AimMenu dropdowns
-                (uiManager.D_PredictionMethod, "Prediction Method", new Dictionary<string, int>
-                {
-                    ["Kalman Filter"] = 0,
-                    ["Shall0e's Prediction"] = 1,
-                    ["wisethef0x's EMA Prediction"] = 2
-                }),
-                (uiManager.D_DetectionAreaType, "Detection Area Type", new Dictionary<string, int>
-                {
-                    ["Closest to Center Screen"] = 0,
-                    ["Closest to Mouse"] = 1
-                }),
-                (uiManager.D_AimingBoundariesAlignment, "Aiming Boundaries Alignment", new Dictionary<string, int>
-                {
-                    ["Center"] = 0,
-                    ["Top"] = 1,
-                    ["Bottom"] = 2
-                }),
-                // SettingsMenu dropdowns
-                (uiManager.D_MouseMovementMethod, "Mouse Movement Method", new Dictionary<string, int>
-                {
-                    ["Mouse Event"] = 0,
-                    ["SendInput"] = 1,
-                    ["LG HUB"] = 2,
-                    ["Razer Synapse (Require Razer Peripheral)"] = 3,
-                    ["ddxoft Virtual Input Driver"] = 4
-                }),
-                (uiManager.D_ScreenCaptureMethod, "Screen Capture Method", new Dictionary<string, int>
-                {
-                    ["DirectX"] = 0,
-                    ["GDI+"] = 1
-                }),
-                (uiManager.D_ImageSize, "Image Size", new Dictionary<string, int>
-                {
-                    ["640"] = 0,
-                    ["512"] = 1,
-                    ["416"] = 2,
-                    ["320"] = 3,
-                    ["256"] = 4,
-                    ["160"] = 5
-                }),
-            };
-
-            foreach (var (dropdown, key, mappings) in dropdownConfigs)
-            {
-                if (dropdown == null)
-                {
-                    continue;
-                }
-
-                if (Dictionary.dropdownState.TryGetValue(key, out var value))
-                {
-                    var stringValue = value?.ToString() ?? "";
-
-                    if (mappings.TryGetValue(stringValue, out int index))
-                    {
-                        dropdown.DropdownBox.SelectedIndex = index;
-                    }
-                    else
-                    {
-                        LogManager.Log(LogManager.LogLevel.Warning, $"No mapping found for '{stringValue}' in '{key}' dropdown.");
-                    }
-                }
-            }
-
-            // Update slider visibility based on loaded states
+            RestoreCommonDropdowns();
+            uiManager.D_ScreenCaptureMethod?.RestoreSelection();
             UpdatePredictionSliderVisibility();
             UpdateAimAssistSliderVisibility();
             UpdateAimConfigSliderVisibility();
@@ -1142,6 +975,7 @@ namespace Aimmy2
         internal static void ApplyConfigLoadDefaults(IDictionary<string, dynamic> sliderSettings)
         {
             sliderSettings["AI FPS Limit"] = 0;
+            sliderSettings["Sticky Aim Grace"] = StickyAimSelector.DefaultGraceMilliseconds;
         }
 
         private void LoadConfig(string path = "bin\\configs\\Default.cfg", bool loading_from_configlist = false)
@@ -1150,7 +984,7 @@ namespace Aimmy2
             SaveDictionary.LoadJSON(Dictionary.sliderSettings, path);
             SaveDictionary.LoadJSON(Dictionary.dropdownState, path);
 
-            if (!loading_from_configlist || _menuControls["AimMenu"] == null || !_menuInitialized["AimMenu"])
+            if (!loading_from_configlist || _menuControls["AimMenu"] == null)
                 return;
 
             try
@@ -1188,6 +1022,7 @@ namespace Aimmy2
                 ("AI FPS Limit", uiManager.S_AIFpsLimit, 0.0),
                 ("Mouse Jitter", uiManager.S_MouseJitter, 0.0),
                 ("Sticky Aim Threshold", uiManager.S_StickyAimThreshold, 50),
+                ("Sticky Aim Grace", uiManager.S_StickyAimGrace, StickyAimSelector.DefaultGraceMilliseconds),
                 ("EMA Smoothening", uiManager.S_EMASmoothing, 0.5),
                 ("Y Offset (Up/Down)", uiManager.S_YOffset, 0.0),
                 ("X Offset (Left/Right)", uiManager.S_XOffset, 0.0),
@@ -1206,73 +1041,10 @@ namespace Aimmy2
 
         private void ApplyConfigToDropdowns()
         {
-            var dropdownConfigs = new[]
-            {
-
-                ("Prediction Method", uiManager.D_PredictionMethod, new Dictionary<string, int>
-                {
-                    ["Kalman Filter"] = 0,
-                    ["Shall0e's Prediction"] = 1,
-                    ["wisethef0x's EMA Prediction"] = 2
-                }),
-
-                ("Detection Area Type", uiManager.D_DetectionAreaType, new Dictionary<string, int>
-                {
-                    ["Closest to Center Screen"] = 0,
-                    ["Closest to Mouse"] = 1
-                }),
-
-                ("Aiming Boundaries Alignment", uiManager.D_AimingBoundariesAlignment, new Dictionary<string, int>
-                {
-                    ["Center"] = 0,
-                    ["Top"] = 1,
-                    ["Bottom"] = 2
-                }),
-
-                ("Mouse Movement Method", uiManager.D_MouseMovementMethod, new Dictionary<string, int>
-                {
-                    ["Mouse Event"] = 0,
-                    ["SendInput"] = 1,
-                    ["LG HUB"] = 2,
-                    ["Razer Synapse (Require Razer Peripheral)"] = 3,
-                    ["ddxoft Virtual Input Driver"] = 4
-                }),
-
-                ("Image Size", uiManager.D_ImageSize, new Dictionary<string, int>
-                {
-                    ["640"] = 0,
-                    ["512"] = 1,
-                    ["416"] = 2,
-                    ["320"] = 3,
-                    ["256"] = 4,
-                    ["160"] = 5
-                }),
-
-                ("Movement Path", uiManager.D_MovementPath, new Dictionary<string, int>
-                {
-                    ["Cubic Bezier"] = 0,
-                    ["Exponential"] = 1,
-                    ["Linear"] = 2,
-                    ["Adaptive"] = 3,
-                    ["Perlin Noise"] = 4
-                }),
-
-                ("Tracer Position", uiManager.D_TracerPosition, new Dictionary<string, int>
-                {
-                    ["Bottom"] = 0,
-                    ["Middle"] = 1,
-                    ["Top"] = 2,
-                }),
-
-                ("Target Class", uiManager.D_TargetClass, new Dictionary<string, int>
-                {
-                    ["Best Confidence"] = 0,
-                })
-            };
-
-            ApplyDropdownValues(dropdownConfigs, Dictionary.dropdownState);
-
-            // Update prediction slider visibility based on selected method
+            RestoreCommonDropdowns();
+            uiManager.D_MovementPath?.RestoreSelection();
+            uiManager.D_TracerPosition?.RestoreSelection();
+            uiManager.D_TargetClass?.RestoreSelection();
             UpdatePredictionSliderVisibility();
         }
 
@@ -1312,22 +1084,14 @@ namespace Aimmy2
             }
         }
 
-        public void UpdateAimAssistSliderVisibility()
-        {
-            // Don't show sliders if Aim Assist section is collapsed
-            if (Dictionary.minimizeState.TryGetValue("Aim Assist", out var collapsed) && collapsed == true)
-            {
-                if (uiManager.S_StickyAimThreshold != null)
-                    uiManager.S_StickyAimThreshold.Visibility = Visibility.Collapsed;
-                return;
-            }
+        public void UpdateAimAssistSliderVisibility() => UpdateStickySliderVisibility(uiManager);
 
-            // Show Sticky Aim Threshold only if Sticky Aim is enabled
-            if (uiManager.S_StickyAimThreshold != null)
-            {
-                uiManager.S_StickyAimThreshold.Visibility = Dictionary.toggleState["Sticky Aim"]
-                    ? Visibility.Visible : Visibility.Collapsed;
-            }
+        private static void UpdateStickySliderVisibility(UI uiManager)
+        {
+            bool collapsed = Dictionary.minimizeState.TryGetValue("Aim Assist", out var value) && value == true;
+            var visibility = !collapsed && Dictionary.toggleState["Sticky Aim"] ? Visibility.Visible : Visibility.Collapsed;
+            if (uiManager.S_StickyAimThreshold != null) uiManager.S_StickyAimThreshold.Visibility = visibility;
+            if (uiManager.S_StickyAimGrace != null) uiManager.S_StickyAimGrace.Visibility = visibility;
         }
 
         public void UpdateAimConfigSliderVisibility()
@@ -1372,23 +1136,13 @@ namespace Aimmy2
             }
         }
 
-        private void ApplyDropdownValues((string key, ADropdown? dropdown, Dictionary<string, int> mappings)[] configs, Dictionary<string, dynamic> source)
+        private void RestoreCommonDropdowns()
         {
-            foreach (var (key, dropdown, mappings) in configs)
-            {
-                if (dropdown != null && source.TryGetValue(key, out var value))
-                {
-                    var stringValue = value?.ToString() ?? "";
-                    if (mappings.TryGetValue(stringValue, out int index))
-                    {
-                        dropdown.DropdownBox.SelectedIndex = index;
-                    }
-                    else
-                    {
-                        LogManager.Log(LogManager.LogLevel.Warning, $"No mapping found for '{stringValue}' in '{key}' dropdown.");
-                    }
-                }
-            }
+            uiManager.D_PredictionMethod?.RestoreSelection();
+            uiManager.D_DetectionAreaType?.RestoreSelection();
+            uiManager.D_AimingBoundariesAlignment?.RestoreSelection();
+            uiManager.D_MouseMovementMethod?.RestoreSelection();
+            uiManager.D_ImageSize?.RestoreSelection();
         }
 
         #endregion
@@ -1405,27 +1159,6 @@ namespace Aimmy2
 
         #endregion
 
-        #region Unimplemented Methods (For Controls)
-
-        public AToggle AddToggle(StackPanel panel, string title) =>
-            throw new NotImplementedException("Use control's internal implementation");
-
-        public AKeyChanger AddKeyChanger(StackPanel panel, string title, string keybind) =>
-            throw new NotImplementedException("Use control's internal implementation");
-
-        public AColorChanger AddColorChanger(StackPanel panel, string title) =>
-            throw new NotImplementedException("Use control's internal implementation");
-
-        public ASlider AddSlider(StackPanel panel, string title, string label, double frequency, double buttonsteps, double min, double max) =>
-            throw new NotImplementedException("Use control's internal implementation");
-
-        public ADropdown AddDropdown(StackPanel panel, string title) =>
-            throw new NotImplementedException("Use control's internal implementation");
-
-        public AFileLocator AddFileLocator(StackPanel panel, string title, string filter = "All files (*.*)|*.*", string DLExtension = "") =>
-            throw new NotImplementedException("Use control's internal implementation");
-
-        #endregion
     }
 
     #region Extension Methods

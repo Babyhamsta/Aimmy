@@ -35,6 +35,7 @@ namespace Class
         public ASlider? S_MouseSensitivity { get; set; }
         public ASlider? S_MouseJitter { get; set; }
         public ASlider? S_StickyAimThreshold { get; set; }
+        public ASlider? S_StickyAimGrace { get; set; }
         public ASlider? S_YOffset { get; set; }
         public ASlider? S_YOffsetPercent { get; set; }
         public ASlider? S_XOffset { get; set; }

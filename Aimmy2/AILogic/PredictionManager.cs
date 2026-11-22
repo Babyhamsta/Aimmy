@@ -1,304 +1,134 @@
-﻿using Aimmy2.Class;
+using System.Diagnostics;
+using System.Drawing;
 
 namespace AILogic
 {
-    internal class KalmanPrediction
+    internal abstract class MotionPredictor
     {
-        public struct Detection
+        private long? _last;
+        private long _changedX, _changedY;
+        private Point _observed, _prediction;
+
+        internal void Reset() => _last = null;
+
+        internal Point Update(Point point, long timestamp, double lead)
         {
-            public int X;
-            public int Y;
-            public DateTime Timestamp;
+            if (_last is not long previous)
+            {
+                Initialize(point, timestamp);
+                _changedX = _changedY = timestamp;
+                _prediction = point;
+            }
+            else
+            {
+                if (timestamp <= previous) return _prediction;
+                var estimate = Estimate(point, timestamp, Stopwatch.GetElapsedTime(previous, timestamp).TotalSeconds, lead);
+                _prediction = new Point(LimitLead(point.X, _observed.X, estimate.X, timestamp, ref _changedX),
+                    LimitLead(point.Y, _observed.Y, estimate.Y, timestamp, ref _changedY));
+            }
+
+            _last = timestamp;
+            _observed = point;
+            return _prediction;
         }
 
-        // State: [x, y, vx, vy]
+        private static int LimitLead(int current, int previous, int estimate, long time, ref long lastChange)
+        {
+            if (current != previous)
+            {
+                lastChange = time;
+                if ((current > previous && estimate < current) || (current < previous && estimate > current))
+                    return current;
+            }
+            else if (Stopwatch.GetElapsedTime(lastChange, time).TotalMilliseconds >= 33)
+                return current;
+            return estimate;
+        }
+
+        protected abstract void Initialize(Point point, long timestamp);
+        protected abstract Point Estimate(Point point, long timestamp, double dt, double lead);
+    }
+
+    internal sealed class KalmanPrediction : MotionPredictor
+    {
+        private double _x, _y, _vx, _vy;
+        // Both axes use the same position/velocity covariance and measurement variance.
+        private double _pp, _pv, _vv;
+
+        protected override void Initialize(Point point, long timestamp)
+        {
+            _x = point.X;
+            _y = point.Y;
+            _vx = _vy = _pv = 0;
+            _pp = 1;
+            _vv = 10000;
+        }
+
+        protected override Point Estimate(Point point, long timestamp, double dt, double lead)
+        {
+            // Constant velocity model with continuous acceleration noise.
+            const double noise = 24000;
+            double pp = _pp + dt * (2 * _pv + dt * _vv) + noise * dt * dt * dt / 3;
+            double pv = _pv + dt * _vv + noise * dt * dt / 2;
+            double positionGain = pp / (pp + 0.5);
+            double velocityGain = pv / (pp + 0.5);
+            _x += _vx * dt;
+            _y += _vy * dt;
+            double dx = point.X - _x, dy = point.Y - _y;
+            _x += positionGain * dx;
+            _y += positionGain * dy;
+            _vx = Math.Clamp(_vx + velocityGain * dx, -5000, 5000);
+            _vy = Math.Clamp(_vy + velocityGain * dy, -5000, 5000);
+            _pp = (1 - positionGain) * pp;
+            _pv = (1 - positionGain) * pv;
+            _vv += noise * dt - velocityGain * pv;
+            return new Point((int)Math.Round(_x + _vx * lead), (int)Math.Round(_y + _vy * lead));
+        }
+    }
+
+    internal sealed class WiseTheFoxPrediction : MotionPredictor
+    {
         private double _x, _y, _vx, _vy;
 
-        // Covariance matrix (4x4 simplified to diagonal)
-        private double _p00 = 1.0, _p11 = 1.0, _p22 = 1.0, _p33 = 1.0;
-
-        // Tuning parameters
-        private const double ProcessNoise = 0.1;
-        private const double MeasurementNoise = 0.5;
-        private const double MaxVelocity = 5000.0;
-
-        private DateTime _lastUpdateTime = DateTime.UtcNow;
-        private bool _initialized = false;
-
-        public void UpdateKalmanFilter(Detection detection)
+        protected override void Initialize(Point point, long timestamp)
         {
-            var now = DateTime.UtcNow;
-
-            if (!_initialized)
-            {
-                _x = detection.X;
-                _y = detection.Y;
-                _vx = 0;
-                _vy = 0;
-                _lastUpdateTime = now;
-                _initialized = true;
-                return;
-            }
-
-            // Calculate time step, clamped between 1ms and 100ms
-            double dt = (now - _lastUpdateTime).TotalSeconds;
-            dt = Math.Clamp(dt, 0.001, 0.1);
-
-            // Prediction step
-            double predictedX = _x + _vx * dt;
-            double predictedY = _y + _vy * dt;
-
-            // Update covariance (add process noise)
-            _p00 += ProcessNoise;
-            _p11 += ProcessNoise;
-            _p22 += ProcessNoise * 10; // Higher noise for velocity
-            _p33 += ProcessNoise * 10;
-
-            // Innovation (measurement residual)
-            double innovationX = detection.X - predictedX;
-            double innovationY = detection.Y - predictedY;
-
-            // Kalman gain (simplified for position measurements)
-            double K = _p00 / (_p00 + MeasurementNoise);
-
-            // Update state
-            _x = predictedX + K * innovationX;
-            _y = predictedY + K * innovationY;
-
-            // Update velocity based on innovation
-            _vx += K * innovationX / dt;
-            _vy += K * innovationY / dt;
-
-            // Clamp velocity to reasonable values
-            _vx = Math.Clamp(_vx, -MaxVelocity, MaxVelocity);
-            _vy = Math.Clamp(_vy, -MaxVelocity, MaxVelocity);
-
-            // Update covariance
-            _p00 *= (1 - K);
-            _p11 *= (1 - K);
-
-            _lastUpdateTime = now;
+            _x = point.X;
+            _y = point.Y;
+            _vx = _vy = 0;
         }
 
-        public Detection GetKalmanPosition(double mouseSpeed = 0)
+        protected override Point Estimate(Point point, long timestamp, double dt, double lead)
         {
-            var now = DateTime.UtcNow;
-            double dt = (now - _lastUpdateTime).TotalSeconds;
-
-            // Predict current position based on time since last update
-            double currentX = _x + _vx * dt;
-            double currentY = _y + _vy * dt;
-
-            // Get base lead time from settings
-            double leadTime = AimSettings.KalmanLeadTime;
-
-            // Dynamically adjust based on mouse speed if available
-            if (mouseSpeed > 0.0)
-            {
-                // Estimate animation completion time from mouse speed
-                double estimatedCompletionTime = 100.0 / mouseSpeed;
-                double dynamicLead = estimatedCompletionTime * 0.4; // Use 40% of completion time
-                // Scale by user setting (setting acts as multiplier around the dynamic value)
-                leadTime = dynamicLead * (leadTime / 0.10); // 0.10 is the default, so setting of 0.10 = 1x multiplier
-                leadTime = Math.Clamp(leadTime, 0.02, 0.3); // Cap to reasonable range
-            }
-
-            // Predict where target will be after lead time
-            double predictedX = currentX + _vx * leadTime;
-            double predictedY = currentY + _vy * leadTime;
-
-            return new Detection
-            {
-                X = (int)predictedX,
-                Y = (int)predictedY,
-                Timestamp = now
-            };
-        }
-
-        public void Reset()
-        {
-            _x = _y = _vx = _vy = 0;
-            _p00 = _p11 = _p22 = _p33 = 1.0;
-            _initialized = false;
+            double alpha = 1 - Math.Pow(0.5, 60 * dt);
+            double dx = alpha * (point.X - _x), dy = alpha * (point.Y - _y);
+            _vx += alpha * (dx / dt - _vx);
+            _vy += alpha * (dy / dt - _vy);
+            _x += dx;
+            _y += dy;
+            return new Point((int)Math.Round(_x + _vx * lead), (int)Math.Round(_y + _vy * lead));
         }
     }
 
-    internal class WiseTheFoxPrediction
+    internal sealed class ShalloePredictionV2 : MotionPredictor
     {
-        /// <summary>
-        /// Prediction using Exponential Moving Average with velocity tracking
-        /// Originally by @wisethef0x, fixed to include actual prediction
-        /// </summary>
-        public struct WTFDetection
+        private readonly Queue<(long Time, Point Position)> _history = new();
+        protected override void Initialize(Point point, long timestamp)
         {
-            public int X;
-            public int Y;
-            public DateTime Timestamp;
+            _history.Clear();
+            _history.Enqueue((timestamp, point));
         }
 
-        private DateTime _lastUpdateTime;
-        private const double Alpha = 0.5; // Smoothing factor
-
-        private double _emaX, _emaY;
-        private double _velocityX, _velocityY;
-        private double _prevX, _prevY;
-        private bool _initialized = false;
-
-        public WiseTheFoxPrediction()
+        protected override Point Estimate(Point point, long timestamp, double dt, double multiplier)
         {
-            _lastUpdateTime = DateTime.UtcNow;
-        }
-
-        public void UpdateDetection(WTFDetection detection)
-        {
-            var now = DateTime.UtcNow;
-
-            if (!_initialized)
-            {
-                _emaX = detection.X;
-                _emaY = detection.Y;
-                _prevX = detection.X;
-                _prevY = detection.Y;
-                _velocityX = 0;
-                _velocityY = 0;
-                _lastUpdateTime = now;
-                _initialized = true;
-                return;
-            }
-
-            // Calculate time delta, clamped
-            double dt = (now - _lastUpdateTime).TotalSeconds;
-            dt = Math.Clamp(dt, 0.001, 0.1);
-
-            // Apply EMA to position
-            _emaX = Alpha * detection.X + (1.0 - Alpha) * _emaX;
-            _emaY = Alpha * detection.Y + (1.0 - Alpha) * _emaY;
-
-            // Calculate velocity (pixels per second)
-            double newVelocityX = (_emaX - _prevX) / dt;
-            double newVelocityY = (_emaY - _prevY) / dt;
-
-            // Apply EMA to velocity for smoothing
-            _velocityX = Alpha * newVelocityX + (1.0 - Alpha) * _velocityX;
-            _velocityY = Alpha * newVelocityY + (1.0 - Alpha) * _velocityY;
-
-            // Store for next frame
-            _prevX = _emaX;
-            _prevY = _emaY;
-            _lastUpdateTime = now;
-        }
-
-        public WTFDetection GetEstimatedPosition()
-        {
-            // Get lead time from settings
-            double leadTime = AimSettings.WiseTheFoxLeadTime;
-
-            // Predict where target will be after lead time
-            double predictedX = _emaX + _velocityX * leadTime;
-            double predictedY = _emaY + _velocityY * leadTime;
-
-            return new WTFDetection
-            {
-                X = (int)predictedX,
-                Y = (int)predictedY,
-                Timestamp = DateTime.UtcNow
-            };
-        }
-
-        public void Reset()
-        {
-            _emaX = _emaY = 0;
-            _velocityX = _velocityY = 0;
-            _prevX = _prevY = 0;
-            _initialized = false;
-        }
-    }
-
-    internal class ShalloePredictionV2
-    {
-        /// <summary>
-        /// Velocity-based prediction using historical velocity averaging
-        /// Fixed to use proper velocity calculation instead of broken position averaging
-        /// </summary>
-        private static List<int> _velocityXHistory = new(5);
-        private static List<int> _velocityYHistory = new(5);
-
-        private static int _prevX = 0;
-        private static int _prevY = 0;
-        private static bool _initialized = false;
-
-        // Max velocity samples to keep
-        private const int MaxHistorySize = 5;
-
-        public static void UpdatePosition(int targetX, int targetY)
-        {
-            if (!_initialized)
-            {
-                _prevX = targetX;
-                _prevY = targetY;
-                _initialized = true;
-                return;
-            }
-
-            // Calculate velocity (pixels per frame)
-            int velocityX = targetX - _prevX;
-            int velocityY = targetY - _prevY;
-
-            // Add to history, removing oldest if full
-            if (_velocityXHistory.Count >= MaxHistorySize)
-            {
-                _velocityXHistory.RemoveAt(0);
-                _velocityYHistory.RemoveAt(0);
-            }
-
-            _velocityXHistory.Add(velocityX);
-            _velocityYHistory.Add(velocityY);
-
-            // Store current position for next frame
-            _prevX = targetX;
-            _prevY = targetY;
-        }
-
-        public static int GetSPX()
-        {
-            if (!_initialized || _velocityXHistory.Count == 0)
-            {
-                return _prevX;
-            }
-
-            // Get lead multiplier from settings
-            double leadMultiplier = AimSettings.ShalloeLeadMultiplier;
-
-            // Calculate average velocity
-            double avgVelocity = _velocityXHistory.Average();
-
-            // Predict future position: current + (average velocity * lead multiplier)
-            return (int)(_prevX + avgVelocity * leadMultiplier);
-        }
-
-        public static int GetSPY()
-        {
-            if (!_initialized || _velocityYHistory.Count == 0)
-            {
-                return _prevY;
-            }
-
-            // Get lead multiplier from settings
-            double leadMultiplier = AimSettings.ShalloeLeadMultiplier;
-
-            // Calculate average velocity
-            double avgVelocity = _velocityYHistory.Average();
-
-            // Predict future position: current + (average velocity * lead multiplier)
-            return (int)(_prevY + avgVelocity * leadMultiplier);
-        }
-
-        public static void Reset()
-        {
-            _velocityXHistory.Clear();
-            _velocityYHistory.Clear();
-            _prevX = _prevY = 0;
-            _initialized = false;
+            // Preserve the old five-frame window and lead units at the 60 Hz reference rate.
+            while (_history.Count > 1 && Stopwatch.GetElapsedTime(_history.Peek().Time, timestamp).TotalSeconds > 5.0 / 60)
+                _history.Dequeue();
+            var oldest = _history.Peek();
+            _history.Enqueue((timestamp, point));
+            double window = Stopwatch.GetElapsedTime(oldest.Time, timestamp).TotalSeconds;
+            double factor = multiplier / (60 * window);
+            return new Point(point.X + (int)Math.Round((point.X - oldest.Position.X) * factor),
+                point.Y + (int)Math.Round((point.Y - oldest.Position.Y) * factor));
         }
     }
 }

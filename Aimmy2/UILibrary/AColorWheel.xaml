@@ -9,6 +9,9 @@
              mc:Ignorable="d"
              d:DesignWidth="282.5"
              d:DesignHeight="310">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="ColorWheelVisibilityConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid x:Name="ViewContainer">
             <Border x:Name="ColorWheelView"
@@ -277,7 +280,7 @@
                     Padding="10,0,15,0"
                     VerticalAlignment="Top"
                     HorizontalAlignment="Right"
-                    Visibility="{Binding ShowArrow, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    Visibility="{Binding ShowArrow, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource ColorWheelVisibilityConverter}}"
                     Click="ArrowButton_Click" Margin="0,-37,132,0"/>
             <Border x:Name="DragDropView" 
                             Background="#3F3C3C3C"

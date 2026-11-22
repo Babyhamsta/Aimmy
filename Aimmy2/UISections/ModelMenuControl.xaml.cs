@@ -110,12 +110,8 @@ namespace Aimmy2.Controls
                 var modelNames = availableModels.OrderBy(m => m).ToList();
                 var configNames = availableConfigs.OrderBy(c => c).ToList();
 
-                // Update UI on UI thread
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    UpdateStoreDisplay(ModelStoreScroller, modelNames, "models");
-                    UpdateStoreDisplay(ConfigStoreScroller, configNames, "configs");
-                }, DispatcherPriority.Background);
+                await PopulateStoreAsync(ModelStoreScroller, modelNames, "models", SearchBox);
+                await PopulateStoreAsync(ConfigStoreScroller, configNames, "configs", CSearchBox);
             }
             catch (Exception e)
             {
@@ -138,17 +134,25 @@ namespace Aimmy2.Controls
             }
         }
 
-        private void UpdateStoreDisplay(StackPanel scroller, List<string> items, string folder)
+        private async Task PopulateStoreAsync(StackPanel scroller, List<string> items, string folder, TextBox search)
         {
             scroller.Children.Clear();
 
             if (items.Count > 0)
             {
-                // Create gateways on UI thread
+                // Allow input and rendering between batches of WPF control construction.
+                var slice = Stopwatch.StartNew();
                 foreach (var item in items)
                 {
                     var gateway = new ADownloadGateway(item, folder);
+                    gateway.Visibility = item.Contains(search.Text, StringComparison.OrdinalIgnoreCase)
+                        ? Visibility.Visible : Visibility.Collapsed;
                     scroller.Children.Add(gateway);
+                    if (slice.ElapsedMilliseconds >= 4)
+                    {
+                        await System.Windows.Threading.Dispatcher.Yield(DispatcherPriority.Background);
+                        slice.Restart();
+                    }
                 }
             }
             else

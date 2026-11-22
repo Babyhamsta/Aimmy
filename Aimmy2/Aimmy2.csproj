@@ -60,7 +60,7 @@
 
   <ItemGroup>
     <PackageReference Include="AntWpf" Version="1.0.5" />
-    <PackageReference Include="Costura.Fody" Version="6.0.0">
+    <PackageReference Include="Costura.Fody" Version="6.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -68,18 +68,18 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.23.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.4.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Supercluster.KDTree" Version="1.0.4" />
-    <PackageReference Include="System.Management" Version="10.0.2" />
+    <PackageReference Include="System.Management" Version="11.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-    <PackageReference Include="Vortice.Direct3D11" Version="3.8.2" />
-    <PackageReference Include="Vortice.Direct3D12" Version="3.8.2" />
-    <PackageReference Include="Vortice.DirectX" Version="3.8.2" />
-    <PackageReference Include="Vortice.DXGI" Version="3.8.2" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+    <PackageReference Include="Vortice.Direct3D12" Version="3.8.3" />
+    <PackageReference Include="Vortice.DirectX" Version="3.8.3" />
+    <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
     <PackageReference Include="XamlRadialProgressBar" Version="1.0.3" />
   </ItemGroup>
 

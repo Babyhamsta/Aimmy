@@ -111,7 +111,7 @@ namespace Aimmy2.AILogic
             }
 
             PerformanceBenchmarkSizeResult bestThroughput = FindBestThroughput(validResults);
-            PerformanceBenchmarkSizeResult fastestResult = ChooseFastestDetections(validResults);
+            PerformanceBenchmarkSizeResult fastestResult = bestThroughput;
             PerformanceBenchmarkSizeResult qualityResult = ChooseQuality(validResults, bestThroughput);
             PerformanceBenchmarkSizeResult highSpeedResult = ChooseHighSpeed(validResults, bestThroughput);
             PerformanceBenchmarkSizeResult lowestResourceResult = ChooseLowestResources(validResults);
@@ -194,24 +194,7 @@ namespace Aimmy2.AILogic
                 hardwareWarning);
         }
 
-        internal static PerformanceRecommendation Build(
-            IReadOnlyList<PerformanceBenchmarkSizeResult> results,
-            int currentImageSize,
-            bool isFixedSizeModel)
-        {
-            return BuildChoices(results, currentImageSize, isFixedSizeModel, PerformanceGoal.Balanced).Primary;
-        }
-
         private static PerformanceBenchmarkSizeResult FindBestThroughput(
-            IReadOnlyList<PerformanceBenchmarkSizeResult> validResults)
-        {
-            return validResults
-                .OrderByDescending(result => result.AverageFps)
-                .ThenByDescending(result => result.ImageSize)
-                .First();
-        }
-
-        private static PerformanceBenchmarkSizeResult ChooseFastestDetections(
             IReadOnlyList<PerformanceBenchmarkSizeResult> validResults)
         {
             return validResults

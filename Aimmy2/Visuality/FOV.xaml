@@ -13,30 +13,27 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStyle="None"
-        WindowStartupLocation="CenterScreen" WindowState="Maximized">
-    <Grid>
-        <Grid x:Name="FOVStrictEnclosure"
-          Width="640"
-          Height="640"
-          HorizontalAlignment="Left"
-          VerticalAlignment="Top">
-
+        ShowActivated="False"
+        WindowStartupLocation="Manual">
+    <Grid ClipToBounds="True">
+        <Grid>
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="RingOffset" />
+            </Grid.RenderTransform>
             <Ellipse x:Name="Circle"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center"
-             Width="640"
-             Height="640"
-             Stroke="Red" />
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     Width="640"
+                     Height="640"
+                     Stroke="Red" />
 
             <Rectangle x:Name="RectangleShape"
-               Visibility="Collapsed"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               Width="640"
-               Height="640"
-               Stroke="Red" />
-
+                       Visibility="Collapsed"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Width="640"
+                       Height="640"
+                       Stroke="Red" />
         </Grid>
-
     </Grid>
 </Window>

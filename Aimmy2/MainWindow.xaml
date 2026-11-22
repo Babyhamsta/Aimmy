@@ -124,28 +124,28 @@
                       HorizontalAlignment="Left"
                       Width="50"
                       Margin="0,50,0,0">
-                    <!-- Improved Menu Highlighter with smoother gradient -->
                     <Border x:Name="MenuHighlighter"
                             Width="50"
                             Height="50"
                             VerticalAlignment="Top"
                             HorizontalAlignment="Center"
-                            ClipToBounds="True">
+                            IsHitTestVisible="False"
+                            BorderBrush="{DynamicResource ThemeColor}"
+                            BorderThickness="3,0,0,0">
                         <Border.Background>
-                            <RadialGradientBrush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                 <GradientStop x:Name="HighlighterGradient1" Color="#FF722ED1" Offset="0"/>
                                 <GradientStop x:Name="HighlighterGradient2" Color="#33722ED1" Offset="0.3"/>
                                 <GradientStop Color="Transparent" Offset="0.9"/>
-                            </RadialGradientBrush>
+                            </LinearGradientBrush>
                         </Border.Background>
-                        <Border.Effect>
-                            <BlurEffect Radius="5"/>
-                        </Border.Effect>
                     </Border>
 
                     <!-- Menu buttons with updated effect brush -->
                     <Ant:Button x:Name="Menu1B"
                                 Tag="AimMenu"
+                                ToolTip="Aim"
+                                AutomationProperties.Name="Aim"
                                 theme:ThemeBehavior.Theme="Theme:EffectBrush"
                                 VerticalAlignment="Top"
                                 Height="50"
@@ -163,6 +163,8 @@
                                 Click="MenuSwitch" />
                     <Ant:Button x:Name="Menu2B"
                                 Tag="ModelMenu"
+                                ToolTip="Models"
+                                AutomationProperties.Name="Models"
                                 theme:ThemeBehavior.Theme="Theme:EffectBrush"
                                 VerticalAlignment="Top"
                                 Height="50"
@@ -181,6 +183,8 @@
                                 Click="MenuSwitch" />
                     <Ant:Button x:Name="Menu3B"
                                 Tag="SettingsMenu"
+                                ToolTip="Settings"
+                                AutomationProperties.Name="Settings"
                                 theme:ThemeBehavior.Theme="Theme:EffectBrush"
                                 VerticalAlignment="Top"
                                 Height="50"
@@ -199,6 +203,8 @@
                                 Click="MenuSwitch" />
                     <Ant:Button x:Name="Menu4B"
                                 Tag="AboutMenu"
+                                ToolTip="About"
+                                AutomationProperties.Name="About"
                                 theme:ThemeBehavior.Theme="Theme:EffectBrush"
                                 VerticalAlignment="Top"
                                 Height="50"

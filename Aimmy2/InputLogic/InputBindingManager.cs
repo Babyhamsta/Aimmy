@@ -1,4 +1,5 @@
-﻿using Gma.System.MouseKeyHook;
+﻿using System.Collections.Concurrent;
+using Gma.System.MouseKeyHook;
 using System.Windows.Forms;
 
 namespace InputLogic
@@ -7,7 +8,18 @@ namespace InputLogic
     {
         private IKeyboardMouseEvents? _mEvents;
         private readonly Dictionary<string, string> bindings = [];
-        private static readonly Dictionary<string, bool> isHolding = [];
+        private static readonly ConcurrentDictionary<string, bool> isHolding = [];
+        private static int _aimReleaseVersion;
+        internal static int AimReleaseVersion => Volatile.Read(ref _aimReleaseVersion);
+        private void Release(string bindingId)
+        {
+            isHolding[bindingId] = false;
+            if (bindingId is "Aim Keybind" or "Second Aim Keybind" &&
+                !IsHoldingBinding("Aim Keybind") && !IsHoldingBinding("Second Aim Keybind"))
+                Interlocked.Increment(ref _aimReleaseVersion);
+            OnBindingReleased?.Invoke(bindingId);
+        }
+
         private string? settingBindingId = null;
 
         public event Action<string, string>? OnBindingSet;
@@ -92,8 +104,7 @@ namespace InputLogic
             {
                 if (binding.Value == e.KeyCode.ToString())
                 {
-                    isHolding[binding.Key] = false;
-                    OnBindingReleased?.Invoke(binding.Key);
+                    Release(binding.Key);
                 }
             }
         }
@@ -104,8 +115,7 @@ namespace InputLogic
             {
                 if (binding.Value == e.Button.ToString())
                 {
-                    isHolding[binding.Key] = false;
-                    OnBindingReleased?.Invoke(binding.Key);
+                    Release(binding.Key);
                 }
             }
         }

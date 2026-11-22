@@ -1,4 +1,4 @@
-﻿using AILogic;
+using AILogic;
 using Aimmy2.Class;
 using Class;
 using InputLogic;
@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Windows;
@@ -26,6 +27,7 @@ namespace Aimmy2.AILogic
         private static readonly TimeSpan BenchmarkSampleDuration = TimeSpan.FromSeconds(10);
         private const int BenchmarkWarmupMinimumInferences = 30;
         private const int BenchmarkStabilityWindow = 8;
+        private const int DetectionHideDebounceMilliseconds = 20;
 
         #region Variables
 
@@ -43,37 +45,34 @@ namespace Aimmy2.AILogic
 
         // Dynamic properties instead of constants
         public int IMAGE_SIZE => _currentImageSize;
+
         private int NUM_DETECTIONS { get; set; } = 8400; // Will be set dynamically for dynamic models
         private bool IsDynamicModel { get; set; } = false;
 
         // Public static property to check if current loaded model is dynamic
         public static bool CurrentModelIsDynamic { get; private set; } = false;
+
         private int ModelFixedSize { get; set; } = 640; // Store the fixed size for non-dynamic models
         private int NUM_CLASSES { get; set; } = 1;
+
         private Dictionary<int, string> _modelClasses = new Dictionary<int, string>
         {
             { 0, "enemy" }
         };
+
         public Dictionary<int, string> ModelClasses => _modelClasses; // apparently this is better than making _modelClasses public
+
         public static event Action<Dictionary<int, string>>? ClassesUpdated;
+
         public static event Action<int>? ImageSizeUpdated;
+
         public static event Action<bool>? DynamicModelStatusChanged;
 
         private const int SAVE_FRAME_COOLDOWN_MS = 500;
 
+        private Task _pendingSave = Task.CompletedTask;
         private DateTime lastSavedTime = DateTime.MinValue;
         private List<string>? _outputNames;
-        private RectangleF LastDetectionBox;
-        private KalmanPrediction kalmanPrediction;
-        private WiseTheFoxPrediction wtfpredictionManager;
-
-        private byte[]? _bitmapBuffer; // Reusable buffer for bitmap operations
-
-        // Display-aware properties
-        private int ScreenWidth => DisplayManager.ScreenWidth;
-        private int ScreenHeight => DisplayManager.ScreenHeight;
-        private int ScreenLeft => DisplayManager.ScreenLeft;
-        private int ScreenTop => DisplayManager.ScreenTop;
 
         private readonly RunOptions? _modeloptions;
         private InferenceSession? _onnxModel;
@@ -89,78 +88,77 @@ namespace Aimmy2.AILogic
         private readonly SemaphoreSlim _inferenceGate = new(1, 1);
         private bool _disposed;
 
-        // For Auto-Labelling Data System
-        private bool PlayerFound = false;
-
-        private double CenterXTranslated = 0;
-        private double CenterYTranslated = 0;
-
         // Benchmarking
-        private int iterationCount = 0;
-        private long totalTime = 0;
+        private int _liveInferences;
 
-        private int detectedX { get; set; }
-        private int detectedY { get; set; }
+        private int _liveSelections;
+        private int _framesWithCandidates;
+        private int _framesAwaitingMatch;
+        private double _liveSeconds;
+        private DetectedPlayerWindow? _visibleOverlay;
+        private long _lastDisplayTimestamp;
+        private bool _displayMissPending;
 
         public double AIConf = 0;
-        // Pre-calculated values - now dynamic
-        private float _scaleX => ScreenWidth / (float)IMAGE_SIZE;
-        private float _scaleY => ScreenHeight / (float)IMAGE_SIZE;
 
         // Tensor reuse (model inference)
-        private DenseTensor<float>? _reusableTensor;
+        private FixedModelBuffers? _fixedModelBuffers;
+
         private float[]? _reusableInputArray;
         private List<NamedOnnxValue>? _reusableInputs;
 
         // Benchmarking
         private readonly Dictionary<string, BenchmarkData> _benchmarks = new();
+
         private readonly object _benchmarkLock = new();
 
-
         private readonly CaptureManager _captureManager = new();
+        private bool _trackingActive;
+        private bool _observing;
+        private int _releaseVersion;
+        private readonly KalmanPrediction kalmanPrediction = new();
+        private readonly ShalloePredictionV2 shalloePrediction = new();
+        private readonly WiseTheFoxPrediction wtfpredictionManager = new();
+        private string? _motionMethod;
+
+        private readonly TriggerButton _trigger = new(MouseManager.GetMouseActions);
+
+        private void ResetMotion()
+        {
+            MouseManager.ResetMovement();
+            kalmanPrediction.Reset();
+            wtfpredictionManager.Reset();
+            shalloePrediction.Reset();
+        }
+
         private readonly StickyAimSelector _stickyAimSelector = new();
         public Task<bool> InitializationTask { get; }
         public bool IsLoaded => _onnxModel != null && _outputNames != null;
+
         #endregion Variables
 
         #region Benchmarking
 
         private class BenchmarkData
         {
-            public long TotalTime { get; set; }
+            public double TotalTime { get; set; }
             public int CallCount { get; set; }
-            public long MinTime { get; set; } = long.MaxValue;
-            public long MaxTime { get; set; }
+            public double MinTime { get; set; } = double.MaxValue;
+            public double MaxTime { get; set; }
+            public long OverFrameBudget { get; set; }
             public double AverageTime => CallCount > 0 ? (double)TotalTime / CallCount : 0;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private IDisposable Benchmark(string name)
+        private BenchmarkScope Benchmark(string name) => new(this, name);
+
+        private readonly struct BenchmarkScope(AIManager manager, string name) : IDisposable
         {
-            return new BenchmarkScope(this, name);
+            private readonly long _start = Stopwatch.GetTimestamp();
+
+            public void Dispose() => manager.RecordBenchmark(name, Stopwatch.GetElapsedTime(_start).TotalMilliseconds);
         }
 
-        private class BenchmarkScope : IDisposable
-        {
-            private readonly AIManager _manager;
-            private readonly string _name;
-            private readonly Stopwatch _sw;
-
-            public BenchmarkScope(AIManager manager, string name)
-            {
-                _manager = manager;
-                _name = name;
-                _sw = Stopwatch.StartNew();
-            }
-
-            public void Dispose()
-            {
-                _sw.Stop();
-                _manager.RecordBenchmark(_name, _sw.ElapsedMilliseconds);
-            }
-        }
-
-        private void RecordBenchmark(string name, long elapsedMs)
+        private void RecordBenchmark(string name, double elapsedMs)
         {
             lock (_benchmarkLock)
             {
@@ -172,12 +170,13 @@ namespace Aimmy2.AILogic
 
                 data.TotalTime += elapsedMs;
                 data.CallCount++;
+                if (elapsedMs > 1000.0 / 60) data.OverFrameBudget++;
                 data.MinTime = Math.Min(data.MinTime, elapsedMs);
                 data.MaxTime = Math.Max(data.MaxTime, elapsedMs);
             }
         }
 
-        public void PrintBenchmarks()
+        private void PrintBenchmarks()
         {
             lock (_benchmarkLock)
             {
@@ -189,12 +188,13 @@ namespace Aimmy2.AILogic
                 foreach (var kvp in _benchmarks.OrderBy(x => x.Key))
                 {
                     var data = kvp.Value;
-                    lines.Add($"{kvp.Key}: Avg={data.AverageTime:F2}ms, Min={data.MinTime}ms, Max={data.MaxTime}ms, Count={data.CallCount}");
+                    lines.Add($"{kvp.Key}: Avg={data.AverageTime:F2}ms, Min={data.MinTime:F2}ms, Max={data.MaxTime:F2}ms, Count={data.CallCount}, >16.7ms={data.OverFrameBudget}");
                 }
 
-                lines.Add($"Overall FPS: {(iterationCount > 0 ? 1000.0 / (totalTime / (double)iterationCount) : 0):F2}");
-
-                //File.WriteAllLines("AIManager_Benchmarks.txt", lines);
+                if (_captureManager.SlowestReadback is { } readback) lines.Add(readback);
+                lines.Add(_captureManager.ReadbackCounts);
+                lines.Add($"Frames with eligible detections: {_framesWithCandidates}/{_liveInferences}, with detections but no sticky match: {_framesAwaitingMatch}");
+                lines.Add($"Active inference FPS: {(_liveSeconds > 0 ? _liveInferences / _liveSeconds : 0):F2}, selected frames: {_liveSelections}/{_liveInferences}");
 
                 Log(LogLevel.Info, string.Join(Environment.NewLine, lines));
             }
@@ -208,15 +208,6 @@ namespace Aimmy2.AILogic
 
             // Initialize the cached image size
             _currentImageSize = AimSettings.ImageSize;
-
-            // Initialize DXGI capture for current display
-            if (AimSettings.ScreenCaptureMethod == "DirectX")
-            {
-                _captureManager.InitializeDxgiDuplication();
-            }
-
-            kalmanPrediction = new KalmanPrediction();
-            wtfpredictionManager = new WiseTheFoxPrediction();
 
             _modeloptions = new RunOptions();
 
@@ -232,13 +223,7 @@ namespace Aimmy2.AILogic
             {
                 try
                 {
-                    if (!await LoadModelAsync(modelPath, useDirectML: true))
-                    {
-                        return false;
-                    }
-
-                    _usingDirectML = true;
-                    return true;
+                    return await LoadModelAsync(modelPath, useDirectML: true);
                 }
                 catch (Exception ex)
                 {
@@ -246,9 +231,7 @@ namespace Aimmy2.AILogic
 
                     try
                     {
-                        bool loaded = await LoadModelAsync(modelPath, useDirectML: false);
-                        _usingDirectML = loaded ? false : _usingDirectML;
-                        return loaded;
+                        return await LoadModelAsync(modelPath, useDirectML: false);
                     }
                     catch (Exception e)
                     {
@@ -265,6 +248,7 @@ namespace Aimmy2.AILogic
             {
                 OnnxModelLoadResult loadedModel = OnnxModelSessionFactory.Load(modelPath, useDirectML);
                 _onnxModel = loadedModel.Session;
+                _usingDirectML = useDirectML;
                 _outputNames = loadedModel.OutputNames;
 
                 // Validate the onnx model output shape (ensure model is OnnxV8)
@@ -273,14 +257,23 @@ namespace Aimmy2.AILogic
                     DisposeLoadedModel();
                     return Task.FromResult(false);
                 }
-
-                // Pre-allocate bitmap buffer
-                _bitmapBuffer = new byte[3 * IMAGE_SIZE * IMAGE_SIZE];
+                EnsureInferenceBuffers(_onnxModel);
             }
             catch
             {
                 DisposeLoadedModel();
                 throw;
+            }
+
+            // This method runs on the model-loading worker, before the live loop owns these resources.
+            try
+            {
+                using (Benchmark("CapturePreparation"))
+                    _captureManager.PrepareDirectX(IMAGE_SIZE);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Warning, $"DirectX preparation deferred to first capture: {ex.Message}");
             }
 
             _isAiLoopRunning = true;
@@ -297,6 +290,7 @@ namespace Aimmy2.AILogic
 
         private void DisposeLoadedModel()
         {
+            ReleaseInferenceBuffers();
             _onnxModel?.Dispose();
             _onnxModel = null;
             _outputNames = null;
@@ -495,7 +489,6 @@ namespace Aimmy2.AILogic
             }
 
             Stopwatch stopwatch = new();
-            DetectedPlayerWindow? DetectedPlayerOverlay = Dictionary.DetectedPlayerOverlay;
 
             try
             {
@@ -509,75 +502,121 @@ namespace Aimmy2.AILogic
 
                     if (_benchmarkMode)
                     {
+                        _observing = false;
+                        _trigger.Release();
+                        HideDetection();
                         await Task.Delay(10, cancellationToken);
                         continue;
                     }
 
                     stopwatch.Restart();
+                    long activeStart = 0;
 
                     try
                     {
                         if (sizeChangePending)
                         {
+                            _trigger.Release();
+                            HideDetection();
                             await Task.Delay(1, cancellationToken);
                             continue;
                         }
 
-                        _captureManager.HandlePendingDisplayChanges();
+                        bool active = AimSettings.ConstantAiTracking ||
+                            InputBindingManager.IsHoldingBinding("Aim Keybind") ||
+                            InputBindingManager.IsHoldingBinding("Second Aim Keybind");
+                        int release = InputBindingManager.AimReleaseVersion;
+                        bool observing = ShouldProcess() && ShouldPredict();
+                        if (active != _trackingActive || release != _releaseVersion || observing != _observing)
+                        {
+                            _trigger.Release();
+                            _stickyAimSelector.Reset();
+                            ResetMotion();
+                            if (!active || !observing || release != _releaseVersion)
+                                HideDetection();
+                        }
+                        _observing = observing;
+                        _trackingActive = active;
+                        _releaseVersion = release;
 
                         using (Benchmark("AILoopIteration"))
                         {
-                            UpdateFOV();
-
-                            if (ShouldProcess())
+                            if (observing)
                             {
-                                if (ShouldPredict())
+                                activeStart = Stopwatch.GetTimestamp();
+                                Prediction? closestPrediction;
+                                Prediction? displayDetection;
+                                System.Drawing.Point? measured;
+                                using (Benchmark("CaptureToSelection"))
                                 {
-                                    Prediction? closestPrediction;
-                                    using (Benchmark("GetClosestPrediction"))
+                                    // The performance helper can own the gate for an entire benchmark.
+                                    // Release input before yielding a live frame to it.
+                                    if (!_inferenceGate.Wait(0))
                                     {
-                                        await _inferenceGate.WaitAsync(cancellationToken);
-                                        try
-                                        {
-                                            closestPrediction = await GetClosestPrediction();
-                                        }
-                                        finally
-                                        {
-                                            _inferenceGate.Release();
-                                        }
-                                    }
-
-                                    if (closestPrediction == null)
-                                    {
-                                        DisableOverlay(DetectedPlayerOverlay!);
+                                        _trigger.Release();
+                                        HideDetection();
                                         continue;
                                     }
-
-                                    using (Benchmark("AutoTrigger"))
+                                    try
                                     {
-                                        await AutoTrigger();
+                                        if (_benchmarkMode || _suppressOutputActions)
+                                        {
+                                            _trigger.Release();
+                                            continue;
+                                        }
+                                        closestPrediction = DetectAndSelect(out displayDetection, out measured);
+                                        if (_lastPredictionRanInference) _liveInferences++;
                                     }
-
-                                    using (Benchmark("CalculateCoordinates"))
+                                    finally
                                     {
-                                        CalculateCoordinates(DetectedPlayerOverlay, closestPrediction, _scaleX, _scaleY);
+                                        _inferenceGate.Release();
                                     }
+                                }
 
+                                if (_suppressOutputActions || release != InputBindingManager.AimReleaseVersion)
+                                {
+                                    _trigger.Release();
+                                    HideDetection();
+                                    continue;
+                                }
+
+                                if (measured is System.Drawing.Point aim)
+                                {
                                     using (Benchmark("HandleAim"))
                                     {
-                                        HandleAim(closestPrediction);
+                                        HandleAim(aim);
                                     }
+                                }
 
-                                    totalTime += stopwatch.ElapsedMilliseconds;
-                                    iterationCount++;
-                                }
-                                else
+                                using (Benchmark("AutoTrigger"))
                                 {
-                                    await Task.Delay(1, cancellationToken);
+                                    await UpdateTriggerAsync(closestPrediction, cancellationToken);
                                 }
+                                if (displayDetection != null)
+                                    UpdateDetectionOverlay(displayDetection, cancellationToken);
+                                else if (_visibleOverlay != null)
+                                {
+                                    // A capture without a new frame is different from an inference miss.
+                                    _displayMissPending |= _lastPredictionRanInference;
+                                    if (Stopwatch.GetElapsedTime(_lastDisplayTimestamp).TotalMilliseconds >= DetectionHideDebounceMilliseconds &&
+                                        (_displayMissPending || Stopwatch.GetElapsedTime(_captureManager.LastCaptureTimestamp).TotalMilliseconds > 150))
+                                        HideDetection();
+                                }
+
+                                if (closestPrediction == null)
+                                {
+                                    if (_lastPredictionRanInference && AimSettings.StickyAim && _stickyAimSelector.HasLock)
+                                        MouseManager.PauseMovement(_captureManager.LastCaptureTimestamp);
+                                    continue;
+                                }
+
+                                AIConf = closestPrediction.Confidence;
+                                _liveSelections++;
                             }
                             else
                             {
+                                _trigger.Release();
+                                HideDetection();
                                 await Task.Delay(1, cancellationToken);
                             }
                         }
@@ -586,6 +625,7 @@ namespace Aimmy2.AILogic
                     {
                         stopwatch.Stop();
                         await ApplyFpsLimitAsync(stopwatch, cancellationToken);
+                        if (activeStart != 0) _liveSeconds += Stopwatch.GetElapsedTime(activeStart).TotalSeconds;
                     }
                 }
             }
@@ -594,7 +634,13 @@ namespace Aimmy2.AILogic
             }
             catch (Exception ex)
             {
+                _trigger.Release();
                 Log(LogLevel.Error, $"AI loop stopped: {ex.Message}", true, 5000);
+            }
+            finally
+            {
+                _trigger.Release();
+                HideDetection();
             }
         }
 
@@ -614,268 +660,145 @@ namespace Aimmy2.AILogic
 
         #region AI Loop Functions
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task AutoTrigger()
+        private Task UpdateTriggerAsync(Prediction? selected, CancellationToken token)
         {
-            if (_suppressOutputActions)
-                return;
-
-            // if auto trigger is disabled,
-            // or if the aim keybinds are not held,
-            // or if constant AI tracking is enabled,
-            // we check for spray release and return
-            if (!AimProcessingDecisions.ShouldAttemptAutoTrigger(
-                AimSettings.AutoTrigger,
-                InputBindingManager.IsHoldingBinding("Aim Keybind"),
-                InputBindingManager.IsHoldingBinding("Second Aim Keybind"),
-                AimSettings.ConstantAiTracking))
+            bool eligible = selected != null && !_suppressOutputActions && _releaseVersion == InputBindingManager.AimReleaseVersion &&
+                AimProcessingDecisions.ShouldAttemptAutoTrigger(AimSettings.AutoTrigger,
+                    InputBindingManager.IsHoldingBinding("Aim Keybind"),
+                    InputBindingManager.IsHoldingBinding("Second Aim Keybind"), AimSettings.ConstantAiTracking);
+            if (eligible && AimSettings.CursorCheck)
             {
-                CheckSprayRelease();
-                return;
+                var cursor = WinAPICaller.GetCursorPosition();
+                eligible = selected!.ScreenBounds.Contains(cursor.X, cursor.Y) &&
+                    DisplayManager.IsPointInCurrentDisplay(new System.Windows.Point(cursor.X, cursor.Y));
             }
 
-
-            if (AimSettings.SprayMode)
-            {
-                await MouseManager.DoTriggerClick(LastDetectionBox);
-                return;
-            }
-
-
-            if (AimSettings.CursorCheck)
-            {
-                var mousePos = WinAPICaller.GetCursorPosition();
-
-                if (!DisplayManager.IsPointInCurrentDisplay(new System.Windows.Point(mousePos.X, mousePos.Y)))
-                {
-                    return;
-                }
-
-                if (LastDetectionBox.Contains(mousePos.X, mousePos.Y))
-                {
-                    await MouseManager.DoTriggerClick(LastDetectionBox);
-                }
-            }
-            else
-            {
-                await MouseManager.DoTriggerClick();
-            }
-
-            if (!AimSettings.AimAssist || !AimSettings.ShowDetectedPlayer) return;
-
-        }
-        private void CheckSprayRelease()
-        {
-            if (!AimSettings.SprayMode) return;
-
-            // if auto trigger is disabled, we reset the spray state
-            // if the aim keybinds are not held, we reset the spray state
-            if (!AimProcessingDecisions.ShouldKeepSprayActive(
-                AimSettings.AutoTrigger,
-                InputBindingManager.IsHoldingBinding("Aim Keybind"),
-                InputBindingManager.IsHoldingBinding("Second Aim Keybind")))
-            {
-                MouseManager.ResetSprayState();
-            }
+            return _trigger.UpdateAsync(eligible, eligible && AimSettings.SprayMode,
+                eligible ? AimSettings.AutoTriggerDelayMilliseconds : 0, token);
         }
 
-        private async void UpdateFOV()
+        private void HideDetection()
         {
-            if (AimSettings.DetectionAreaType == "Closest to Mouse" && AimSettings.ShowFov)
+            _displayMissPending = false;
+            var overlay = _visibleOverlay;
+            if (overlay == null) return;
+            _visibleOverlay = null;
+            overlay.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Send, () =>
             {
-                var mousePosition = WinAPICaller.GetCursorPosition();
-
-                // Check if mouse is on the current display
-                if (!DisplayManager.IsPointInCurrentDisplay(new System.Windows.Point(mousePosition.X, mousePosition.Y)))
-                {
-                    // Mouse is on a different display - don't update FOV position
-                    return;
-                }
-
-                // Translate mouse position relative to current display
-                var displayRelativeX = mousePosition.X - DisplayManager.ScreenLeft;
-                var displayRelativeY = mousePosition.Y - DisplayManager.ScreenTop;
-
-                await Application.Current.Dispatcher.BeginInvoke(() =>
-                    Dictionary.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
-                        Convert.ToInt16(displayRelativeX / WinAPICaller.scalingFactorX) - 320, // this is based off the window size, not the size of the model -whip
-                        Convert.ToInt16(displayRelativeY / WinAPICaller.scalingFactorY) - 320, 0, 0));
-            }
+                overlay.DetectedPlayerFocus.Opacity = 0;
+                overlay.DetectedPlayerConfidence.Opacity = 0;
+                overlay.DetectedTracers.Opacity = 0;
+            });
         }
 
-        private static void DisableOverlay(DetectedPlayerWindow DetectedPlayerOverlay)
+        private void UpdateOverlay(DetectedPlayerWindow overlay, Prediction closestPrediction, CancellationToken cancellationToken)
         {
-            if (AimSettings.ShowDetectedPlayer && Dictionary.DetectedPlayerOverlay != null)
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    if (AimSettings.ShowAiConfidence)
-                    {
-                        DetectedPlayerOverlay!.DetectedPlayerConfidence.Opacity = 0;
-                    }
-
-                    if (AimSettings.ShowTracers)
-                    {
-                        DetectedPlayerOverlay!.DetectedTracers.Opacity = 0;
-                    }
-
-                    DetectedPlayerOverlay!.DetectedPlayerFocus.Opacity = 0;
-                });
-            }
-        }
-
-        private void UpdateOverlay(DetectedPlayerWindow DetectedPlayerOverlay, Prediction closestPrediction)
-        {
-            var scalingFactorX = WinAPICaller.scalingFactorX;
-            var scalingFactorY = WinAPICaller.scalingFactorY;
-
-            // Convert screen coordinates to display-relative coordinates
-            var displayRelativeX = LastDetectionBox.X - DisplayManager.ScreenLeft;
-            var displayRelativeY = LastDetectionBox.Y - DisplayManager.ScreenTop;
-
-            // Calculate center position in display-relative coordinates
-            var centerX = Convert.ToInt16(displayRelativeX / scalingFactorX) + (LastDetectionBox.Width / 2.0);
-            var centerY = Convert.ToInt16(displayRelativeY / scalingFactorY);
-
+            var bounds = closestPrediction.ScreenBounds;
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (AimSettings.ShowAiConfidence)
-                {
-                    DetectedPlayerOverlay.DetectedPlayerConfidence.Opacity = 1;
-                    DetectedPlayerOverlay.DetectedPlayerConfidence.Content = $"{closestPrediction.ClassName}: {Math.Round((AIConf * 100), 2)}%";
+                var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(overlay);
 
-                    var labelEstimatedHalfWidth = DetectedPlayerOverlay.DetectedPlayerConfidence.ActualWidth / 2.0;
-                    DetectedPlayerOverlay.DetectedPlayerConfidence.Margin = new Thickness(
+                var width = bounds.Width / dpi.DpiScaleX;
+                var height = bounds.Height / dpi.DpiScaleY;
+                var centerX = (bounds.X - DisplayManager.ScreenLeft) / dpi.DpiScaleX + width / 2;
+                var centerY = (bounds.Y - DisplayManager.ScreenTop) / dpi.DpiScaleY;
+
+                bool showConfidence = AimSettings.ShowAiConfidence;
+                overlay.DetectedPlayerConfidence.Opacity = showConfidence ? 1 : 0;
+                if (showConfidence)
+                {
+                    overlay.DetectedPlayerConfidence.Content = $"{closestPrediction.ClassName}: {Math.Round(closestPrediction.Confidence * 100, 2)}%";
+
+                    var labelEstimatedHalfWidth = overlay.DetectedPlayerConfidence.ActualWidth / 2.0;
+                    overlay.DetectedPlayerConfidence.Margin = new Thickness(
                         centerX - labelEstimatedHalfWidth,
-                        centerY - DetectedPlayerOverlay.DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
+                        centerY - overlay.DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
                 }
                 var showTracers = AimSettings.ShowTracers;
-                DetectedPlayerOverlay.DetectedTracers.Opacity = showTracers ? 1 : 0;
+                overlay.DetectedTracers.Opacity = showTracers ? 1 : 0;
                 if (showTracers)
                 {
                     var tracerPosition = AimSettings.TracerPosition;
+                    overlay.DetectedTracers.X1 = DisplayManager.ScreenWidth / (2.0 * dpi.DpiScaleX);
+                    overlay.DetectedTracers.Y1 = tracerPosition switch
+                    {
+                        "Top" => 0,
+                        "Middle" => DisplayManager.ScreenHeight / (2.0 * dpi.DpiScaleY),
+                        _ => DisplayManager.ScreenHeight / dpi.DpiScaleY
+                    };
 
                     var boxTop = centerY;
-                    var boxBottom = centerY + LastDetectionBox.Height;
+                    var boxBottom = centerY + height;
                     var boxHorizontalCenter = centerX;
-                    var boxVerticalCenter = centerY + (LastDetectionBox.Height / 2.0);
-                    var boxLeft = centerX - (LastDetectionBox.Width / 2.0);
-                    var boxRight = centerX + (LastDetectionBox.Width / 2.0);
+                    var boxVerticalCenter = centerY + (height / 2.0);
+                    var boxLeft = centerX - (width / 2.0);
+                    var boxRight = centerX + (width / 2.0);
 
                     switch (tracerPosition)
                     {
                         case "Top":
-                            DetectedPlayerOverlay.DetectedTracers.X2 = boxHorizontalCenter;
-                            DetectedPlayerOverlay.DetectedTracers.Y2 = boxTop;
+                            overlay.DetectedTracers.X2 = boxHorizontalCenter;
+                            overlay.DetectedTracers.Y2 = boxTop;
                             break;
 
                         case "Bottom":
-                            DetectedPlayerOverlay.DetectedTracers.X2 = boxHorizontalCenter;
-                            DetectedPlayerOverlay.DetectedTracers.Y2 = boxBottom;
+                            overlay.DetectedTracers.X2 = boxHorizontalCenter;
+                            overlay.DetectedTracers.Y2 = boxBottom;
                             break;
 
                         case "Middle":
-                            var screenHorizontalCenter = DisplayManager.ScreenWidth / (2.0 * WinAPICaller.scalingFactorX);
+                            var screenHorizontalCenter = DisplayManager.ScreenWidth / (2.0 * dpi.DpiScaleX);
                             if (boxHorizontalCenter < screenHorizontalCenter)
                             {
                                 // if the box is on the left half of the screen, aim for the right-middle of the box
-                                DetectedPlayerOverlay.DetectedTracers.X2 = boxRight;
-                                DetectedPlayerOverlay.DetectedTracers.Y2 = boxVerticalCenter;
+                                overlay.DetectedTracers.X2 = boxRight;
+                                overlay.DetectedTracers.Y2 = boxVerticalCenter;
                             }
                             else
                             {
                                 // if the box is on the right half, aim for the left-middle
-                                DetectedPlayerOverlay.DetectedTracers.X2 = boxLeft;
-                                DetectedPlayerOverlay.DetectedTracers.Y2 = boxVerticalCenter;
+                                overlay.DetectedTracers.X2 = boxLeft;
+                                overlay.DetectedTracers.Y2 = boxVerticalCenter;
                             }
                             break;
 
                         default:
                             // default to the bottom-center if the setting is unrecognized
-                            DetectedPlayerOverlay.DetectedTracers.X2 = boxHorizontalCenter;
-                            DetectedPlayerOverlay.DetectedTracers.Y2 = boxBottom;
+                            overlay.DetectedTracers.X2 = boxHorizontalCenter;
+                            overlay.DetectedTracers.Y2 = boxBottom;
                             break;
                     }
                 }
 
-                DetectedPlayerOverlay.Opacity = AimSettings.OverlayOpacity;
+                overlay.Opacity = AimSettings.OverlayOpacity;
 
-                DetectedPlayerOverlay.DetectedPlayerFocus.Opacity = 1;
-                DetectedPlayerOverlay.DetectedPlayerFocus.Margin = new Thickness(
-                    centerX - (LastDetectionBox.Width / 2.0), centerY, 0, 0);
-                DetectedPlayerOverlay.DetectedPlayerFocus.Width = LastDetectionBox.Width;
-                DetectedPlayerOverlay.DetectedPlayerFocus.Height = LastDetectionBox.Height;
-            });
+                overlay.DetectedPlayerFocus.Opacity = 1;
+                overlay.DetectedPlayerFocus.Margin = new Thickness(
+                    centerX - (width / 2.0), centerY, 0, 0);
+                overlay.DetectedPlayerFocus.Width = width;
+                overlay.DetectedPlayerFocus.Height = height;
+            }, System.Windows.Threading.DispatcherPriority.Send, cancellationToken);
         }
 
-        private void CalculateCoordinates(DetectedPlayerWindow DetectedPlayerOverlay, Prediction closestPrediction, float scaleX, float scaleY)
+        private void UpdateDetectionOverlay(Prediction closestPrediction, CancellationToken cancellationToken)
         {
-            AIConf = closestPrediction.Confidence;
-
-            if (AimSettings.ShowDetectedPlayer && Dictionary.DetectedPlayerOverlay != null)
+            var overlay = AimSettings.ShowDetectedPlayer ? Dictionary.DetectedPlayerOverlay : null;
+            if (overlay != _visibleOverlay) HideDetection();
+            if (overlay != null)
             {
                 using (Benchmark("UpdateOverlay"))
                 {
-                    UpdateOverlay(DetectedPlayerOverlay!, closestPrediction);
+                    UpdateOverlay(overlay, closestPrediction, cancellationToken);
+                    _visibleOverlay = overlay;
+                    _lastDisplayTimestamp = Stopwatch.GetTimestamp();
+                    _displayMissPending = false;
                 }
-                if (!AimSettings.AimAssist) return;
-            }
-
-            double YOffset = AimSettings.YOffset;
-            double XOffset = AimSettings.XOffset;
-
-            double YOffsetPercentage = AimSettings.YOffsetPercent;
-            double XOffsetPercentage = AimSettings.XOffsetPercent;
-
-            var rect = closestPrediction.Rectangle;
-
-            if (AimSettings.UseXAxisPercentageAdjustment)
-            {
-                detectedX = (int)((rect.X + (rect.Width * (XOffsetPercentage / 100))) * scaleX);
-            }
-            else
-            {
-                detectedX = (int)((rect.X + rect.Width / 2) * scaleX + XOffset);
-            }
-
-            if (AimSettings.UseYAxisPercentageAdjustment)
-            {
-                detectedY = (int)((rect.Y + rect.Height - (rect.Height * (YOffsetPercentage / 100))) * scaleY + YOffset);
-            }
-            else
-            {
-                detectedY = CalculateDetectedY(scaleY, YOffset, closestPrediction);
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int CalculateDetectedY(float scaleY, double YOffset, Prediction closestPrediction)
+        private void HandleAim(System.Drawing.Point measured)
         {
-            var rect = closestPrediction.Rectangle;
-            float yBase = rect.Y;
-            float yAdjustment = 0;
-
-            switch (AimSettings.AimingBoundariesAlignment)
-            {
-                case "Center":
-                    yAdjustment = rect.Height / 2;
-                    break;
-
-                case "Top":
-                    // yBase is already at the top
-                    break;
-
-                case "Bottom":
-                    yAdjustment = rect.Height;
-                    break;
-            }
-
-            return (int)((yBase + yAdjustment) * scaleY + YOffset);
-        }
-
-        private void HandleAim(Prediction closestPrediction)
-        {
-            if (_suppressOutputActions)
+            if (_suppressOutputActions || _releaseVersion != InputBindingManager.AimReleaseVersion)
                 return;
 
             if (AimSettings.AimAssist &&
@@ -883,71 +806,44 @@ namespace Aimmy2.AILogic
                  AimSettings.AimAssist && InputBindingManager.IsHoldingBinding("Aim Keybind") ||
                  AimSettings.AimAssist && InputBindingManager.IsHoldingBinding("Second Aim Keybind")))
             {
-                if (AimSettings.Predictions)
+                long time = _captureManager.LastCaptureTimestamp;
+                string method = AimSettings.Predictions ? AimSettings.PredictionMethod : "";
+                if (_motionMethod != method)
+                    ResetMotion();
+                _motionMethod = method;
+                var correction = measured;
+                if (method.Length != 0)
                 {
-                    HandlePredictions(kalmanPrediction, closestPrediction, detectedX, detectedY);
+                    using var predictionTiming = Benchmark(method);
+                    correction = method switch
+                    {
+                        "Kalman Filter" => kalmanPrediction.Update(measured, time, AimSettings.KalmanLeadTime),
+                        "Shall0e's Prediction" => shalloePrediction.Update(measured, time, AimSettings.ShalloeLeadMultiplier),
+                        "wisethef0x's EMA Prediction" => wtfpredictionManager.Update(measured, time, AimSettings.WiseTheFoxLeadTime),
+                        _ => measured
+                    };
                 }
-                else
-                {
-                    MouseManager.MoveCrosshair(detectedX, detectedY);
-                }
+                MouseManager.MoveCrosshair(correction.X, correction.Y, measured.X, measured.Y, time);
             }
         }
 
-        private void HandlePredictions(KalmanPrediction kalmanPrediction, Prediction closestPrediction, int detectedX, int detectedY)
+        private Prediction? DetectAndSelect(out Prediction? displayDetection, out System.Drawing.Point? measured, bool useMousePosition = true)
         {
-            var predictionMethod = AimSettings.PredictionMethod;
-            switch (predictionMethod)
+            displayDetection = null;
+            measured = null;
+            if (_captureManager.HandlePendingDisplayChanges())
             {
-                case "Kalman Filter":
-                    KalmanPrediction.Detection detection = new()
-                    {
-                        X = detectedX,
-                        Y = detectedY,
-                        Timestamp = DateTime.UtcNow
-                    };
-
-                    kalmanPrediction.UpdateKalmanFilter(detection);
-                    var predictedPosition = kalmanPrediction.GetKalmanPosition();
-
-                    MouseManager.MoveCrosshair(predictedPosition.X, predictedPosition.Y);
-                    break;
-
-                case "Shall0e's Prediction":
-                    // Update position (calculates velocity internally)
-                    ShalloePredictionV2.UpdatePosition(detectedX, detectedY);
-
-                    // Get predicted position
-                    MouseManager.MoveCrosshair(ShalloePredictionV2.GetSPX(), ShalloePredictionV2.GetSPY());
-                    break;
-
-                case "wisethef0x's EMA Prediction":
-                    WiseTheFoxPrediction.WTFDetection wtfdetection = new()
-                    {
-                        X = detectedX,
-                        Y = detectedY,
-                        Timestamp = DateTime.UtcNow
-                    };
-
-                    wtfpredictionManager.UpdateDetection(wtfdetection);
-                    var wtfpredictedPosition = wtfpredictionManager.GetEstimatedPosition();
-
-                    // Use both predicted X and Y
-                    MouseManager.MoveCrosshair(wtfpredictedPosition.X, wtfpredictedPosition.Y);
-                    break;
+                _stickyAimSelector.Reset();
+                ResetMotion();
             }
-        }
-
-        private async Task<Prediction?> GetClosestPrediction(bool useMousePosition = true)
-        {
             _lastPredictionRanInference = false;
-            Rectangle detectionBox = CreateDetectionBox(useMousePosition);
+            var detectionBox = CreateDetectionBox(useMousePosition);
 
             Bitmap? frame;
 
             using (Benchmark("ScreenGrab"))
             {
-                frame = _captureManager.ScreenGrab(detectionBox, allowStaleCache: _benchmarkMode);
+                frame = _captureManager.BorrowFrame(detectionBox, allowStaleCache: _benchmarkMode);
             }
 
             if (frame == null) return null;
@@ -957,62 +853,64 @@ namespace Aimmy2.AILogic
 
             try
             {
-                float[] inputArray;
+                if (_onnxModel == null) return null;
+                EnsureInferenceBuffers(_onnxModel);
+
                 using (Benchmark("BitmapToFloatArray"))
                 {
-                    if (_reusableInputArray == null || _reusableInputArray.Length != 3 * IMAGE_SIZE * IMAGE_SIZE)
-                    {
-                        _reusableInputArray = new float[3 * IMAGE_SIZE * IMAGE_SIZE];
-                    }
-                    inputArray = _reusableInputArray;
-
-                    // Fill the reusable array
-                    BitmapToFloatArrayInPlace(frame, inputArray, IMAGE_SIZE);
+                    BitmapToFloatArrayInPlace(frame, _reusableInputArray, IMAGE_SIZE);
                 }
 
-                // Reuse tensor and inputs - recreate if size changed
-                /// this needs to be revised !!!!! - taylor
-                if (_reusableTensor == null || _reusableTensor.Dimensions[2] != IMAGE_SIZE)
-                {
-                    _reusableTensor = new DenseTensor<float>(inputArray, new int[] { 1, 3, IMAGE_SIZE, IMAGE_SIZE });
-                    _reusableInputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", _reusableTensor) };
-                }
-                else
-                {
-                    // Directly copy into existing DenseTensor buffer
-                    inputArray.AsSpan().CopyTo(_reusableTensor.Buffer.Span);
-                }
-
-                if (_onnxModel == null) return null;
                 using (Benchmark("ModelInference"))
                 {
-                    results = _onnxModel.Run(_reusableInputs, _outputNames, _modeloptions);
+                    if (_fixedModelBuffers != null)
+                    {
+                        outputTensor = _fixedModelBuffers.Run(_onnxModel, _modeloptions!);
+                    }
+                    else
+                    {
+                        results = _onnxModel.Run(_reusableInputs, _outputNames, _modeloptions);
+                        outputTensor = results[0].AsTensor<float>();
+                    }
                     _lastPredictionRanInference = true;
-                    outputTensor = results[0].AsTensor<float>();
                 }
 
                 if (outputTensor == null)
                 {
                     Log(LogLevel.Error, "Model inference returned null output tensor.", true, 2000);
-                    SaveFrame(frame);
                     return null;
                 }
 
-                // Calculate the FOV boundaries
-                float FovSize = (float)AimSettings.FovSize;
-                float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
-                float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
-                float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
-                float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
+                bool sticky = AimSettings.StickyAim && _trackingActive;
+                float fovSize = Math.Clamp((float)AimSettings.FovSize, 0, IMAGE_SIZE);
+                float stickyThreshold = (float)AimSettings.StickyAimThreshold;
+                bool hadLock = _stickyAimSelector.HasLock;
 
-                //List<double[]> KDpoints;
-                List<Prediction> KDPredictions;
-                using (Benchmark("PrepareKDTreeData"))
+                //redundant, but i might need later not sure
+                //float inset = sticky && hadLock ? 0 : (IMAGE_SIZE - fovSize) / 2;
+                float inset = 0;
+                var crosshair = new Vector2(detectionBox.Left + detectionBox.Width / 2,
+                    detectionBox.Top + detectionBox.Height / 2);
+
+                bool percentX = AimSettings.UseXAxisPercentageAdjustment;
+                bool percentY = AimSettings.UseYAxisPercentageAdjustment;
+
+                double xPercent = AimSettings.XOffsetPercent;
+                double yPercent = AimSettings.YOffsetPercent;
+
+                double xOffset = AimSettings.XOffset;
+                double yOffset = AimSettings.YOffset;
+                string alignment = AimSettings.AimingBoundariesAlignment;
+                Func<RectangleF, Vector2> aimPoint = bounds => AimCoordinates.AimPoint(bounds,
+                    percentX, xPercent, xOffset, percentY, yPercent, yOffset, alignment);
+
+                List<Prediction> predictions;
+                using (Benchmark("DecodeDetections"))
                 {
                     float minConfidence = AimSettings.MinimumConfidence;
                     string selectedClass = AimSettings.TargetClass;
 
-                    KDPredictions = PredictionFilter.CreatePredictions(
+                    predictions = PredictionFilter.CreatePredictions(
                         outputTensor,
                         detectionBox,
                         IMAGE_SIZE,
@@ -1021,62 +919,45 @@ namespace Aimmy2.AILogic
                         _modelClasses,
                         minConfidence,
                         selectedClass,
-                        fovMinX,
-                        fovMaxX,
-                        fovMinY,
-                        fovMaxY);
-                }
-
-                if (KDPredictions.Count == 0)
-                {
-                    SaveFrame(frame);
-                    return null;
-                }
-
-                //kdtree was replaced with linear search
-                Prediction? bestCandidate = null;
-                double bestDistSq = double.MaxValue;
-                double center = IMAGE_SIZE / 2.0;
-
-                // TODO: Optimize this linear search further if needed
-                // TODO: Consider updating KD-Tree and adding options to switch from linear to kd.
-                // we can honestly replacing linear search by letting sticky aim handle the search
-                using (Benchmark("LinearSearch"))
-                {
-                    foreach (var p in KDPredictions)
-                    {
-                        var dx = p.CenterXTranslated * IMAGE_SIZE - center;
-                        var dy = p.CenterYTranslated * IMAGE_SIZE - center;
-                        double d2 = dx * dx + dy * dy; // dx^2 + dy^2
-
-                        if (d2 < bestDistSq) { bestDistSq = d2; bestCandidate = p; }
-                    }
+                        inset,
+                        IMAGE_SIZE - inset,
+                        inset,
+                        IMAGE_SIZE - inset,
+                        capturedPixels: _captureManager.CapturedPixels);
                 }
 
                 if (_benchmarkMode)
                 {
-                    return bestCandidate;
+                    return StickyAimSelector.NearestToCenter(predictions, crosshair, aimPoint, fovSize);
                 }
 
-                Prediction? finalTarget = _stickyAimSelector.SelectTarget(
-                    AimSettings.StickyAim,
-                    (float)AimSettings.StickyAimThreshold,
-                    IMAGE_SIZE,
-                    bestCandidate,
-                    KDPredictions);
-                if (finalTarget != null)
+                Prediction? finalTarget;
+                using (Benchmark("SelectTarget"))
                 {
-                    UpdateDetectionBox(finalTarget, detectionBox);
-                    SaveFrame(frame, finalTarget);
-                    return finalTarget;
+                    finalTarget = _stickyAimSelector.SelectTarget(
+                        sticky, stickyThreshold, predictions,
+                        _captureManager.LastCaptureTimestamp, crosshair, aimPoint,
+                        AimSettings.StickyAimGraceMs, detectionBox, fovSize);
+                    displayDetection = AimSettings.ShowDetectedPlayer
+                        ? _stickyAimSelector.ForDisplay(finalTarget, predictions, crosshair, aimPoint, fovSize) : null;
                 }
-
-                return null;
+                if (predictions.Count != 0)
+                {
+                    _framesWithCandidates++;
+                    if (finalTarget == null) _framesAwaitingMatch++;
+                }
+                SaveFrame(frame, outputTensor, detectionBox);
+                if (_stickyAimSelector.Acquired || (hadLock && !_stickyAimSelector.HasLock)) ResetMotion();
+                if (finalTarget != null && AimSettings.AimAssist)
+                {
+                    using var timing = Benchmark("CalculateCoordinates");
+                    var error = aimPoint(finalTarget.ScreenBounds) - crosshair;
+                    measured = System.Drawing.Point.Round(new PointF(error.X, error.Y));
+                }
+                return finalTarget;
             }
             finally
             {
-                // Always dispose the cloned frame to prevent memory leaks
-                frame.Dispose();
                 results?.Dispose();
             }
         }
@@ -1105,17 +986,6 @@ namespace Aimmy2.AILogic
                 displayBounds,
                 mousePosition,
                 mouseOnCurrentDisplay);
-        }
-
-        private void UpdateDetectionBox(Prediction target, Rectangle detectionBox)
-        {
-            float translatedXMin = target.Rectangle.X + detectionBox.Left;
-            float translatedYMin = target.Rectangle.Y + detectionBox.Top;
-            LastDetectionBox = new(translatedXMin, translatedYMin,
-                target.Rectangle.Width, target.Rectangle.Height);
-
-            CenterXTranslated = target.CenterXTranslated;
-            CenterYTranslated = target.CenterYTranslated;
         }
 
         public async Task<PerformanceBenchmarkReport> RunPerformanceBenchmarkAsync(
@@ -1301,7 +1171,7 @@ namespace Aimmy2.AILogic
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var frameStopwatch = Stopwatch.StartNew();
-                await GetClosestPrediction(useMousePosition: false);
+                DetectAndSelect(out _, out _, useMousePosition: false);
                 frameStopwatch.Stop();
 
                 if (_lastPredictionRanInference)
@@ -1354,9 +1224,32 @@ namespace Aimmy2.AILogic
         {
             _currentImageSize = imageSize;
             NUM_DETECTIONS = CalculateNumDetections(imageSize);
-            _bitmapBuffer = new byte[3 * imageSize * imageSize];
+            ReleaseInferenceBuffers();
+        }
+
+        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_reusableInputArray))]
+        private void EnsureInferenceBuffers(InferenceSession session)
+        {
+            if (_reusableInputArray == null || _reusableInputArray.Length != 3 * IMAGE_SIZE * IMAGE_SIZE)
+            {
+                ReleaseInferenceBuffers();
+                var input = new float[3 * IMAGE_SIZE * IMAGE_SIZE];
+                if (_usingDirectML)
+                    _fixedModelBuffers = FixedModelBuffers.TryCreate(session, IMAGE_SIZE, input);
+                if (_fixedModelBuffers == null)
+                {
+                    var tensor = new DenseTensor<float>(input, new[] { 1, 3, IMAGE_SIZE, IMAGE_SIZE });
+                    _reusableInputs = [NamedOnnxValue.CreateFromTensor(session.InputMetadata.Keys.First(), tensor)];
+                }
+                _reusableInputArray = input;
+            }
+        }
+
+        private void ReleaseInferenceBuffers()
+        {
+            _fixedModelBuffers?.Dispose();
+            _fixedModelBuffers = null;
             _reusableInputArray = null;
-            _reusableTensor = null;
             _reusableInputs = null;
         }
 
@@ -1425,7 +1318,7 @@ namespace Aimmy2.AILogic
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var frameStopwatch = Stopwatch.StartNew();
-                await GetClosestPrediction(useMousePosition: false);
+                DetectAndSelect(out _, out _, useMousePosition: false);
                 frameStopwatch.Stop();
                 bool ranInference = _lastPredictionRanInference;
 
@@ -1512,60 +1405,40 @@ namespace Aimmy2.AILogic
 
         #region Screen Capture
 
-        private void SaveFrame(Bitmap frame, Prediction? DoLabel = null)
+        private void SaveFrame(Bitmap frame, Tensor<float> output, Rectangle crop)
         {
-            if (_suppressOutputActions)
-                return;
+            bool label = AimSettings.AutoLabelData;
+            if (_suppressOutputActions || !AimSettings.CollectDataWhilePlaying ||
+                (AimSettings.ConstantAiTracking && !label) || !_pendingSave.IsCompleted ||
+                (DateTime.UtcNow - lastSavedTime).TotalMilliseconds < SAVE_FRAME_COOLDOWN_MS) return;
 
-            // Only save frames if "Collect Data While Playing" is enabled
-            if (!AimSettings.CollectDataWhilePlaying) return;
-
-            // Skip if we're in constant tracking mode (unless auto-labeling is enabled)
-            if (AimSettings.ConstantAiTracking && !AimSettings.AutoLabelData) return;
-
-            // Cooldown check
-            if ((DateTime.Now - lastSavedTime).TotalMilliseconds < SAVE_FRAME_COOLDOWN_MS) return;
-
-            try
+            var boxes = label ? PredictionFilter.CreatePredictions(output, crop, IMAGE_SIZE,
+                NUM_DETECTIONS, NUM_CLASSES, _modelClasses, AimSettings.MinimumConfidence,
+                "Best Confidence", 0, IMAGE_SIZE, 0, IMAGE_SIZE, clipToBounds: true, capturedPixels: _captureManager.CapturedPixels) : null;
+            var ownedFrame = (Bitmap)frame.Clone();
+            lastSavedTime = DateTime.UtcNow;
+            _pendingSave = Task.Run(() =>
             {
-                // Validate bitmap is still usable
-                if (frame == null) return;
-
-                // Accessing Width/Height will throw if bitmap is disposed
-                int width = frame.Width;
-                int height = frame.Height;
-                if (width <= 0 || height <= 0) return;
-
-                lastSavedTime = DateTime.Now;
-                string uuid = Guid.NewGuid().ToString();
-                string imagePath = Path.Combine("bin", "images", $"{uuid}.jpg");
-
-                // Save synchronously to avoid "Object is currently in use elsewhere" error
-                frame.Save(imagePath, ImageFormat.Jpeg);
-
-                if (AimSettings.AutoLabelData && DoLabel != null)
+                using (ownedFrame)
                 {
-                    var labelPath = Path.Combine("bin", "labels", $"{uuid}.txt");
-
-                    float x = (DoLabel!.Rectangle.X + DoLabel.Rectangle.Width / 2) / width;
-                    float y = (DoLabel!.Rectangle.Y + DoLabel.Rectangle.Height / 2) / height;
-                    float labelWidth = DoLabel.Rectangle.Width / width;
-                    float labelHeight = DoLabel.Rectangle.Height / height;
-
-                    File.WriteAllText(labelPath, $"{DoLabel.ClassId} {x} {y} {labelWidth} {labelHeight}");
+                    string id = Guid.NewGuid().ToString();
+                    string imagePath = Path.Combine("bin", "images", id + ".jpg");
+                    string labelPath = Path.Combine("bin", "labels", id + ".txt");
+                    try
+                    {
+                        if (boxes != null)
+                            TrainingLabels.Write(labelPath, boxes, ownedFrame.Width, ownedFrame.Height);
+                        ownedFrame.Save(imagePath, ImageFormat.Jpeg);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log(LogLevel.Error, $"Frame export {id} failed: {ex.Message}");
+                        try { File.Delete(imagePath); File.Delete(labelPath); }
+                        catch (Exception cleanup) { Log(LogLevel.Warning, cleanup.Message); }
+                    }
                 }
-            }
-            catch (ArgumentException)
-            {
-                // Bitmap was disposed or invalid - silently ignore
-            }
-            catch (Exception ex)
-            {
-                Log(LogLevel.Error, $"SaveFrame failed: {ex.Message}");
-            }
+            });
         }
-
-
 
         #endregion Screen Capture
 
@@ -1612,6 +1485,7 @@ namespace Aimmy2.AILogic
             }
 
             StopAiLoop();
+            _pendingSave.GetAwaiter().GetResult();
 
             // Print final benchmarks
             PrintBenchmarks();
@@ -1620,12 +1494,10 @@ namespace Aimmy2.AILogic
             _captureManager.Dispose();
 
             // Clean up other resources
-            _reusableInputArray = null;
-            _reusableInputs = null;
+            ReleaseInferenceBuffers();
             _onnxModel?.Dispose();
             _modeloptions?.Dispose();
             _inferenceGate.Dispose();
-            _bitmapBuffer = null;
         }
     }
 }

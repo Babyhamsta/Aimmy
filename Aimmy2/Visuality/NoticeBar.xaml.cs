@@ -20,17 +20,14 @@ namespace Visuality
         private static DispatcherTimer? _cleanupTimer;
         private readonly bool _isContainerInstance;
 
-        private const double ProgressBarMaxWidth = 500;
-
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
             ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
         }
 
-        public NoticeBar(string text, int waitingTime = 4000, NoticeType type = NoticeType.Info) : this(true)
+        public NoticeBar(string text, int waitingTime = 4000, NoticeType type = NoticeType.Info) : this(false)
         {
-            _isContainerInstance = false;
             CreateStandaloneNotice(text, waitingTime, type);
         }
 
@@ -51,7 +48,6 @@ namespace Visuality
                         Interval = TimeSpan.FromMilliseconds(100)
                     };
                     _cleanupTimer.Tick += CleanupExpiredNotices;
-                    _cleanupTimer.Start();
                 }
 
                 ThemeManager.ExcludeWindowFromBackground(this);
@@ -87,11 +83,10 @@ namespace Visuality
             if (_notices == null || _containerInstance == null) return;
 
             var now = DateTime.Now;
-            var toRemove = _notices.Where(n => n.IsExpired(now)).ToList();
-
-            foreach (var notice in toRemove)
+            for (int i = _notices.Count - 1; i >= 0; i--)
             {
-                _containerInstance.AnimateRemoval(notice);
+                var notice = _notices[i];
+                if (notice.IsExpired(now)) _containerInstance.AnimateRemoval(notice);
             }
         }
 
@@ -116,6 +111,7 @@ namespace Visuality
 
             if (_notices?.Count == 0)
             {
+                _cleanupTimer?.Stop();
                 Hide();
             }
         }
@@ -144,57 +140,20 @@ namespace Visuality
                         _notices.RemoveAt(0);
                     }
 
-                    _containerInstance.Dispatcher.BeginInvoke(
-                        new Action(() => _containerInstance.StartProgressAnimation(notice)),
-                        DispatcherPriority.Loaded);
+                    _cleanupTimer?.Start();
                 }
             });
         }
 
-        private void StartProgressAnimation(NoticeItem notice)
+        private void ProgressBar_Loaded(object sender, RoutedEventArgs e)
         {
-            var container = NoticesContainer.ItemContainerGenerator.ContainerFromItem(notice) as ListBoxItem;
-            if (container == null)
-            {
-                Dispatcher.BeginInvoke(
-                    new Action(() => StartProgressAnimation(notice)),
-                    DispatcherPriority.Loaded);
-                return;
-            }
-
-            var progressBar = FindVisualChild<Border>(container, "ProgressBar");
-            if (progressBar != null)
-            {
-                var parent = progressBar.Parent as FrameworkElement;
-                var maxWidth = parent?.ActualWidth > 0 ? parent.ActualWidth : ProgressBarMaxWidth;
-
-                progressBar.Width = maxWidth;
-
-                var progressAnimation = new DoubleAnimation
-                {
-                    From = maxWidth,
-                    To = 0,
-                    Duration = TimeSpan.FromMilliseconds(notice.Duration)
-                };
-
-                progressBar.BeginAnimation(WidthProperty, progressAnimation);
-            }
-        }
-
-        private static T? FindVisualChild<T>(DependencyObject parent, string name) where T : FrameworkElement
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, i);
-
-                if (child is T typedChild && typedChild.Name == name)
-                    return typedChild;
-
-                var result = FindVisualChild<T>(child, name);
-                if (result != null)
-                    return result;
-            }
-            return null;
+            if (sender is not Border { DataContext: NoticeItem notice } bar) return;
+            var remaining = notice.Remaining;
+            double fraction = notice.Duration > 0 ? Math.Clamp(remaining.TotalMilliseconds / notice.Duration, 0, 1) : 0;
+            var scale = new ScaleTransform(fraction, 1);
+            bar.RenderTransform = scale;
+            if (remaining > TimeSpan.Zero)
+                scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(fraction, 0, remaining));
         }
 
         protected override void OnClosed(EventArgs e)
@@ -301,6 +260,8 @@ namespace Visuality
             OnPropertyChanged(nameof(ThemeColorMid));
             OnPropertyChanged(nameof(ThemeColorEnd));
         }
+
+        internal TimeSpan Remaining => _expiryTime - DateTime.Now;
 
         public bool IsExpired(DateTime now) => now >= _expiryTime && !_isRemoving;
 

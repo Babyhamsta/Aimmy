@@ -4,6 +4,12 @@ namespace Aimmy2.AILogic
 {
     internal static class CaptureTargetSelector
     {
+        internal static (Rectangle Source, Point Destination) VisibleRegion(Rectangle crop, Rectangle display)
+        {
+            Rectangle visible = Rectangle.Intersect(display, crop);
+            return (visible, new Point(visible.Left - crop.Left, visible.Top - crop.Top));
+        }
+
         internal static Rectangle SelectDetectionBox(
             string detectionAreaType,
             int imageSize,

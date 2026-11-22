@@ -199,7 +199,12 @@ namespace Aimmy2.Controls
                     // Set initial visibility based on toggle state
                     s.Visibility = Dictionary.toggleState["Sticky Aim"]
                         ? Visibility.Visible : Visibility.Collapsed;
-                }, tooltip: "How far a target must move before switching to a new one. Higher = stays locked longer.")
+                }, tooltip: "Maximum matching distance in pixels from the last or expected position.")
+                .AddSlider("Sticky Aim Grace", "ms", 5, 5, 0, 500, s =>
+                {
+                    uiManager.S_StickyAimGrace = s;
+                    s.Visibility = Dictionary.toggleState["Sticky Aim"] ? Visibility.Visible : Visibility.Collapsed;
+                }, tooltip: "How long to retain a missing target before another player can be selected. Default 150 ms.")
                 .AddKeyChanger("Aim Keybind", k => uiManager.C_Keybind = k,
                     tooltip: "The key you hold to activate aim assist.")
                 .AddKeyChanger("Second Aim Keybind", tooltip: "An alternate key to activate aim assist.")
@@ -254,14 +259,15 @@ namespace Aimmy2.Controls
                 }, tooltip: "How mouse movements are sent. Try different options if aim assist isn't working.")
                 .AddDropdown("Movement Path", d =>
                 {
-                    d.DropdownBox.SelectedIndex = 0;
+                    string savedPath = AimSettings.MovementPath;
+                    d.DropdownBox.SelectedIndex = -1;
                     uiManager.D_MovementPath = d;
                     _mainWindow.AddDropdownItem(d, "Cubic Bezier");
                     _mainWindow.AddDropdownItem(d, "Exponential");
                     _mainWindow.AddDropdownItem(d, "Linear");
-                    _mainWindow.AddDropdownItem(d, "Adaptive");
                     _mainWindow.AddDropdownItem(d, "Perlin Noise");
-                }, tooltip: "The curve style used when moving to a target. Affects how natural the movement looks.")
+                    d.SelectOption(savedPath);
+                }, tooltip: "How the pointer moves toward the target.")
                 .AddDropdown("Detection Area Type", d =>
                 {
                     d.DropdownBox.SelectedIndex = -1;
@@ -269,14 +275,7 @@ namespace Aimmy2.Controls
                     uiManager.DDI_ClosestToCenterScreen = _mainWindow.AddDropdownItem(d, "Closest to Center Screen");
                     _mainWindow.AddDropdownItem(d, "Closest to Mouse");
 
-                    uiManager.DDI_ClosestToCenterScreen.Selected += async (s, e) =>
-                    {
-                        await Task.Delay(100);
-                        MainWindow.FOVWindow.FOVStrictEnclosure.Margin = new Thickness(
-                            Convert.ToInt16((WinAPICaller.ScreenWidth / 2) / WinAPICaller.scalingFactorX) - 320,
-                            Convert.ToInt16((WinAPICaller.ScreenHeight / 2) / WinAPICaller.scalingFactorY) - 320,
-                            0, 0);
-                    };
+                    d.DropdownBox.SelectionChanged += (_, _) => MainWindow.FOVWindow.ForceReposition();
                 }, tooltip: "How targets are prioritized. Center screen is best for most games.")
                 .AddDropdown("Aiming Boundaries Alignment", d =>
                 {
@@ -342,7 +341,8 @@ namespace Aimmy2.Controls
                     // Set initial visibility based on toggle state
                     s.Visibility = Dictionary.toggleState["X Axis Percentage Adjustment"]
                         ? Visibility.Visible : Visibility.Collapsed;
-                }, tooltip: "Move aim point left or right as a percentage of the target box width.");
+                }, tooltip: "Move aim point left or right as a percentage of the target box width.")
+                .AddSeparator();
         }
 
         private void LoadPredictions()
@@ -419,14 +419,14 @@ namespace Aimmy2.Controls
                     t.Minimize.Click += (s, e) => TogglePanel("Auto Trigger", TriggerBotPanel);
                 })
                 .AddToggle("Auto Trigger", t => uiManager.T_AutoTrigger = t,
-                    tooltip: "Automatically click when a target is detected in your crosshair area.")
+                    tooltip: "Click while the primary aim binding is held and a target is selected in the FOV.")
                 .AddToggle("Cursor Check", t => uiManager.T_CursorCheck = t,
-                    tooltip: "Only trigger when cursor is directly on target. More accurate but may miss some shots.")
+                    tooltip: "Require the cursor to be inside the selected box for clicks and spray.")
                 .AddToggle("Spray Mode", t => uiManager.T_SprayMode = t,
-                    tooltip: "Hold down fire instead of single clicks. Good for automatic weapons.")
+                    tooltip: "Hold the button while a current detection meets the trigger conditions.")
                 //.AddToggle("Only When Held", t => uiManager.T_OnlyWhenHeld = t)
                 .AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.01, 1, s => uiManager.S_AutoTriggerDelay = s,
-                    tooltip: "Wait time before firing after detecting a target. Helps avoid accidental shots.")
+                    tooltip: "Minimum interval between the end of one single click and the start of the next.")
                 .AddSeparator();
         }
 
@@ -541,29 +541,15 @@ namespace Aimmy2.Controls
 
             builder.AddDropdown("Tracer Position", d =>
             {
-                d.DropdownBox.SelectedIndex = 0;
+                string savedPosition = AimSettings.TracerPosition;
+                d.DropdownBox.SelectedIndex = -1;
                 uiManager.D_TracerPosition = d;
                 // Changed the positions of these as top is above middle & bottom - ts (this) bothered me so i had to
                 _mainWindow.AddDropdownItem(d, "Top");
                 _mainWindow.AddDropdownItem(d, "Middle");
                 _mainWindow.AddDropdownItem(d, "Bottom");
-                d.DropdownBox.SelectionChanged += (s, e) =>
-                {
-                    if (Dictionary.toggleState["Show Detected Player"])
-                    {
-                        // simulate a click to turn it off - this is to force a reload of the ui cause tracer doesn't update otherwise - helz
-                        uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                        // simulate a click to turn it back on - same as before ^ - helz
-                        uiManager.T_ShowDetectedPlayer.Reader.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                    }
-                    else
-                    {
-                        if (Dictionary.DetectedPlayerOverlay != null)
-                        {
-                            Dictionary.DetectedPlayerOverlay.ForceReposition();
-                        }
-                    }
-                };
+                d.SelectOption(savedPosition);
+
             }, tooltip: "Where tracer lines start from on the screen.");
 
             builder
@@ -770,11 +756,7 @@ namespace Aimmy2.Controls
             var toggle = new AToggle(title, tooltip);
             _mainWindow!.toggleInstances[title] = toggle;
 
-            // Set initial state
-            if (Dictionary.toggleState[title])
-                toggle.EnableSwitch();
-            else
-                toggle.DisableSwitch();
+            toggle.SetInitialState((bool)Dictionary.toggleState[title]);
 
             // Handle click
             toggle.Reader.Click += (sender, e) =>

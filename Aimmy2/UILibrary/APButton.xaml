@@ -35,7 +35,7 @@
                        HorizontalAlignment="Right"
                        HorizontalContentAlignment="Right" />
 
-                <Button x:Name="Reader"
+                <Button x:Name="Reader" AutomationProperties.LabeledBy="{Binding ElementName=ButtonTitle}"
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Padding="0,0,0,0"
