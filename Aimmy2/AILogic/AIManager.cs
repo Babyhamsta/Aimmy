@@ -270,6 +270,26 @@ namespace Aimmy2.AILogic
             // This method runs on the model-loading worker, before the live loop owns these resources.
             try
             {
+                using (Benchmark("ModelWarmup"))
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        if (_fixedModelBuffers != null)
+                            _fixedModelBuffers.Run(_onnxModel, _modeloptions!);
+                        else
+                        {
+                            using var outputs = _onnxModel.Run(_reusableInputs, _outputNames, _modeloptions);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Warning, $"Model warmup failed: {ex.Message}");
+            }
+
+            try
+            {
                 using (Benchmark("CapturePreparation"))
                     _captureManager.PrepareDirectX(IMAGE_SIZE);
             }
