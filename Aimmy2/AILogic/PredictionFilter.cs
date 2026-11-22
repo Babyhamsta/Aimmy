@@ -1,3 +1,7 @@
+using Microsoft.ML.OnnxRuntime;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Buffers;
 using System.Drawing;
 using System.Numerics;
 using Microsoft.ML.OnnxRuntime.Tensors;
@@ -7,7 +11,7 @@ namespace Aimmy2.AILogic
     internal static class PredictionFilter
     {
         internal static List<Prediction> CreatePredictions(
-            Tensor<float> outputTensor,
+            TensorBase outputTensor,
             Rectangle detectionBox,
             int imageSize,
             int numDetections,
@@ -22,6 +26,23 @@ namespace Aimmy2.AILogic
             bool clipToBounds = false,
             Rectangle? capturedPixels = null)
         {
+            return outputTensor switch
+            {
+                Tensor<float> floats => Decode(floats),
+                Tensor<Float16> halves => Decode(halves),
+                _ => throw new NotSupportedException("Expected Float32 or Float16 detections.")
+            };
+
+            List<Prediction> Decode<T>(Tensor<T> tensor) where T : unmanaged =>
+                DecodePredictions(tensor, detectionBox, imageSize, numDetections, numClasses, modelClasses,
+                    minConfidence, selectedClass, fovMinX, fovMaxX, fovMinY, fovMaxY, clipToBounds, capturedPixels);
+        }
+
+        private static List<Prediction> DecodePredictions<T>(Tensor<T> outputTensor, Rectangle detectionBox,
+            int imageSize, int numDetections, int numClasses, IReadOnlyDictionary<int, string> modelClasses,
+            float minConfidence, string selectedClass, float fovMinX, float fovMaxX, float fovMinY,
+            float fovMaxY, bool clipToBounds, Rectangle? capturedPixels) where T : unmanaged
+        {
             if (capturedPixels is Rectangle visible)
             {
                 fovMinX = Math.Max(fovMinX, visible.Left);
@@ -34,26 +55,44 @@ namespace Aimmy2.AILogic
             int selectedClassId = ResolveSelectedClassId(modelClasses, selectedClass);
 
             var predictions = new List<Prediction>();
-            var dense = outputTensor as DenseTensor<float>;
+            var dense = outputTensor as DenseTensor<T>;
             int channelStride = outputTensor.Strides[1];
             int boxStride = outputTensor.Strides[2];
             float Read(int channel, int box)
             {
                 int index = channel * channelStride + box * boxStride;
-                return dense != null ? dense.Buffer.Span[index] : outputTensor.GetValue(index);
+                T value = dense != null ? dense.Buffer.Span[index] : outputTensor.GetValue(index);
+                return typeof(T) == typeof(float) ? Unsafe.As<T, float>(ref value) : (float)Unsafe.As<T, Half>(ref value);
             }
 
             // A single-class YOLO head stores confidences contiguously on the usual dense layout.
-            ReadOnlySpan<float> scores = dense != null && numClasses == 1 && boxStride == 1
-                ? dense.Buffer.Span.Slice(4 * channelStride, numDetections) : default;
+            ReadOnlySpan<float> scores = typeof(T) == typeof(float) && dense != null && numClasses == 1 && boxStride == 1
+                ? MemoryMarshal.Cast<T, float>(dense.Buffer.Span.Slice(4 * channelStride, numDetections)) : default;
+            ReadOnlySpan<short> halfScores = typeof(T) == typeof(Float16) && dense != null && numClasses == 1 && boxStride == 1
+                ? MemoryMarshal.Cast<T, short>(dense.Buffer.Span.Slice(4 * channelStride, numDetections)) : default;
+            // Signed half bits place negative scores below zero and preserve positive score order.
+            var halfThreshold = Vector<short>.Zero;
+            if (!halfScores.IsEmpty && !float.IsNaN(minConfidence))
+            {
+                ushort minScoreBits = BitConverter.HalfToUInt16Bits((Half)Math.Max(0f, minConfidence));
+                halfThreshold = new Vector<short>((short)minScoreBits);
+            }
             var threshold = new Vector<float>(minConfidence);
             for (int i = 0; i < numDetections; i++)
             {
-                if (Vector.IsHardwareAccelerated && i % Vector<float>.Count == 0 &&
+                if (typeof(T) == typeof(float) && Vector.IsHardwareAccelerated && i % Vector<float>.Count == 0 &&
                     i <= scores.Length - Vector<float>.Count &&
                     Vector.LessThanAll(new Vector<float>(scores.Slice(i)), threshold))
                 {
                     i += Vector<float>.Count - 1;
+                    continue;
+                }
+
+                if (typeof(T) == typeof(Float16) && Vector.IsHardwareAccelerated && i % Vector<short>.Count == 0 &&
+                    i <= halfScores.Length - Vector<short>.Count &&
+                    Vector.LessThanAll(new Vector<short>(halfScores.Slice(i)), halfThreshold))
+                {
+                    i += Vector<short>.Count - 1;
                     continue;
                 }
 
@@ -130,27 +169,49 @@ namespace Aimmy2.AILogic
 
             if (predictions.Count < 2) return predictions;
 
-            // Stable confidence ranking also breaks ties by the model's anchor order.
-            var kept = new List<int>();
-            foreach (int index in Enumerable.Range(0, predictions.Count).OrderByDescending(i => predictions[i].Confidence))
+            int count = predictions.Count;
+            int[]? rented = null;
+            Span<int> order = count <= 128 ? stackalloc int[count] :
+                (rented = ArrayPool<int>.Shared.Rent(count)).AsSpan(0, count);
+            try
             {
-                var candidate = predictions[index];
-                bool suppressed = false;
-                foreach (int winner in kept)
+                // Equal scores retain their original detector order.
+                for (int i = 0; i < count; i++)
                 {
-                    var other = predictions[winner];
-                    if (other.ClassId == candidate.ClassId && IntersectionOverUnion(other.Rectangle, candidate.Rectangle) >= .45f)
+                    int j = i;
+                    float score = predictions[i].Confidence;
+                    while (j > 0 && predictions[order[j - 1]].Confidence < score)
                     {
-                        suppressed = true;
-                        break;
+                        order[j] = order[j - 1];
+                        j--;
                     }
+                    order[j] = i;
                 }
-                if (!suppressed) kept.Add(index);
+
+                int keptCount = 0;
+                foreach (int index in order)
+                {
+                    var candidate = predictions[index];
+                    bool suppressed = false;
+                    foreach (int winner in order[..keptCount])
+                    {
+                        var other = predictions[winner];
+                        if (other.ClassId == candidate.ClassId && IntersectionOverUnion(other.Rectangle, candidate.Rectangle) >= .45f)
+                        {
+                            suppressed = true;
+                            break;
+                        }
+                    }
+                    if (!suppressed) order[keptCount++] = index;
+                }
+                order[..keptCount].Sort();
+                for (int i = 0; i < keptCount; i++) predictions[i] = predictions[order[i]];
+                predictions.RemoveRange(keptCount, count - keptCount);
             }
-            // Preserve detector order for downstream consumers, including training labels.
-            kept.Sort();
-            for (int i = 0; i < kept.Count; i++) predictions[i] = predictions[kept[i]];
-            predictions.RemoveRange(kept.Count, predictions.Count - kept.Count);
+            finally
+            {
+                if (rented != null) ArrayPool<int>.Shared.Return(rented);
+            }
             return predictions;
         }
 

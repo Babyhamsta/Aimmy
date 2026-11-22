@@ -104,7 +104,9 @@ namespace Aimmy2.AILogic
         // Tensor reuse (model inference)
         private FixedModelBuffers? _fixedModelBuffers;
 
-        private float[]? _reusableInputArray;
+        private float[]? _reusableFloatInput;
+        private Float16[]? _reusableHalfInput;
+        private bool _halfOutput;
         private List<NamedOnnxValue>? _reusableInputs;
 
         // Benchmarking
@@ -677,8 +679,12 @@ namespace Aimmy2.AILogic
                 eligible ? AimSettings.AutoTriggerDelayMilliseconds : 0, token);
         }
 
+        private int _overlayUpdateInFlight;
+        private int _overlayGeneration;
+
         private void HideDetection()
         {
+            Interlocked.Increment(ref _overlayGeneration);
             _displayMissPending = false;
             var overlay = _visibleOverlay;
             if (overlay == null) return;
@@ -693,91 +699,102 @@ namespace Aimmy2.AILogic
 
         private void UpdateOverlay(DetectedPlayerWindow overlay, Prediction closestPrediction, CancellationToken cancellationToken)
         {
+            int expectedGeneration = Volatile.Read(ref _overlayGeneration);
+            if (Interlocked.CompareExchange(ref _overlayUpdateInFlight, 1, 0) != 0) return;
             var bounds = closestPrediction.ScreenBounds;
-            Application.Current.Dispatcher.Invoke(() =>
+            overlay.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Render, () =>
             {
-                var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(overlay);
-
-                var width = bounds.Width / dpi.DpiScaleX;
-                var height = bounds.Height / dpi.DpiScaleY;
-                var centerX = (bounds.X - DisplayManager.ScreenLeft) / dpi.DpiScaleX + width / 2;
-                var centerY = (bounds.Y - DisplayManager.ScreenTop) / dpi.DpiScaleY;
-
-                bool showConfidence = AimSettings.ShowAiConfidence;
-                overlay.DetectedPlayerConfidence.Opacity = showConfidence ? 1 : 0;
-                if (showConfidence)
+                try
                 {
-                    overlay.DetectedPlayerConfidence.Content = $"{closestPrediction.ClassName}: {Math.Round(closestPrediction.Confidence * 100, 2)}%";
+                    if (Volatile.Read(ref _overlayGeneration) != expectedGeneration || cancellationToken.IsCancellationRequested)
+                        return;
+                    var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(overlay);
 
-                    var labelEstimatedHalfWidth = overlay.DetectedPlayerConfidence.ActualWidth / 2.0;
-                    overlay.DetectedPlayerConfidence.Margin = new Thickness(
-                        centerX - labelEstimatedHalfWidth,
-                        centerY - overlay.DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
-                }
-                var showTracers = AimSettings.ShowTracers;
-                overlay.DetectedTracers.Opacity = showTracers ? 1 : 0;
-                if (showTracers)
-                {
-                    var tracerPosition = AimSettings.TracerPosition;
-                    overlay.DetectedTracers.X1 = DisplayManager.ScreenWidth / (2.0 * dpi.DpiScaleX);
-                    overlay.DetectedTracers.Y1 = tracerPosition switch
+                    var width = bounds.Width / dpi.DpiScaleX;
+                    var height = bounds.Height / dpi.DpiScaleY;
+                    var centerX = (bounds.X - DisplayManager.ScreenLeft) / dpi.DpiScaleX + width / 2;
+                    var centerY = (bounds.Y - DisplayManager.ScreenTop) / dpi.DpiScaleY;
+
+                    bool showConfidence = AimSettings.ShowAiConfidence;
+                    overlay.DetectedPlayerConfidence.Opacity = showConfidence ? 1 : 0;
+                    if (showConfidence)
                     {
-                        "Top" => 0,
-                        "Middle" => DisplayManager.ScreenHeight / (2.0 * dpi.DpiScaleY),
-                        _ => DisplayManager.ScreenHeight / dpi.DpiScaleY
-                    };
+                        overlay.DetectedPlayerConfidence.Content = $"{closestPrediction.ClassName}: {Math.Round(closestPrediction.Confidence * 100, 2)}%";
 
-                    var boxTop = centerY;
-                    var boxBottom = centerY + height;
-                    var boxHorizontalCenter = centerX;
-                    var boxVerticalCenter = centerY + (height / 2.0);
-                    var boxLeft = centerX - (width / 2.0);
-                    var boxRight = centerX + (width / 2.0);
-
-                    switch (tracerPosition)
-                    {
-                        case "Top":
-                            overlay.DetectedTracers.X2 = boxHorizontalCenter;
-                            overlay.DetectedTracers.Y2 = boxTop;
-                            break;
-
-                        case "Bottom":
-                            overlay.DetectedTracers.X2 = boxHorizontalCenter;
-                            overlay.DetectedTracers.Y2 = boxBottom;
-                            break;
-
-                        case "Middle":
-                            var screenHorizontalCenter = DisplayManager.ScreenWidth / (2.0 * dpi.DpiScaleX);
-                            if (boxHorizontalCenter < screenHorizontalCenter)
-                            {
-                                // if the box is on the left half of the screen, aim for the right-middle of the box
-                                overlay.DetectedTracers.X2 = boxRight;
-                                overlay.DetectedTracers.Y2 = boxVerticalCenter;
-                            }
-                            else
-                            {
-                                // if the box is on the right half, aim for the left-middle
-                                overlay.DetectedTracers.X2 = boxLeft;
-                                overlay.DetectedTracers.Y2 = boxVerticalCenter;
-                            }
-                            break;
-
-                        default:
-                            // default to the bottom-center if the setting is unrecognized
-                            overlay.DetectedTracers.X2 = boxHorizontalCenter;
-                            overlay.DetectedTracers.Y2 = boxBottom;
-                            break;
+                        var labelEstimatedHalfWidth = overlay.DetectedPlayerConfidence.ActualWidth / 2.0;
+                        overlay.DetectedPlayerConfidence.Margin = new Thickness(
+                            centerX - labelEstimatedHalfWidth,
+                            centerY - overlay.DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
                     }
+                    var showTracers = AimSettings.ShowTracers;
+                    overlay.DetectedTracers.Opacity = showTracers ? 1 : 0;
+                    if (showTracers)
+                    {
+                        var tracerPosition = AimSettings.TracerPosition;
+                        overlay.DetectedTracers.X1 = DisplayManager.ScreenWidth / (2.0 * dpi.DpiScaleX);
+                        overlay.DetectedTracers.Y1 = tracerPosition switch
+                        {
+                            "Top" => 0,
+                            "Middle" => DisplayManager.ScreenHeight / (2.0 * dpi.DpiScaleY),
+                            _ => DisplayManager.ScreenHeight / dpi.DpiScaleY
+                        };
+
+                        var boxTop = centerY;
+                        var boxBottom = centerY + height;
+                        var boxHorizontalCenter = centerX;
+                        var boxVerticalCenter = centerY + (height / 2.0);
+                        var boxLeft = centerX - (width / 2.0);
+                        var boxRight = centerX + (width / 2.0);
+
+                        switch (tracerPosition)
+                        {
+                            case "Top":
+                                overlay.DetectedTracers.X2 = boxHorizontalCenter;
+                                overlay.DetectedTracers.Y2 = boxTop;
+                                break;
+
+                            case "Bottom":
+                                overlay.DetectedTracers.X2 = boxHorizontalCenter;
+                                overlay.DetectedTracers.Y2 = boxBottom;
+                                break;
+
+                            case "Middle":
+                                var screenHorizontalCenter = DisplayManager.ScreenWidth / (2.0 * dpi.DpiScaleX);
+                                if (boxHorizontalCenter < screenHorizontalCenter)
+                                {
+                                    // if the box is on the left half of the screen, aim for the right-middle of the box
+                                    overlay.DetectedTracers.X2 = boxRight;
+                                    overlay.DetectedTracers.Y2 = boxVerticalCenter;
+                                }
+                                else
+                                {
+                                    // if the box is on the right half, aim for the left-middle
+                                    overlay.DetectedTracers.X2 = boxLeft;
+                                    overlay.DetectedTracers.Y2 = boxVerticalCenter;
+                                }
+                                break;
+
+                            default:
+                                // default to the bottom-center if the setting is unrecognized
+                                overlay.DetectedTracers.X2 = boxHorizontalCenter;
+                                overlay.DetectedTracers.Y2 = boxBottom;
+                                break;
+                        }
+                    }
+
+                    overlay.Opacity = AimSettings.OverlayOpacity;
+
+                    overlay.DetectedPlayerFocus.Opacity = 1;
+                    overlay.DetectedPlayerFocus.Margin = new Thickness(
+                        centerX - (width / 2.0), centerY, 0, 0);
+                    overlay.DetectedPlayerFocus.Width = width;
+                    overlay.DetectedPlayerFocus.Height = height;
                 }
-
-                overlay.Opacity = AimSettings.OverlayOpacity;
-
-                overlay.DetectedPlayerFocus.Opacity = 1;
-                overlay.DetectedPlayerFocus.Margin = new Thickness(
-                    centerX - (width / 2.0), centerY, 0, 0);
-                overlay.DetectedPlayerFocus.Width = width;
-                overlay.DetectedPlayerFocus.Height = height;
-            }, System.Windows.Threading.DispatcherPriority.Send, cancellationToken);
+                finally
+                {
+                    Interlocked.Exchange(ref _overlayUpdateInFlight, 0);
+                }
+            });
         }
 
         private void UpdateDetectionOverlay(Prediction closestPrediction, CancellationToken cancellationToken)
@@ -839,26 +856,39 @@ namespace Aimmy2.AILogic
             _lastPredictionRanInference = false;
             var detectionBox = CreateDetectionBox(useMousePosition);
 
-            Bitmap? frame;
+            if (_onnxModel == null) return null;
+            EnsureInferenceBuffers(_onnxModel);
 
+            Bitmap? frame = null;
+            Rectangle capturedBox;
             using (Benchmark("ScreenGrab"))
             {
-                frame = _captureManager.BorrowFrame(detectionBox, allowStaleCache: _benchmarkMode);
+                if (AimSettings.ScreenCaptureMethod == "DirectX" && !_benchmarkMode && !AimSettings.CollectDataWhilePlaying)
+                {
+                    bool captured = _reusableHalfInput != null
+                        ? _captureManager.TryCaptureToTensor(detectionBox, _reusableHalfInput, IMAGE_SIZE, out capturedBox)
+                        : _captureManager.TryCaptureToTensor(detectionBox, _reusableFloatInput!, IMAGE_SIZE, out capturedBox);
+                    if (!captured)
+                        return null;
+                }
+                else
+                {
+                    frame = _captureManager.BorrowFrame(detectionBox, out capturedBox, allowStaleCache: _benchmarkMode);
+                    if (frame == null) return null;
+                }
             }
-
-            if (frame == null) return null;
+            detectionBox = capturedBox;
 
             IDisposableReadOnlyCollection<DisposableNamedOnnxValue>? results = null;
-            Tensor<float>? outputTensor = null;
+            TensorBase? outputTensor = null;
 
             try
             {
-                if (_onnxModel == null) return null;
-                EnsureInferenceBuffers(_onnxModel);
-
-                using (Benchmark("BitmapToFloatArray"))
+                if (frame != null)
                 {
-                    BitmapToFloatArrayInPlace(frame, _reusableInputArray, IMAGE_SIZE);
+                    using var timing = Benchmark(_reusableHalfInput != null ? "BitmapToHalfArray" : "BitmapToFloatArray");
+                    if (_reusableHalfInput != null) BitmapToHalfArrayInPlace(frame, _reusableHalfInput, IMAGE_SIZE);
+                    else BitmapToFloatArrayInPlace(frame, _reusableFloatInput!, IMAGE_SIZE);
                 }
 
                 using (Benchmark("ModelInference"))
@@ -870,7 +900,7 @@ namespace Aimmy2.AILogic
                     else
                     {
                         results = _onnxModel.Run(_reusableInputs, _outputNames, _modeloptions);
-                        outputTensor = results[0].AsTensor<float>();
+                        outputTensor = _halfOutput ? results[0].AsTensor<Float16>() : results[0].AsTensor<float>();
                     }
                     _lastPredictionRanInference = true;
                 }
@@ -946,7 +976,7 @@ namespace Aimmy2.AILogic
                     _framesWithCandidates++;
                     if (finalTarget == null) _framesAwaitingMatch++;
                 }
-                SaveFrame(frame, outputTensor, detectionBox);
+                if (frame != null) SaveFrame(frame, outputTensor, detectionBox);
                 if (_stickyAimSelector.Acquired || (hadLock && !_stickyAimSelector.HasLock)) ResetMotion();
                 if (finalTarget != null && AimSettings.AimAssist)
                 {
@@ -1227,21 +1257,35 @@ namespace Aimmy2.AILogic
             ReleaseInferenceBuffers();
         }
 
-        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_reusableInputArray))]
         private void EnsureInferenceBuffers(InferenceSession session)
         {
-            if (_reusableInputArray == null || _reusableInputArray.Length != 3 * IMAGE_SIZE * IMAGE_SIZE)
+            int length = checked(3 * IMAGE_SIZE * IMAGE_SIZE);
+            if ((_reusableFloatInput?.Length ?? _reusableHalfInput?.Length) == length) return;
+
+            ReleaseInferenceBuffers();
+            var input = session.InputMetadata.First();
+            Type inputType = input.Value.ElementType;
+            Type outputType = session.OutputMetadata.First().Value.ElementType;
+            _halfOutput = outputType == typeof(Float16);
+            if (!_halfOutput && outputType != typeof(float))
+                throw new NotSupportedException($"Unsupported model output type {outputType.Name}.");
+
+            if (inputType == typeof(Float16)) _reusableHalfInput = Bind(new Float16[length]);
+            else if (inputType == typeof(float)) _reusableFloatInput = Bind(new float[length]);
+            else throw new NotSupportedException($"Unsupported model input type {inputType.Name}.");
+
+            Log(LogLevel.Info, $"Model precision: Input={(_reusableHalfInput != null ? "Float16" : "Float32")}, Output={(_halfOutput ? "Float16" : "Float32")}");
+
+            T[] Bind<T>(T[] buffer) where T : unmanaged
             {
-                ReleaseInferenceBuffers();
-                var input = new float[3 * IMAGE_SIZE * IMAGE_SIZE];
                 if (_usingDirectML)
-                    _fixedModelBuffers = FixedModelBuffers.TryCreate(session, IMAGE_SIZE, input);
+                    _fixedModelBuffers = FixedModelBuffers.TryCreate(session, IMAGE_SIZE, buffer);
                 if (_fixedModelBuffers == null)
                 {
-                    var tensor = new DenseTensor<float>(input, new[] { 1, 3, IMAGE_SIZE, IMAGE_SIZE });
-                    _reusableInputs = [NamedOnnxValue.CreateFromTensor(session.InputMetadata.Keys.First(), tensor)];
+                    var tensor = new DenseTensor<T>(buffer, new[] { 1, 3, IMAGE_SIZE, IMAGE_SIZE });
+                    _reusableInputs = [NamedOnnxValue.CreateFromTensor(input.Key, tensor)];
                 }
-                _reusableInputArray = input;
+                return buffer;
             }
         }
 
@@ -1249,7 +1293,8 @@ namespace Aimmy2.AILogic
         {
             _fixedModelBuffers?.Dispose();
             _fixedModelBuffers = null;
-            _reusableInputArray = null;
+            _reusableFloatInput = null;
+            _reusableHalfInput = null;
             _reusableInputs = null;
         }
 
@@ -1405,7 +1450,7 @@ namespace Aimmy2.AILogic
 
         #region Screen Capture
 
-        private void SaveFrame(Bitmap frame, Tensor<float> output, Rectangle crop)
+        private void SaveFrame(Bitmap frame, TensorBase output, Rectangle crop)
         {
             bool label = AimSettings.AutoLabelData;
             if (_suppressOutputActions || !AimSettings.CollectDataWhilePlaying ||

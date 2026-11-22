@@ -4,7 +4,7 @@ namespace Aimmy2.AILogic
 {
     internal static class OnnxModelSessionFactory
     {
-        private static SessionOptions CreateDefaultOptions()
+        private static SessionOptions CreateDefaultOptions(bool useDirectML)
         {
             return new SessionOptions
             {
@@ -13,15 +13,19 @@ namespace Aimmy2.AILogic
                 GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
                 ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
                 InterOpNumThreads = 1,
-                IntraOpNumThreads = 4
+                IntraOpNumThreads = useDirectML ? 1 : 4
             };
         }
 
         internal static OnnxModelLoadResult Load(string modelPath, bool useDirectML)
         {
-            using SessionOptions sessionOptions = CreateDefaultOptions();
+            using SessionOptions sessionOptions = CreateDefaultOptions(useDirectML);
 
-            if (useDirectML) { sessionOptions.AppendExecutionProvider_DML(); }
+            if (useDirectML)
+            {
+                sessionOptions.AddSessionConfigEntry("session.intra_op.allow_spinning", "0");
+                sessionOptions.AppendExecutionProvider_DML();
+            }
             else { sessionOptions.AppendExecutionProvider_CPU(); }
 
             InferenceSession? session = null;

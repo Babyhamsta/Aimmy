@@ -8,37 +8,58 @@ namespace Aimmy2.AILogic
     {
         private readonly string[] _inputNames, _outputNames;
         private readonly OrtValue[] _inputs, _outputs;
-        private readonly DenseTensor<float> _output;
+        private readonly TensorBase _output;
 
-        internal static FixedModelBuffers? TryCreate(InferenceSession session, int size, float[] input)
+        internal static FixedModelBuffers? TryCreate<T>(InferenceSession session, int size, T[] input) where T : unmanaged
         {
+            var modelInput = session.InputMetadata.First();
+            if (modelInput.Value.ElementType != typeof(T))
+                throw new ArgumentException("Input buffer precision must match the model.", nameof(input));
             var output = session.OutputMetadata.First();
             int[] shape = output.Value.Dimensions;
-            if (shape.Length != 3 || shape.Any(dimension => dimension <= 0) || output.Value.ElementType != typeof(float))
+            if (shape.Length != 3 || shape.Any(dimension => dimension <= 0))
                 return null;
 
-            return new FixedModelBuffers(session.InputMetadata.Keys.First(), size, input, output.Key, shape);
-        }
-
-        private FixedModelBuffers(string inputName, int size, float[] input, string outputName, int[] dimensions)
-        {
-            _inputNames = [inputName];
-            _outputNames = [outputName];
-            _output = new DenseTensor<float>(dimensions);
-            _inputs = [OrtValue.CreateTensorValueFromMemory(input, [1, 3, size, size])];
+            long[] outputShape = Array.ConvertAll(shape, d => (long)d);
+            var pinnedInput = OrtValue.CreateTensorValueFromMemory(input, [1, 3, size, size]);
             try
             {
-                _outputs = [OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance,
-                    _output.Buffer, Array.ConvertAll(dimensions, d => (long)d))];
+                return output.Value.ElementType == typeof(Float16) ? BindOutput<Float16>() :
+                    output.Value.ElementType == typeof(float) ? BindOutput<float>() :
+                    throw new NotSupportedException($"Unsupported output precision {output.Value.ElementType}.");
             }
             catch
             {
-                _inputs[0].Dispose();
+                pinnedInput.Dispose();
                 throw;
+            }
+
+            FixedModelBuffers BindOutput<TOutput>() where TOutput : unmanaged
+            {
+                var tensor = new DenseTensor<TOutput>(shape);
+                var pinnedOutput = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, tensor.Buffer, outputShape);
+                try
+                {
+                    return new FixedModelBuffers(modelInput.Key, pinnedInput, output.Key, pinnedOutput, tensor);
+                }
+                catch
+                {
+                    pinnedOutput.Dispose();
+                    throw;
+                }
             }
         }
 
-        internal Tensor<float> Run(InferenceSession session, RunOptions options)
+        private FixedModelBuffers(string inputName, OrtValue input, string outputName, OrtValue output, TensorBase tensor)
+        {
+            _inputNames = [inputName];
+            _inputs = [input];
+            _outputNames = [outputName];
+            _outputs = [output];
+            _output = tensor;
+        }
+
+        internal TensorBase Run(InferenceSession session, RunOptions options)
         {
             session.Run(options, _inputNames, _inputs, _outputNames, _outputs);
             return _output;

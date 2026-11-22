@@ -1,3 +1,4 @@
+using Microsoft.ML.OnnxRuntime;
 using Aimmy2.Class;
 using Aimmy2.AILogic;
 using Other;
@@ -273,8 +274,9 @@ namespace AILogic
             _cachedFrameBounds = Rectangle.Empty;
         }
 
-        private Bitmap? DirectX(Rectangle detectionBox, bool allowStaleCache = false)
+        private bool DirectX(Rectangle detectionBox, Array? inputBuffer, bool allowStaleCache, out Rectangle capturedBox)
         {
+            capturedBox = detectionBox;
             int w = detectionBox.Width;
             int h = detectionBox.Height;
             bool frameAcquired = false;
@@ -289,11 +291,11 @@ namespace AILogic
                     if (_dxDevice == null || _dxDevice.ImmediateContext == null || _deskDuplication == null)
                     {
                         Interlocked.Exchange(ref _displayChangesPending, 1);
-                        return GetCachedFrame(detectionBox, allowStaleCache);
+                        return HasCachedFrame(detectionBox, allowStaleCache);
                     }
                 }
 
-                if (_pendingReadback.HasValue) return FinishReadback(detectionBox);
+                if (_pendingReadback.HasValue) return FinishReadback(detectionBox, inputBuffer, out capturedBox);
                 EnsureReadbackBuffers(w, h);
 
                 long acquireStart = Stopwatch.GetTimestamp();
@@ -304,7 +306,7 @@ namespace AILogic
                 {
                     // No new frame available - this is normal
                     _consecutiveFailures = 0; // Reset failure counter
-                    return GetCachedFrame(detectionBox, allowStaleCache);
+                    return HasCachedFrame(detectionBox, allowStaleCache);
                 }
                 else if (result == Vortice.DXGI.ResultCode.DeviceRemoved || result == Vortice.DXGI.ResultCode.AccessLost)
                 { // Device lost - need to reinitialize
@@ -313,13 +315,13 @@ namespace AILogic
                     if (_consecutiveFailures >= MAX_CONSECUTIVE_FAILURES)
                         Interlocked.Exchange(ref _displayChangesPending, 1);
 
-                    return GetCachedFrame(detectionBox, allowStaleCache);
+                    return HasCachedFrame(detectionBox, allowStaleCache);
                 }
                 else if (result != Result.Ok)
                 {
                     // Other error
                     _consecutiveFailures++;
-                    return GetCachedFrame(detectionBox, allowStaleCache);
+                    return HasCachedFrame(detectionBox, allowStaleCache);
                 }
 
                 long capturedAt = Stopwatch.GetTimestamp();
@@ -346,15 +348,20 @@ namespace AILogic
                     else
                     {
                         LogManager.Log(LogLevel.Warning, "No visible region to copy from DirectX capture.", true, 3000);
-                        return GetCachedFrame(detectionBox, allowStaleCache);
+                        return HasCachedFrame(detectionBox, allowStaleCache);
                     }
 
                     #endregion Display Bounds
 
+                    _dxDevice.ImmediateContext.Flush();
                     _pendingReadback = new(detectionBox, visible, destination, acquireStart, capturedAt);
                     _mapTicks = _submitTicks = _waitTicks = 0;
-                    return FinishReadback(detectionBox);
                 }
+                desktopResource.Dispose();
+                desktopResource = null;
+                frameAcquired = false;
+                _deskDuplication.ReleaseFrame();
+                return FinishReadback(detectionBox, inputBuffer, out capturedBox);
             }
             catch (Exception e)
             {
@@ -363,7 +370,7 @@ namespace AILogic
                 if (++_consecutiveFailures >= MAX_CONSECUTIVE_FAILURES)
                     Interlocked.Exchange(ref _displayChangesPending, 1);
 
-                return GetCachedFrame(detectionBox, allowStaleCache);
+                return HasCachedFrame(detectionBox, allowStaleCache);
             }
             finally
             {
@@ -387,17 +394,18 @@ namespace AILogic
         private int _deferredReads, _movedCrops, _expiredReads;
         internal string ReadbackCounts => $"Deferred GPU map calls: {_deferredReads}, discarded for changed crop: {_movedCrops}, discarded for age: {_expiredReads}";
 
-        private Bitmap? DeferReadback(long capturedAt)
+        private bool DeferReadback(long capturedAt)
         {
             if (Stopwatch.GetElapsedTime(capturedAt).TotalSeconds >= 1)
                 Interlocked.Exchange(ref _displayChangesPending, 1);
             _deferredReads++;
-            return null;
+            return false;
         }
 
-        private Bitmap? FinishReadback(Rectangle requestedCrop)
+        private unsafe bool FinishReadback(Rectangle requestedCrop, Array? inputBuffer, out Rectangle capturedBox)
         {
             var (detectionBox, visible, destination, acquireStart, capturedAt) = _pendingReadback!.Value;
+            capturedBox = detectionBox;
             var context = _dxDevice!.ImmediateContext;
             var texture = _stagingTex!;
             // Some drivers begin system-memory transfer on the first Map. Probe before
@@ -439,22 +447,57 @@ namespace AILogic
             _pendingReadback = null;
             result.CheckError();
 
-            if (requestedCrop != detectionBox || Stopwatch.GetElapsedTime(capturedAt).TotalMilliseconds > 50)
+            if (requestedCrop.Size != detectionBox.Size || Stopwatch.GetElapsedTime(capturedAt).TotalMilliseconds > 50)
             {
                 context.Unmap(texture, 0);
-                if (requestedCrop != detectionBox) _movedCrops++;
+                if (requestedCrop.Size != detectionBox.Size) _movedCrops++;
                 else _expiredReads++;
-                return null;
+                return false;
             }
+            long mappedAt = Stopwatch.GetTimestamp();
+            _cachedFrameBounds = Rectangle.Empty;
+            try
+            {
+                if (inputBuffer is Float16[] halves)
+                    MathUtil.BgraToHalfArrayInPlace((byte*)map.DataPointer, (int)map.RowPitch, visible,
+                        destination, AimSettings.ThirdPersonSupport, halves, detectionBox.Width);
+                else if (inputBuffer is float[] floats)
+                    MathUtil.BgraToFloatArrayInPlace((byte*)map.DataPointer, (int)map.RowPitch, visible,
+                        destination, AimSettings.ThirdPersonSupport, floats, detectionBox.Width);
+                else
+                    CopyToBitmap(map, detectionBox, visible, destination);
+            }
+            finally
+            {
+                context.Unmap(texture, 0);
+            }
+            if (inputBuffer == null) _cachedFrameBounds = detectionBox;
+            _consecutiveFailures = 0;
+            long end = Stopwatch.GetTimestamp();
+            if (end - acquireStart > _slowestReadbackTicks)
+            {
+                _slowestReadbackTicks = end - acquireStart;
+                SlowestReadback = $"Slowest successful DirectX readback: acquire {Stopwatch.GetElapsedTime(acquireStart, capturedAt).TotalMilliseconds:F2} ms, " +
+                    $"submit to ready (including deferred time) {Stopwatch.GetElapsedTime(capturedAt, mappedAt).TotalMilliseconds:F2} ms " +
+                    $"(Map {Stopwatch.GetElapsedTime(0, _mapTicks).TotalMilliseconds:F2} ms, " +
+                    $"submit {Stopwatch.GetElapsedTime(0, _submitTicks).TotalMilliseconds:F2} ms, " +
+                    $"event wait {Stopwatch.GetElapsedTime(0, _waitTicks).TotalMilliseconds:F2} ms), " +
+                    $"pixel processing and unmap {Stopwatch.GetElapsedTime(mappedAt, end).TotalMilliseconds:F2} ms";
+            }
+            CapturedPixels = new Rectangle(destination, visible.Size);
+            LastCaptureTimestamp = capturedAt;
+            return true;
+        }
+
+        private void CopyToBitmap(MappedSubresource map, Rectangle detectionBox, Rectangle visible, System.Drawing.Point destination)
+        {
             int w = detectionBox.Width, h = detectionBox.Height;
             var boundsRect = new Rectangle(0, 0, w, h);
-            long mappedAt = Stopwatch.GetTimestamp();
             BitmapData? mapDest = null;
 
             try
             {
                 mapDest = directXBitmap!.LockBits(boundsRect, ImageLockMode.WriteOnly, directXBitmap!.PixelFormat);
-                _cachedFrameBounds = Rectangle.Empty;
                 unsafe
                 {
                     byte* src = (byte*)map.DataPointer;
@@ -508,41 +551,16 @@ namespace AILogic
             }
             finally
             {
-                try
-                {
-                    if (mapDest != null) directXBitmap!.UnlockBits(mapDest);
-                }
-                finally
-                {
-                    context.Unmap(texture, 0);
-                }
+                if (mapDest != null) directXBitmap!.UnlockBits(mapDest);
             }
-
-            _cachedFrameBounds = detectionBox;
-            _consecutiveFailures = 0;
-            long end = Stopwatch.GetTimestamp();
-            if (end - acquireStart > _slowestReadbackTicks)
-            {
-                _slowestReadbackTicks = end - acquireStart;
-                SlowestReadback = $"Slowest successful DirectX readback: acquire {Stopwatch.GetElapsedTime(acquireStart, capturedAt).TotalMilliseconds:F2} ms, " +
-                    $"submit to ready (including deferred time) {Stopwatch.GetElapsedTime(capturedAt, mappedAt).TotalMilliseconds:F2} ms " +
-                    $"(Map {Stopwatch.GetElapsedTime(0, _mapTicks).TotalMilliseconds:F2} ms, " +
-                    $"submit {Stopwatch.GetElapsedTime(0, _submitTicks).TotalMilliseconds:F2} ms, " +
-                    $"event wait {Stopwatch.GetElapsedTime(0, _waitTicks).TotalMilliseconds:F2} ms), " +
-                    $"bitmap copy and unmap {Stopwatch.GetElapsedTime(mappedAt, end).TotalMilliseconds:F2} ms";
-            }
-            CapturedPixels = new Rectangle(destination, visible.Size);
-            LastCaptureTimestamp = capturedAt;
-            return directXBitmap;
         }
 
         #region Frame Caching
 
-        private Bitmap? GetCachedFrame(Rectangle detectionBox, bool allowStaleCache)
+        private bool HasCachedFrame(Rectangle detectionBox, bool allowStaleCache)
         {
             // Only the performance helper may repeat a frame to measure inference throughput.
-            return allowStaleCache && directXBitmap != null && detectionBox == _cachedFrameBounds
-                ? directXBitmap : null;
+            return allowStaleCache && directXBitmap != null && detectionBox == _cachedFrameBounds;
         }
 
         #endregion Frame Caching
@@ -601,7 +619,30 @@ namespace AILogic
         #endregion GDI
 
         // The inference gate serializes borrowers. Export takes its own copy before queuing work.
-        internal Bitmap? BorrowFrame(Rectangle detectionBox, bool allowStaleCache = false)
+        internal Bitmap? BorrowFrame(Rectangle detectionBox, out Rectangle capturedBox, bool allowStaleCache = false)
+        {
+            capturedBox = detectionBox;
+            if (PrepareCaptureMethod() == "DirectX")
+                return DirectX(detectionBox, null, allowStaleCache, out capturedBox) ? directXBitmap : null;
+            return GDIScreen(detectionBox);
+        }
+
+        internal bool TryCaptureToTensor(Rectangle detectionBox, float[] inputBuffer, int imageSize, out Rectangle capturedBox) =>
+            TryCaptureToTensorCore(detectionBox, inputBuffer, imageSize, out capturedBox);
+
+        internal bool TryCaptureToTensor(Rectangle detectionBox, Float16[] inputBuffer, int imageSize, out Rectangle capturedBox) =>
+            TryCaptureToTensorCore(detectionBox, inputBuffer, imageSize, out capturedBox);
+
+        private bool TryCaptureToTensorCore(Rectangle detectionBox, Array inputBuffer, int imageSize, out Rectangle capturedBox)
+        {
+            capturedBox = detectionBox;
+            if (detectionBox.Width != imageSize || detectionBox.Height != imageSize ||
+                inputBuffer.Length != checked(3 * imageSize * imageSize))
+                throw new ArgumentException("Capture bounds and input tensor dimensions must match.");
+            return PrepareCaptureMethod() == "DirectX" && DirectX(detectionBox, inputBuffer, false, out capturedBox);
+        }
+
+        private string PrepareCaptureMethod()
         {
             string selectedMethod = AimSettings.ScreenCaptureMethod;
 
@@ -637,14 +678,7 @@ namespace AILogic
                 }
             }
 
-            if (selectedMethod == "DirectX" && !_directXFailedPermanently)
-            {
-                return DirectX(detectionBox, allowStaleCache);
-            }
-            else
-            {
-                return GDIScreen(detectionBox);
-            }
+            return _currentCaptureMethod;
         }
 
         #region dispose
