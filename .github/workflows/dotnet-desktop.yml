@@ -1,5 +1,4 @@
-#not sure if im doing this right lol
-name: .NET Core Desktop
+name: Build Aimmy
 
 on:
   push:
@@ -24,58 +23,39 @@ on:
       - 'global.json'
       - 'NuGet.config'
       - '.github/workflows/dotnet-desktop.yml'
+  workflow_dispatch: # Lets you trigger a build manually from the Actions tab
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-
   build:
-    strategy:
-      matrix:
-        targetplatform: [x64]
-        configuration: [Release]
+    runs-on: windows-latest
 
-    runs-on: windows-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
-
-    env:
-      Solution_Name: Aimmy2.sln                         # Replace with your solution name, i.e. MyWpfApp.sln.
-      Wpf_Project_Path: Aimmy2\Aimmy2.csproj
-      #Wap_Project_Name: MyWpfApp.Package.wapproj
-      
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+      - name: Publish Release (win-x64)
+        run: >
+          dotnet publish Aimmy2/Aimmy2.csproj
+          -c Release
+          -r win-x64
+          -p:Platform=x64
+          --self-contained false
+          -o publish/win-x64
 
-    # Restore the application
-    - name:  Restore the Wpf application to populate the obj folder
-      run: msbuild $env:Solution_Path /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
-      env:
-        Configuration: Debug
-        RuntimeIdentifier: win-${{ matrix.targetplatform }}
-        
-    # Build the Windows Application Packaging project
-    - name: Build release x64
-      run: msbuild $env:Solution_Path /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=$env:SigningCertificate /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
-      env:
-        AppxBundle: Never
-        BuildMode: SideLoadOnly
-        Configuration: Release
-        TargetPlatform: ${{ matrix.targetplatform }}
-
-    # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: aimmyidk
-        path: Aimmy2\bin\x64\Release\
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aimmy2-win-x64-${{ github.run_number }}
+          path: publish/win-x64/
+          if-no-files-found: error
+          retention-days: 14
