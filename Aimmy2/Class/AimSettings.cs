@@ -1,4 +1,5 @@
 using System.Globalization;
+using Aimmy2.AILogic;
 
 namespace Aimmy2.Class
 {
@@ -28,6 +29,10 @@ namespace Aimmy2.Class
         public static float MinimumConfidence => (float)(GetSlider("AI Minimum Confidence") / 100.0);
         public static double StickyAimThreshold => GetSlider("Sticky Aim Threshold");
         public static double StickyAimGraceMs => GetSlider("Sticky Aim Grace");
+        public static double StickyMaxMatchCost => BoundedSlider("Lock Strictness", StickyAimSelector.DefaultMaxMatchCost, 1.2, 3.5);
+        public const double DefaultRescueRatio = .50;
+        public static double StickyRescueFloorRatio => BoundedSlider("Lock Rescue Confidence", DefaultRescueRatio, .25, 1);
+        public static double NmsIouThreshold => BoundedSlider("NMS IoU Threshold", PredictionFilter.DefaultNmsIou, .35, .75);
         public static double OverlayOpacity => GetSlider("Opacity");
         public static double YOffset => GetSlider("Y Offset (Up/Down)");
         public static double XOffset => GetSlider("X Offset (Left/Right)");
@@ -59,13 +64,19 @@ namespace Aimmy2.Class
         public static bool ThirdPersonSupport => GetToggle("Third Person Support");
 
         public static double GetSlider(string key) =>
-            Convert.ToDouble(Dictionary.sliderSettings[key], CultureInfo.InvariantCulture);
+            Convert.ToDouble((object)Dictionary.sliderSettings[key], CultureInfo.InvariantCulture);
+
+        private static double BoundedSlider(string key, double fallback, double minimum, double maximum)
+        {
+            double value = GetSlider(key);
+            return double.IsNaN(value) ? fallback : Math.Clamp(value, minimum, maximum);
+        }
 
         public static bool GetToggle(string key) =>
-            Convert.ToBoolean(Dictionary.toggleState[key], CultureInfo.InvariantCulture);
+            Convert.ToBoolean((object)Dictionary.toggleState[key], CultureInfo.InvariantCulture);
 
         public static string GetDropdown(string key) =>
-            Convert.ToString(Dictionary.dropdownState[key], CultureInfo.InvariantCulture) ?? string.Empty;
+            Convert.ToString((object)Dictionary.dropdownState[key], CultureInfo.InvariantCulture) ?? string.Empty;
 
         private static void SetDropdown(string key, string value)
         {

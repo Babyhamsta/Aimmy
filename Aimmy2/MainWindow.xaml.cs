@@ -976,12 +976,18 @@ namespace Aimmy2
         {
             sliderSettings["AI FPS Limit"] = 0;
             sliderSettings["Sticky Aim Grace"] = StickyAimSelector.DefaultGraceMilliseconds;
+            sliderSettings["Lock Strictness"] = StickyAimSelector.DefaultMaxMatchCost;
+            sliderSettings["Lock Rescue Confidence"] = AimSettings.DefaultRescueRatio;
+            sliderSettings["NMS IoU Threshold"] = PredictionFilter.DefaultNmsIou;
         }
 
         private void LoadConfig(string path = "bin\\configs\\Default.cfg", bool loading_from_configlist = false)
         {
             ApplyConfigLoadDefaults(Dictionary.sliderSettings);
             SaveDictionary.LoadJSON(Dictionary.sliderSettings, path);
+            Dictionary.sliderSettings["Lock Strictness"] = AimSettings.StickyMaxMatchCost;
+            Dictionary.sliderSettings["Lock Rescue Confidence"] = AimSettings.StickyRescueFloorRatio;
+            Dictionary.sliderSettings["NMS IoU Threshold"] = AimSettings.NmsIouThreshold;
             SaveDictionary.LoadJSON(Dictionary.dropdownState, path);
 
             if (!loading_from_configlist || _menuControls["AimMenu"] == null)
@@ -1023,6 +1029,8 @@ namespace Aimmy2
                 ("Mouse Jitter", uiManager.S_MouseJitter, 0.0),
                 ("Sticky Aim Threshold", uiManager.S_StickyAimThreshold, 50),
                 ("Sticky Aim Grace", uiManager.S_StickyAimGrace, StickyAimSelector.DefaultGraceMilliseconds),
+                ("Lock Strictness", uiManager.S_LockStrictness, StickyAimSelector.DefaultMaxMatchCost),
+                ("Lock Rescue Confidence", uiManager.S_LockRescueConfidence, AimSettings.DefaultRescueRatio),
                 ("EMA Smoothening", uiManager.S_EMASmoothing, 0.5),
                 ("Y Offset (Up/Down)", uiManager.S_YOffset, 0.0),
                 ("X Offset (Left/Right)", uiManager.S_XOffset, 0.0),
@@ -1092,6 +1100,8 @@ namespace Aimmy2
             var visibility = !collapsed && Dictionary.toggleState["Sticky Aim"] ? Visibility.Visible : Visibility.Collapsed;
             if (uiManager.S_StickyAimThreshold != null) uiManager.S_StickyAimThreshold.Visibility = visibility;
             if (uiManager.S_StickyAimGrace != null) uiManager.S_StickyAimGrace.Visibility = visibility;
+            if (uiManager.S_LockStrictness != null) uiManager.S_LockStrictness.Visibility = visibility;
+            if (uiManager.S_LockRescueConfidence != null) uiManager.S_LockRescueConfidence.Visibility = visibility;
         }
 
         public void UpdateAimConfigSliderVisibility()

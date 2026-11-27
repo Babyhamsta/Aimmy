@@ -205,6 +205,17 @@ namespace Aimmy2.Controls
                     uiManager.S_StickyAimGrace = s;
                     s.Visibility = Dictionary.toggleState["Sticky Aim"] ? Visibility.Visible : Visibility.Collapsed;
                 }, tooltip: "How long to retain a missing target before another player can be selected. Default 150 ms.")
+                .AddSlider("Lock Strictness", "", .1, .1, 1.2, 3.5, s =>
+                {
+                    uiManager.S_LockStrictness = s;
+                    s.Visibility = Dictionary.toggleState["Sticky Aim"] ? Visibility.Visible : Visibility.Collapsed;
+                }, tooltip: "Lower values require a closer match in position and size. Strict 1.6, balanced 2.0, loose 2.6.")
+                .AddSlider("Lock Rescue Confidence", "", .01, .01, .25, 1, s =>
+                {
+                    uiManager.S_LockRescueConfidence = s;
+                    s.SetValueFormatter(ratio => ratio.ToString("P0"));
+                    s.Visibility = Dictionary.toggleState["Sticky Aim"] ? Visibility.Visible : Visibility.Collapsed;
+                }, tooltip: "Minimum confidence for retaining an existing lock, as a percentage of AI Minimum Confidence. At 100% rescue is disabled.")
                 .AddKeyChanger("Aim Keybind", k => uiManager.C_Keybind = k,
                     tooltip: "The key you hold to activate aim assist.")
                 .AddKeyChanger("Second Aim Keybind", tooltip: "An alternate key to activate aim assist.")

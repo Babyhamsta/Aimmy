@@ -137,6 +137,11 @@ namespace Aimmy2.AILogic
         }
 
         private readonly StickyAimSelector _stickyAimSelector = new();
+        private PredictionFilter.FrameBuffer? _predictionBuffer;
+        private readonly Func<RectangleF, Vector2> _aimPoint;
+        private bool _percentX, _percentY;
+        private double _xPercent, _yPercent, _xOffset, _yOffset;
+        private string _alignment = "";
         public Task<bool> InitializationTask { get; }
         public bool IsLoaded => _onnxModel != null && _outputNames != null;
 
@@ -211,6 +216,7 @@ namespace Aimmy2.AILogic
         public AIManager(string modelPath)
         {
             _modelPath = modelPath;
+            _aimPoint = GetFrameAimPoint;
 
             // Initialize the cached image size
             _currentImageSize = AimSettings.ImageSize;
@@ -757,6 +763,8 @@ namespace Aimmy2.AILogic
             int expectedGeneration = Volatile.Read(ref _overlayGeneration);
             if (Interlocked.CompareExchange(ref _overlayUpdateInFlight, 1, 0) != 0) return;
             var bounds = closestPrediction.ScreenBounds;
+            var className = closestPrediction.ClassName;
+            float confidence = closestPrediction.Confidence;
             overlay.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Render, () =>
             {
                 try
@@ -774,7 +782,7 @@ namespace Aimmy2.AILogic
                     overlay.DetectedPlayerConfidence.Opacity = showConfidence ? 1 : 0;
                     if (showConfidence)
                     {
-                        overlay.DetectedPlayerConfidence.Content = $"{closestPrediction.ClassName}: {Math.Round(closestPrediction.Confidence * 100, 2)}%";
+                        overlay.DetectedPlayerConfidence.Content = $"{className}: {Math.Round(confidence * 100, 2)}%";
 
                         var labelEstimatedHalfWidth = overlay.DetectedPlayerConfidence.ActualWidth / 2.0;
                         overlay.DetectedPlayerConfidence.Margin = new Thickness(
@@ -899,6 +907,15 @@ namespace Aimmy2.AILogic
             }
         }
 
+        private Vector2 GetFrameAimPoint(RectangleF bounds) => AimCoordinates.AimPoint(bounds,
+            _percentX, _xPercent, _xOffset, _percentY, _yPercent, _yOffset, _alignment);
+
+        internal static float DecodeConfidence(bool sticky, bool hadLock, float minConfidence, float rescueRatio)
+        {
+            rescueRatio = Math.Clamp(rescueRatio, .25f, 1f);
+            return sticky && hadLock && rescueRatio < 1f ? minConfidence * rescueRatio : minConfidence;
+        }
+
         private Prediction? DetectAndSelect(out Prediction? displayDetection, out System.Drawing.Point? measured, bool useMousePosition = true)
         {
             displayDetection = null;
@@ -996,22 +1013,19 @@ namespace Aimmy2.AILogic
                 var crosshair = new Vector2(detectionBox.Left + detectionBox.Width / 2,
                     detectionBox.Top + detectionBox.Height / 2);
 
-                bool percentX = AimSettings.UseXAxisPercentageAdjustment;
-                bool percentY = AimSettings.UseYAxisPercentageAdjustment;
+                _percentX = AimSettings.UseXAxisPercentageAdjustment;
+                _percentY = AimSettings.UseYAxisPercentageAdjustment;
+                _xPercent = AimSettings.XOffsetPercent;
+                _yPercent = AimSettings.YOffsetPercent;
+                _xOffset = AimSettings.XOffset;
+                _yOffset = AimSettings.YOffset;
+                _alignment = AimSettings.AimingBoundariesAlignment;
 
-                double xPercent = AimSettings.XOffsetPercent;
-                double yPercent = AimSettings.YOffsetPercent;
-
-                double xOffset = AimSettings.XOffset;
-                double yOffset = AimSettings.YOffset;
-                string alignment = AimSettings.AimingBoundariesAlignment;
-                Func<RectangleF, Vector2> aimPoint = bounds => AimCoordinates.AimPoint(bounds,
-                    percentX, xPercent, xOffset, percentY, yPercent, yOffset, alignment);
-
+                float minConfidence = AimSettings.MinimumConfidence;
+                float decodeFloor = DecodeConfidence(sticky, hadLock, minConfidence, (float)AimSettings.StickyRescueFloorRatio);
                 List<Prediction> predictions;
                 using (Benchmark("DecodeDetections"))
                 {
-                    float minConfidence = AimSettings.MinimumConfidence;
                     string selectedClass = AimSettings.TargetClass;
 
                     predictions = PredictionFilter.CreatePredictions(
@@ -1021,18 +1035,19 @@ namespace Aimmy2.AILogic
                         NUM_DETECTIONS,
                         NUM_CLASSES,
                         _modelClasses,
-                        minConfidence,
+                        decodeFloor,
                         selectedClass,
                         inset,
                         IMAGE_SIZE - inset,
                         inset,
                         IMAGE_SIZE - inset,
-                        capturedPixels: _captureManager.CapturedPixels);
+                        capturedPixels: _captureManager.CapturedPixels,
+                        nmsIouThreshold: (float)AimSettings.NmsIouThreshold, buffer: _predictionBuffer);
                 }
 
                 if (_benchmarkMode)
                 {
-                    return StickyAimSelector.NearestToCenter(predictions, crosshair, aimPoint, fovSize);
+                    return StickyAimSelector.NearestToCenter(predictions, crosshair, _aimPoint, fovSize, minConfidence);
                 }
 
                 Prediction? finalTarget;
@@ -1040,10 +1055,10 @@ namespace Aimmy2.AILogic
                 {
                     finalTarget = _stickyAimSelector.SelectTarget(
                         sticky, stickyThreshold, predictions,
-                        _captureManager.LastCaptureTimestamp, crosshair, aimPoint,
-                        AimSettings.StickyAimGraceMs, detectionBox, fovSize);
+                        _captureManager.LastCaptureTimestamp, crosshair, _aimPoint,
+                        AimSettings.StickyAimGraceMs, detectionBox, fovSize, minConfidence, (float)AimSettings.StickyMaxMatchCost);
                     displayDetection = AimSettings.ShowDetectedPlayer
-                        ? _stickyAimSelector.ForDisplay(finalTarget, predictions, crosshair, aimPoint, fovSize) : null;
+                        ? _stickyAimSelector.ForDisplay(finalTarget, predictions, crosshair, _aimPoint, fovSize, minConfidence) : null;
                 }
                 if (predictions.Count != 0)
                 {
@@ -1055,7 +1070,7 @@ namespace Aimmy2.AILogic
                 if (finalTarget != null && AimSettings.AimAssist)
                 {
                     using var timing = Benchmark("CalculateCoordinates");
-                    var error = aimPoint(finalTarget.ScreenBounds) - crosshair;
+                    var error = _aimPoint(finalTarget.ScreenBounds) - crosshair;
                     measured = System.Drawing.Point.Round(new PointF(error.X, error.Y));
                 }
                 return finalTarget;
@@ -1342,6 +1357,7 @@ namespace Aimmy2.AILogic
 
             ReleaseInferenceBuffers();
             var input = session.InputMetadata.First();
+            _predictionBuffer = new PredictionFilter.FrameBuffer(NUM_DETECTIONS, NUM_CLASSES, _modelClasses);
             Type inputType = input.Value.ElementType;
             Type outputType = session.OutputMetadata.First().Value.ElementType;
             _halfOutput = outputType == typeof(Float16);
@@ -1379,6 +1395,7 @@ namespace Aimmy2.AILogic
             _reusableFloatInput = null;
             _reusableHalfInput = null;
             _reusableInputs = null;
+            _predictionBuffer = null;
         }
 
         private void RestoreBenchmarkState(
@@ -1542,7 +1559,8 @@ namespace Aimmy2.AILogic
 
             var boxes = label ? PredictionFilter.CreatePredictions(output, crop, IMAGE_SIZE,
                 NUM_DETECTIONS, NUM_CLASSES, _modelClasses, AimSettings.MinimumConfidence,
-                "Best Confidence", 0, IMAGE_SIZE, 0, IMAGE_SIZE, clipToBounds: true, capturedPixels: _captureManager.CapturedPixels) : null;
+                "Best Confidence", 0, IMAGE_SIZE, 0, IMAGE_SIZE, clipToBounds: true, capturedPixels: _captureManager.CapturedPixels,
+                nmsIouThreshold: (float)AimSettings.NmsIouThreshold) : null;
             var ownedFrame = (Bitmap)frame.Clone();
             lastSavedTime = DateTime.UtcNow;
             _pendingSave = Task.Run(() =>

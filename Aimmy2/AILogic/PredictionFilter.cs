@@ -10,6 +10,28 @@ namespace Aimmy2.AILogic
 {
     internal static class PredictionFilter
     {
+        internal const float DefaultNmsIou = .55f;
+
+        // Sized when binding the model. Results are borrowed until the next decode.
+        internal sealed class FrameBuffer
+        {
+            internal readonly List<Prediction> Results;
+            internal readonly Prediction[] Boxes;
+            internal readonly string[] ClassNames;
+            internal readonly int[] Order;
+
+            internal FrameBuffer(int detections, int classes, IReadOnlyDictionary<int, string> names)
+            {
+                Results = new(detections);
+                Boxes = new Prediction[detections];
+                for (int i = 0; i < Boxes.Length; i++) Boxes[i] = new Prediction();
+                Order = new int[detections];
+                ClassNames = new string[classes];
+                for (int i = 0; i < classes; i++)
+                    ClassNames[i] = names.TryGetValue(i, out var name) ? name : $"Class_{i}";
+            }
+        }
+
         internal static List<Prediction> CreatePredictions(
             TensorBase outputTensor,
             Rectangle detectionBox,
@@ -24,7 +46,9 @@ namespace Aimmy2.AILogic
             float fovMinY,
             float fovMaxY,
             bool clipToBounds = false,
-            Rectangle? capturedPixels = null)
+            Rectangle? capturedPixels = null,
+            float nmsIouThreshold = DefaultNmsIou,
+            FrameBuffer? buffer = null)
         {
             return outputTensor switch
             {
@@ -35,14 +59,18 @@ namespace Aimmy2.AILogic
 
             List<Prediction> Decode<T>(Tensor<T> tensor) where T : unmanaged =>
                 DecodePredictions(tensor, detectionBox, imageSize, numDetections, numClasses, modelClasses,
-                    minConfidence, selectedClass, fovMinX, fovMaxX, fovMinY, fovMaxY, clipToBounds, capturedPixels);
+                    minConfidence, selectedClass, fovMinX, fovMaxX, fovMinY, fovMaxY, clipToBounds, capturedPixels,
+                    float.IsNaN(nmsIouThreshold) ? DefaultNmsIou : Math.Clamp(nmsIouThreshold, .35f, .75f), buffer);
         }
 
         private static List<Prediction> DecodePredictions<T>(Tensor<T> outputTensor, Rectangle detectionBox,
             int imageSize, int numDetections, int numClasses, IReadOnlyDictionary<int, string> modelClasses,
             float minConfidence, string selectedClass, float fovMinX, float fovMaxX, float fovMinY,
-            float fovMaxY, bool clipToBounds, Rectangle? capturedPixels) where T : unmanaged
+            float fovMaxY, bool clipToBounds, Rectangle? capturedPixels, float nmsIouThreshold,
+            FrameBuffer? buffer) where T : unmanaged
         {
+            var predictions = buffer?.Results ?? new List<Prediction>();
+            predictions.Clear();
             if (capturedPixels is Rectangle visible)
             {
                 fovMinX = Math.Max(fovMinX, visible.Left);
@@ -50,11 +78,10 @@ namespace Aimmy2.AILogic
                 fovMinY = Math.Max(fovMinY, visible.Top);
                 fovMaxY = Math.Min(fovMaxY, visible.Bottom);
             }
-            if (fovMinX > fovMaxX || fovMinY > fovMaxY) return [];
+            if (fovMinX > fovMaxX || fovMinY > fovMaxY) return predictions;
 
             int selectedClassId = ResolveSelectedClassId(modelClasses, selectedClass);
 
-            var predictions = new List<Prediction>();
             var dense = outputTensor as DenseTensor<T>;
             int channelStride = outputTensor.Strides[1];
             int boxStride = outputTensor.Strides[2];
@@ -153,17 +180,16 @@ namespace Aimmy2.AILogic
                 else if (xCenter < fovMinX || xCenter > fovMaxX || yCenter < fovMinY || yCenter > fovMaxY) continue;
 
                 var rect = new RectangleF(xMin, yMin, width, height);
-                var prediction = new Prediction
-                {
-                    Rectangle = rect,
-                    Confidence = bestConfidence,
-                    ClassId = bestClassId,
-                    ClassName = modelClasses.TryGetValue(bestClassId, out var name) ? name : $"Class_{bestClassId}",
-                    CenterXTranslated = xCenter / imageSize,
-                    CenterYTranslated = yCenter / imageSize,
-                    ScreenCenterX = detectionBox.Left + xCenter,
-                    ScreenCenterY = detectionBox.Top + yCenter
-                };
+                var prediction = buffer == null ? new Prediction() : buffer.Boxes[predictions.Count];
+                prediction.Rectangle = rect;
+                prediction.Confidence = bestConfidence;
+                prediction.ClassId = bestClassId;
+                prediction.ClassName = buffer?.ClassNames[bestClassId] ??
+                    (modelClasses.TryGetValue(bestClassId, out var name) ? name : $"Class_{bestClassId}");
+                prediction.CenterXTranslated = xCenter / imageSize;
+                prediction.CenterYTranslated = yCenter / imageSize;
+                prediction.ScreenCenterX = detectionBox.Left + xCenter;
+                prediction.ScreenCenterY = detectionBox.Top + yCenter;
                 predictions.Add(prediction);
             }
 
@@ -171,7 +197,7 @@ namespace Aimmy2.AILogic
 
             int count = predictions.Count;
             int[]? rented = null;
-            Span<int> order = count <= 128 ? stackalloc int[count] :
+            Span<int> order = buffer != null ? buffer.Order.AsSpan(0, count) : count <= 128 ? stackalloc int[count] :
                 (rented = ArrayPool<int>.Shared.Rent(count)).AsSpan(0, count);
             try
             {
@@ -196,7 +222,7 @@ namespace Aimmy2.AILogic
                     foreach (int winner in order[..keptCount])
                     {
                         var other = predictions[winner];
-                        if (other.ClassId == candidate.ClassId && IntersectionOverUnion(other.Rectangle, candidate.Rectangle) >= .45f)
+                        if (other.ClassId == candidate.ClassId && IntersectionOverUnion(other.Rectangle, candidate.Rectangle) >= nmsIouThreshold)
                         {
                             suppressed = true;
                             break;
@@ -217,8 +243,10 @@ namespace Aimmy2.AILogic
 
         internal static float IntersectionOverUnion(RectangleF a, RectangleF b)
         {
-            var overlap = RectangleF.Intersect(a, b);
-            float intersection = overlap.Width * overlap.Height;
+            float width = Math.Min(a.Right, b.Right) - Math.Max(a.Left, b.Left);
+            float height = Math.Min(a.Bottom, b.Bottom) - Math.Max(a.Top, b.Top);
+            if (width <= 0 || height <= 0) return 0;
+            float intersection = width * height;
             return intersection / (a.Width * a.Height + b.Width * b.Height - intersection);
         }
 
@@ -226,6 +254,13 @@ namespace Aimmy2.AILogic
         {
             if (selectedClass == "Best Confidence")
             {
+                return -1;
+            }
+
+            if (modelClasses is Dictionary<int, string> names)
+            {
+                foreach (var entry in names)
+                    if (entry.Value == selectedClass) return entry.Key;
                 return -1;
             }
 
